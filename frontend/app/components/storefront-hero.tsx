@@ -1,12 +1,12 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
 const slides = [
-  { eyebrow: "THE FIRST DROP", title: "Somehow,\nit works.", description: "Oversized graphic tees made for outfits that look intentional—even when they weren’t.", cta: "SHOP THE DROP", href: "/collections/new-drop", theme: "graphic", label: "Graphic T-shirts" },
-  { eyebrow: "THE EVERYDAY EDIT", title: "Your easiest\noutfit yet.", description: "Clean oversized basics and relaxed joggers for repeat-wear days.", cta: "SHOP BASICS", href: "/collections/basics", theme: "basics", label: "Plain tees and joggers" },
-  { eyebrow: "BETTER TOGETHER", title: "Same vibe.\nDifferent energy.", description: "Couple T-shirts without the matching-outfit cringe.", cta: "SHOP COUPLE TEES", href: "/collections/couple-tshirts", theme: "couples", label: "Couple T-shirts" },
+  { image: "/images/feel-the-vibe.webp", alt: "Styled Somehow Feel the Vibe campaign", href: "/collections/new-drop", position: "center" },
+  { image: "/images/the-lineup.webp", alt: "Styled Somehow graphic tees and everyday basics lineup", href: "/collections/all", position: "center" },
 ] as const;
 
 const collectionLinks = [
@@ -40,13 +40,13 @@ export default function StorefrontHero() {
   return (
     <section className="storefront" aria-label="Styled Somehow featured collections">
       <header className="site-header">
-        <Link className="wordmark" href="/" aria-label="Styled Somehow home">styled_<span>somehow</span></Link>
+        <Link className="brand-logo" href="/" aria-label="Styled Somehow home">
+          <Image src="/images/styled-somehow-logo.webp" alt="Styled Somehow" width={210} height={120} priority />
+        </Link>
         <nav className="desktop-nav" aria-label="Main navigation">
           <div className="nav-dropdown">
-            <button type="button" className="nav-link dropdown-trigger">COLLECTIONS <span aria-hidden="true">⌄</span></button>
-            <div className="dropdown-menu">
-              {collectionLinks.map(([label, href]) => <Link key={label} href={href}>{label}</Link>)}
-            </div>
+            <button type="button" className="nav-link">COLLECTIONS <span aria-hidden="true">⌄</span></button>
+            <div className="dropdown-menu">{collectionLinks.map(([label, href]) => <Link key={label} href={href}>{label}</Link>)}</div>
           </div>
           <Link className="nav-link" href="/collections/men">MEN</Link>
           <Link className="nav-link" href="/collections/women">WOMEN</Link>
@@ -74,30 +74,20 @@ export default function StorefrontHero() {
 
       <div className="slides">
         {slides.map((slide, index) => (
-          <article key={slide.eyebrow} className={`hero-slide theme-${slide.theme} ${index === activeSlide ? "is-active" : ""}`} aria-hidden={index !== activeSlide}>
-            <div className="artwork" aria-label={`Placeholder artwork for ${slide.label}`} role="img">
-              <span className="art-orbit orbit-one" /><span className="art-orbit orbit-two" />
-              <span className="art-card card-one">SS</span><span className="art-card card-two">SOMEHOW</span><span className="art-stamp">EST. 2026</span>
-            </div>
-            <div className="hero-overlay" />
-            <div className="hero-copy">
-              <p className="eyebrow">{slide.eyebrow}</p>
-              <h1>{slide.title.split("\n").map((line) => <span key={line}>{line}</span>)}</h1>
-              <p className="hero-description">{slide.description}</p>
-              <Link className="hero-cta" href={slide.href}>{slide.cta}<span aria-hidden="true">↗</span></Link>
-            </div>
-          </article>
+          <Link key={slide.image} href={slide.href} className={`hero-slide ${index === activeSlide ? "is-active" : ""}`} aria-hidden={index !== activeSlide} tabIndex={index === activeSlide ? 0 : -1}>
+            <Image src={slide.image} alt={slide.alt} fill priority={index === 0} sizes="100vw" style={{ objectPosition: slide.position }} />
+            {index === 1 && <span className="lineup-cta">EXPLORE THE LINEUP <span aria-hidden="true">↗</span></span>}
+          </Link>
         ))}
       </div>
 
       <div className="carousel-controls">
         <button type="button" onClick={() => moveSlide(-1)} aria-label="Previous slide">←</button>
         <div className="carousel-dots" role="group" aria-label="Choose a slide">
-          {slides.map((slide, index) => <button key={slide.eyebrow} className={index === activeSlide ? "is-active" : ""} type="button" aria-label={`Show slide ${index + 1}: ${slide.label}`} aria-current={index === activeSlide ? "true" : undefined} onClick={() => setActiveSlide(index)} />)}
+          {slides.map((slide, index) => <button key={slide.image} className={index === activeSlide ? "is-active" : ""} type="button" aria-label={`Show slide ${index + 1}`} aria-current={index === activeSlide ? "true" : undefined} onClick={() => setActiveSlide(index)} />)}
         </div>
         <button type="button" onClick={() => moveSlide(1)} aria-label="Next slide">→</button>
       </div>
-      <p className="vertical-note">STYLE YOU DON&apos;T HAVE TO THINK ABOUT</p>
     </section>
   );
 }
