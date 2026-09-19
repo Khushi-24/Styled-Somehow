@@ -60,13 +60,16 @@ button { color: inherit; font: inherit; }
 }
 
 @media (max-width: 620px) {
-  .site-header { padding-inline: 13px; }
+  .storefront { min-height: 240px; height: max(240px, 56.25vw); }
+  .site-header { height: 58px; padding: 6px 13px; }
+  .brand-logo { font-size: .94rem; gap: 2px; }
   .header-actions { gap: 2px; }
-  .icon-button { width: 36px; height: 36px; }
+  .icon-button { width: 34px; height: 34px; }
+  .icon-button svg { width: 21px; height: 21px; }
   .slides { background: var(--paper); }
-  .hero-slide img { object-fit: contain; object-position: center top; }
-  .lineup-cta { bottom: 88px; padding: 13px 17px; font-size: .66rem; }
-  .carousel-controls { bottom: 22px; }
+  .hero-slide img { object-fit: cover; object-position: center !important; }
+  .lineup-cta { bottom: 48px; padding: 10px 13px; font-size: .58rem; }
+  .carousel-controls { bottom: 9px; padding: 5px 8px; }
   .carousel-controls > button { display: none; }
 }
 
