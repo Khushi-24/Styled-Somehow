@@ -39,7 +39,7 @@ export default function StorefrontHero() {
 
   return (
     <section className="storefront" aria-label="Styled Somehow featured collections">
-      <header className="site-header">
+      <header className={`site-header ${activeSlide === 0 ? "header-on-dark" : "header-on-light"} ${menuOpen ? "menu-is-open" : ""}`}>
         <Link className="brand-logo" href="/" aria-label="Styled Somehow home">
           <span>STYLED</span>
           <span>SOMEHOW</span>
