@@ -41,7 +41,8 @@ export default function StorefrontHero() {
     <section className="storefront" aria-label="Styled Somehow featured collections">
       <header className="site-header">
         <Link className="brand-logo" href="/" aria-label="Styled Somehow home">
-          <Image src="/images/styled-somehow-logo.webp" alt="Styled Somehow" width={210} height={120} priority />
+          <span>STYLED</span>
+          <span>SOMEHOW</span>
         </Link>
         <nav className="desktop-nav" aria-label="Main navigation">
           <div className="nav-dropdown">
