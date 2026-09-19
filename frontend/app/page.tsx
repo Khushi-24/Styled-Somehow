@@ -1,8 +1,5 @@
+import StorefrontHero from "./components/storefront-hero";
+
 export default function Home() {
-  return (
-    <main>
-      <h1>Styled Somehow</h1>
-      <p>Coming soon...</p>
-    </main>
-  );
+  return <main><StorefrontHero /></main>;
 }
