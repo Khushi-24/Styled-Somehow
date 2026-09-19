@@ -60,16 +60,20 @@ button { color: inherit; font: inherit; }
 }
 
 @media (max-width: 620px) {
-  .storefront { min-height: 240px; height: max(240px, 56.25vw); }
+  .storefront { min-height: 0; height: calc(58px + 56.25vw + 52px); background: var(--paper); }
   .site-header { height: 58px; padding: 6px 13px; }
+  .site-header.header-on-dark,
+  .site-header.header-on-light { border-color: rgba(9,9,9,.12); background: #f9f4ec; color: var(--ink); }
   .brand-logo { font-size: .94rem; gap: 2px; }
   .header-actions { gap: 2px; }
   .icon-button { width: 34px; height: 34px; }
   .icon-button svg { width: 21px; height: 21px; }
-  .slides { background: var(--paper); }
-  .hero-slide img { object-fit: cover; object-position: center !important; }
-  .lineup-cta { bottom: 48px; padding: 10px 13px; font-size: .58rem; }
-  .carousel-controls { bottom: 9px; padding: 5px 8px; }
+  .header-on-dark .cart-count { background: var(--ink); color: white; }
+  .slides { inset: 58px 0 52px; background: var(--paper); }
+  .hero-slide { overflow: visible; }
+  .hero-slide img { object-fit: contain; object-position: center !important; }
+  .lineup-cta { left: 13px; bottom: -43px; padding: 9px 11px; font-size: .56rem; transform: none; }
+  .carousel-controls { right: 13px; bottom: 9px; left: auto; padding: 5px 8px; transform: none; }
   .carousel-controls > button { display: none; }
 }
 
