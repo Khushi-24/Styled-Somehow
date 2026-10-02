@@ -5,7 +5,7 @@ import { useRef, useState } from "react";
 const images = ["/images/untamed-torque-front.webp", "/images/untamed-torque-back.webp", "/images/untamed-torque-detail.webp"];
 const descriptions = ["Untamed Torque oversized white T-shirt, front view", "Untamed Torque oversized white T-shirt, back view", "Close-up of Untamed text and car print"];
 const sizes = ["S", "M", "L", "XL"];
-export default function UntamedProduct() {
+export default function UntamedProduct({ returnUrl = "/#new-in-product-untamed-torque" }: { returnUrl?: string }) {
  const [photo, setPhoto] = useState(0);
  const gallery = useRef<HTMLDivElement>(null);
  function movePhoto(direction: number) {
@@ -25,7 +25,7 @@ export default function UntamedProduct() {
   } catch { setMessage("Could not save your cart. Please try again."); }
  }
  return <main className="product-page">
-  <nav className="product-nav" aria-label="Product navigation"><Link href="/" className="brand-logo" aria-label="Styled Somehow home"><span>STYLED</span><span>SOMEHOW</span></Link><Link href="/#new-in-product-untamed-torque">← Continue shopping</Link></nav>
+  <nav className="product-nav" aria-label="Product navigation"><Link href="/" className="brand-logo" aria-label="Styled Somehow home"><span>STYLED</span><span>SOMEHOW</span></Link><Link href={returnUrl}>← Continue shopping</Link></nav>
   <p className="product-breadcrumb"><Link href="/">Home</Link> / Untamed Torque</p>
   <div className="product-layout">
    <section className="product-gallery" aria-label="Product photos">

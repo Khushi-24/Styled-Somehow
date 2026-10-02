@@ -184,3 +184,14 @@ button { color: inherit; font: inherit; }
 }
 
 @media(max-width: 620px) { .new-in__grid { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: 70%; overflow-x: auto; gap: 16px; scroll-snap-type: x mandatory; } .new-in__product { scroll-snap-align: start; min-width: 0; } }
+
+.collection-page { min-height: 100vh; background: white; }
+.collection-banner img { display: block; width: 100%; height: auto; }
+.collection-products { padding: 40px 24px 80px; }
+.collection-heading { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 24px; }
+.collection-heading h1 { margin: 0; font-size: clamp(1.8rem,3vw,2.6rem); letter-spacing: -.04em; }
+.collection-heading p { color: #666; font-size: .85rem; }
+.collection-grid { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 20px; }
+.collection-grid h2 { margin: 14px 0 8px; font-size: .95rem; font-weight: 600; }
+@media(max-width: 980px) { .collection-grid { grid-template-columns: repeat(3,minmax(0,1fr)); } }
+@media(max-width: 620px) { .collection-products { padding: 28px 12px 56px; } .collection-grid { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; } .collection-grid h2 { font-size: .85rem; } .collection-grid .product-price { font-size: .85rem; gap: 6px; } }
