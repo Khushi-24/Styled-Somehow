@@ -94,8 +94,12 @@ button { color: inherit; font: inherit; }
 .shop-for__card:focus-visible { outline: 3px solid #090909; outline-offset: 4px; }
 @media (hover: hover) { .shop-for__card:hover img { transform: scale(1.025); } }
 @media (max-width: 620px) {
- .shop-for { padding: 12px; }
- .shop-for__grid { grid-template-columns: 1fr; gap: 12px; }
- .shop-for__caption { bottom: 24px; }
- .shop-for__caption h2 { font-size: 2rem; }
+ .shop-for { padding: 0; }
+ .shop-for__grid { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: 86%; gap: 2px; overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-inline: 0; overscroll-behavior-x: contain; scrollbar-width: none; }
+ .shop-for__grid::-webkit-scrollbar { display: none; }
+ .shop-for__card { min-width: 0; scroll-snap-align: start; }
+ .shop-for__caption { right: 24px; bottom: 28px; left: 28px; text-align: left; }
+ .shop-for__caption h2 { margin-bottom: 18px; font-size: clamp(1.5rem, 6.5vw, 2rem); }
+ .shop-for__explore { padding: 8px 22px; border: 1px solid white; border-radius: 8px; background: rgba(0,0,0,.15); color: white; text-transform: uppercase; }
+ .shop-for__card:focus-visible { outline-offset: -4px; }
 }
