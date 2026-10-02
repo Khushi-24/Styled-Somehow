@@ -128,7 +128,7 @@ button { color: inherit; font: inherit; }
 .product-thumbnails button[aria-pressed="true"] { border-color: #111; }
 .product-thumbnails img { display: block; width: 72px; height: 90px; object-fit: cover; }
 .product-kicker { margin: 8px 0 16px; font-size: .7rem; font-weight: 800; letter-spacing: .18em; }
-.product-information h1 { margin: 0 0 22px; font-size: clamp(1.8rem,3vw,2.6rem); line-height: 1.12; letter-spacing: -.04em; }
+.product-information h1 { margin: 0 0 22px; padding-top: .2em; font-size: clamp(1.8rem,3vw,2.6rem); line-height: 1.4; letter-spacing: -.04em; overflow-wrap: anywhere; }
 .product-price--large { font-size: 1.45rem; }
 .product-description { margin: 24px 0; color: #555; line-height: 1.65; }
 .product-highlights { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; border-block: 1px solid #ddd; padding: 20px 0; margin: 0 0 24px; }
@@ -208,3 +208,6 @@ button { color: inherit; font: inherit; }
 .collection-banner--women { position: relative; height: clamp(320px, 42vw, 640px); }
 .collection-banner--women img { height: 100%; object-fit: cover; object-position: center 30%; }
 @media(max-width: 620px) { .collection-banner--women { height: 420px; } }
+
+.product-gallery__slide--detail { background: #f4efee; }
+.product-gallery__slide--detail img { object-fit: contain; }

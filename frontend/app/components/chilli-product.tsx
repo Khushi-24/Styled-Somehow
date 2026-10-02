@@ -32,7 +32,7 @@ export default function ChilliProduct({ returnUrl = "/#new-in-product-chilli-cru
     <div className="product-gallery__rail" ref={gallery} onScroll={event => {const el = event.currentTarget; setPhoto(Math.round(el.scrollLeft / el.clientWidth));}}>
      {[0, 1, 2, 3].map((index) => {
       const imageIndex = index === 0 ? 0 : index === 1 ? 1 : index === 2 ? 1 : 2;
-      return <div className="product-gallery__slide" key={index} role="group" aria-label={`Photo ${index + 1} of 4`}>
+      return <div className={imageIndex === images.length - 1 ? "product-gallery__slide product-gallery__slide--detail" : "product-gallery__slide"} key={index} role="group" aria-label={`Photo ${index + 1} of 4`}>
        <Image src={images[imageIndex]} alt={index === 1 ? "Chilli Crush style highlights" : descriptions[imageIndex]} fill sizes="(max-width: 820px) 100vw, 55vw" preload={index === 0} />
        {index === 1 && <div className="gallery-highlights"><h2>Style<br />Highlights</h2><dl><div><dt>Composition</dt><dd>100% Cotton</dd></div><div><dt>GSM</dt><dd>240</dd></div><div><dt>Colour</dt><dd>Black</dd></div><div><dt>Sleeve length</dt><dd>Short Sleeve</dd></div><div><dt>Fit</dt><dd>Oversized Fit</dd></div></dl></div>}
       </div>;
