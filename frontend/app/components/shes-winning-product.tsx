@@ -5,7 +5,7 @@ import { useRef, useState } from "react";
 const images = ["/images/shes-winning-1.webp", "/images/shes-winning-2.webp", "/images/shes-winning-detail.webp"];
 const descriptions = ["She’s Winning oversized black T-shirt, front view", "She’s Winning oversized black T-shirt, alternate pose", "Close-up of pink statement print"];
 const sizes = ["S", "M", "L", "XL"];
-export default function ShesWinningProduct() {
+export default function ShesWinningProduct({ returnUrl = "/#new-in-product-shes-winning" }: { returnUrl?: string }) {
  const [photo, setPhoto] = useState(0);
  const gallery = useRef<HTMLDivElement>(null);
  function movePhoto(direction: number) {
@@ -25,7 +25,7 @@ export default function ShesWinningProduct() {
   } catch { setMessage("Could not save your cart. Please try again."); }
  }
  return <main className="product-page">
-  <nav className="product-nav" aria-label="Product navigation"><Link href="/" className="brand-logo" aria-label="Styled Somehow home"><span>STYLED</span><span>SOMEHOW</span></Link><Link href="/#new-in-product-shes-winning">← Continue shopping</Link></nav>
+  <nav className="product-nav" aria-label="Product navigation"><Link href="/" className="brand-logo" aria-label="Styled Somehow home"><span>STYLED</span><span>SOMEHOW</span></Link><Link href={returnUrl}>← Continue shopping</Link></nav>
   <p className="product-breadcrumb"><Link href="/">Home</Link> / She’s Winning</p>
   <div className="product-layout">
    <section className="product-gallery" aria-label="Product photos">

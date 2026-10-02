@@ -204,3 +204,7 @@ button { color: inherit; font: inherit; }
 .product-colours button[aria-pressed="true"] { border: 2px solid #111; padding: 7px 13px; }
 .colour-swatch { width: 20px; height: 20px; border: 1px solid #aaa; border-radius: 50%; }
 .collection-colours { color: #666; font-size: .8rem; margin-top: 10px; }
+
+.collection-banner--women { position: relative; height: clamp(320px, 42vw, 640px); }
+.collection-banner--women img { height: 100%; object-fit: cover; object-position: center 30%; }
+@media(max-width: 620px) { .collection-banner--women { height: 420px; } }

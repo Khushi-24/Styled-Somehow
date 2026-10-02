@@ -5,7 +5,7 @@ import { useRef, useState } from "react";
 const images = ["/images/cherry-zest-1.webp", "/images/cherry-zest-2.webp", "/images/cherry-zest-detail.webp"];
 const descriptions = ["Cherry Zest oversized white T-shirt, front view", "Cherry Zest oversized white T-shirt, alternate pose", "Close-up of cherry and citrus print"];
 const sizes = ["S", "M", "L", "XL"];
-export default function CherryProduct() {
+export default function CherryProduct({ returnUrl = "/#new-in-product-cherry-zest" }: { returnUrl?: string }) {
  const [photo, setPhoto] = useState(0);
  const gallery = useRef<HTMLDivElement>(null);
  function movePhoto(direction: number) {
@@ -25,7 +25,7 @@ export default function CherryProduct() {
   } catch { setMessage("Could not save your cart. Please try again."); }
  }
  return <main className="product-page">
-  <nav className="product-nav" aria-label="Product navigation"><Link href="/" className="brand-logo" aria-label="Styled Somehow home"><span>STYLED</span><span>SOMEHOW</span></Link><Link href="/#new-in-product-cherry-zest">← Continue shopping</Link></nav>
+  <nav className="product-nav" aria-label="Product navigation"><Link href="/" className="brand-logo" aria-label="Styled Somehow home"><span>STYLED</span><span>SOMEHOW</span></Link><Link href={returnUrl}>← Continue shopping</Link></nav>
   <p className="product-breadcrumb"><Link href="/">Home</Link> / Cherry Zest</p>
   <div className="product-layout">
    <section className="product-gallery" aria-label="Product photos">
