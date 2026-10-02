@@ -50,6 +50,14 @@ export default function NewIn() {
     <div className="new-in__image"><Image src="/images/shes-winning-1.webp" alt="Black She’s Winning oversized T-shirt with pink statement artwork" fill sizes="(max-width: 620px) 70vw, (max-width: 980px) 45vw, 25vw" /><span className="new-in__badge">NEW</span></div>
     <h3>She’s Winning Oversized T-Shirt</h3><p className="product-price"><del>₹900</del><span>₹599</span><span className="product-saving">Save 33%</span></p>
    </Link>
+  </article><article id="new-in-product-chilli-crush" className="new-in__product">
+   <Link href="/products/chilli-crush-oversized-t-shirt" onClick={event => {
+     if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+     window.history.replaceState(window.history.state, "", `${window.location.pathname}${window.location.search}#new-in-product-chilli-crush`);
+   }}>
+    <div className="new-in__image"><Image src="/images/chilli-crush-1.webp" alt="Black Chilli Crush oversized T-shirt with red chilli artwork on pink" fill sizes="(max-width: 620px) 70vw, (max-width: 980px) 45vw, 25vw" /><span className="new-in__badge">NEW</span></div>
+    <h3>Chilli Crush Oversized T-Shirt</h3><p className="product-price"><del>₹900</del><span>₹599</span><span className="product-saving">Save 33%</span></p>
+   </Link>
   </article></div>
  </section>;
 }

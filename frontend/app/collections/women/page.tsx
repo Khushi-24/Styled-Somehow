@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 export const metadata: Metadata = { title: "Women’s Collection | styled_somehow", description: "Explore women’s oversized graphic T-shirts from styled_somehow." };
 const products = [
+ {slug: "chilli-crush", name: "Chilli Crush Oversized T-Shirt", image: "/images/chilli-crush-1.webp", alt: "Black Chilli Crush oversized T-shirt with red chilli artwork on pink", original: "900", price: "599", saving: "33"},
  {slug: "cherry-zest", name: "Cherry Zest Oversized T-Shirt", image: "/images/cherry-zest-1.webp", alt: "White Cherry Zest oversized T-shirt with cherry and citrus artwork", original: "999", price: "599", saving: "40"},
  {slug: "shes-winning", name: "She’s Winning Oversized T-Shirt", image: "/images/shes-winning-1.webp", alt: "Black She’s Winning oversized T-shirt with pink statement artwork", original: "900", price: "599", saving: "33"},
 ];
