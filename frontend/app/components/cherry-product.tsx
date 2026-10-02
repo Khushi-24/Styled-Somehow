@@ -34,7 +34,7 @@ export default function CherryProduct() {
       const imageIndex = index === 0 ? 0 : index === 1 ? 1 : index === 2 ? 1 : 2;
       return <div className="product-gallery__slide" key={index} role="group" aria-label={`Photo ${index + 1} of 4`}>
        <Image src={images[imageIndex]} alt={index === 1 ? "Cherry Zest style highlights" : descriptions[imageIndex]} fill sizes="(max-width: 820px) 100vw, 55vw" preload={index === 0} />
-       {index === 1 && <div className="gallery-highlights"><h2>Style<br />Highlights</h2><dl><div><dt>GSM</dt><dd>240</dd></div><div><dt>Colour</dt><dd>White</dd></div><div><dt>Sleeve length</dt><dd>Short Sleeve</dd></div><div><dt>Fit</dt><dd>Oversized Fit</dd></div></dl></div>}
+       {index === 1 && <div className="gallery-highlights"><h2>Style<br />Highlights</h2><dl><div><dt>Composition</dt><dd>100% Cotton</dd></div><div><dt>GSM</dt><dd>240</dd></div><div><dt>Colour</dt><dd>White</dd></div><div><dt>Sleeve length</dt><dd>Short Sleeve</dd></div><div><dt>Fit</dt><dd>Oversized Fit</dd></div></dl></div>}
       </div>;
      })}
     </div>
@@ -44,12 +44,12 @@ export default function CherryProduct() {
     <p className="product-kicker">NEW IN</p><h1 id="product-title">Cherry Zest Oversized T-Shirt</h1>
     <p className="product-price product-price--large"><del>₹999</del><span>₹599</span><span className="product-saving">Save 40%</span></p>
     <p className="product-description">A little sweet, a little tangy. Cherry-and-citrus artwork on a white oversized tee.</p>
-    <dl className="product-highlights"><div><dt>GSM</dt><dd>240</dd></div><div><dt>Colour</dt><dd>White</dd></div><div><dt>Fit</dt><dd>Oversized</dd></div><div><dt>Sleeves</dt><dd>Short</dd></div></dl>
+    <dl className="product-highlights"><div><dt>Composition</dt><dd>100% Cotton</dd></div><div><dt>GSM</dt><dd>240</dd></div><div><dt>Colour</dt><dd>White</dd></div><div><dt>Fit</dt><dd>Oversized</dd></div><div><dt>Sleeves</dt><dd>Short</dd></div></dl>
     <fieldset className="product-sizes"><legend>Size{size ? `: ${size}` : " — select your size"}</legend><div>{sizes.map(value => <button type="button" key={value} aria-pressed={size === value} onClick={() => {setSize(value);setMessage("");}}>{value}</button>)}</div></fieldset>
     <details className="product-details"><summary>Size guide</summary><p>Temporary reference: Bonkers Corner oversized T-shirt sizing. Product measurements will be updated when confirmed.</p><table className="product-size-table"><caption>Garment measurements in inches</caption><thead><tr><th>Size</th><th>Chest</th><th>Length</th></tr></thead><tbody>{[["S",44,28],["M",46,29],["L",48,30],["XL",51,30.5]].map(([label,chest,length]) => <tr key={label}><th scope="row">{label}</th><td>{chest}</td><td>{length}</td></tr>)}</tbody></table></details>
     <button className="product-add" type="button" disabled={!size} onClick={addToCart}>{size ? "Add to cart" : "Select a size"}</button>
     <p className="product-cart-message" role="status">{message}</p>
-    <details className="product-details" open><summary>Product details</summary><p>White oversized T-shirt with a cherry-and-citrus front graphic, pink and red stripes, and a stamp-style border. 240 GSM fabric.</p></details>
+    <details className="product-details" open><summary>Product details</summary><p>White oversized T-shirt with a cherry-and-citrus front graphic, pink and red stripes, and a stamp-style border. 240 GSM, 100% cotton fabric.</p></details>
    </section>
   </div>
  </main>;
