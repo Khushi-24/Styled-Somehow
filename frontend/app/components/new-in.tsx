@@ -13,6 +13,14 @@ export default function NewIn() {
     <div className="new-in__image"><Image src="/images/cherry-zest-1.webp" alt="White Cherry Zest oversized T-shirt with cherry and citrus artwork" fill sizes="(max-width: 620px) 70vw, (max-width: 980px) 45vw, 25vw" /><span className="new-in__badge">NEW</span></div>
     <h3>Cherry Zest Oversized T-Shirt</h3><p className="product-price"><del>₹999</del><span>₹599</span><span className="product-saving">Save 40%</span></p>
    </Link>
+  </article><article className="new-in__product">
+   <Link href="/products/untamed-torque-oversized-t-shirt" onClick={event => {
+     if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+     window.history.replaceState(window.history.state, "", `${window.location.pathname}${window.location.search}#new-in`);
+   }}>
+    <div className="new-in__image"><Image src="/images/untamed-torque-front.webp" alt="White Untamed Torque oversized T-shirt with split-car artwork" fill sizes="(max-width: 620px) 70vw, (max-width: 980px) 45vw, 25vw" /><span className="new-in__badge">NEW</span></div>
+    <h3>Untamed Torque Oversized T-Shirt</h3><p className="product-price"><del>₹1,200</del><span>₹999</span><span className="product-saving">Save 17%</span></p>
+   </Link>
   </article></div>
  </section>;
 }

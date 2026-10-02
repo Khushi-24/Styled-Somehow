@@ -182,3 +182,5 @@ button { color: inherit; font: inherit; }
  .product-information { height: 100%; overflow-y: auto; overscroll-behavior-y: contain; padding-right: 12px; }
  .product-highlights { grid-template-columns: repeat(3,minmax(0,1fr)); }
 }
+
+@media(max-width: 620px) { .new-in__grid { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: 70%; overflow-x: auto; gap: 16px; scroll-snap-type: x mandatory; } .new-in__product { scroll-snap-align: start; min-width: 0; } }
