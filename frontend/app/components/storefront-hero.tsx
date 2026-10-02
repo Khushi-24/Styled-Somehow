@@ -27,6 +27,9 @@ function Icon({ name }: { name: "search" | "user" | "bag" | "menu" | "close" }) 
 }
 
 export default function StorefrontHero() {
+  function rememberHome() {
+    window.history.replaceState(window.history.state, "", `${window.location.pathname}${window.location.search}`);
+  }
   const [activeSlide, setActiveSlide] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -49,7 +52,7 @@ export default function StorefrontHero() {
             <button type="button" className="nav-link">COLLECTIONS <span aria-hidden="true">⌄</span></button>
             <div className="dropdown-menu">{collectionLinks.map(([label, href]) => <Link key={label} href={href}>{label}</Link>)}</div>
           </div>
-          <Link className="nav-link" href="/collections/men">MEN</Link>
+          <Link className="nav-link" href="/collections/men" onClick={rememberHome}>MEN</Link>
           <Link className="nav-link" href="/collections/women">WOMEN</Link>
           <Link className="nav-link" href="/collections/couple-tshirts">COUPLE T-SHIRTS</Link>
         </nav>
@@ -67,7 +70,7 @@ export default function StorefrontHero() {
         <Link href="/collections/graphic-tees" onClick={() => setMenuOpen(false)}>Graphic Tees</Link>
         <Link href="/collections/plain-tees" onClick={() => setMenuOpen(false)}>Plain Tees</Link>
         <Link href="/collections/joggers" onClick={() => setMenuOpen(false)}>Joggers</Link>
-        <Link href="/collections/men" onClick={() => setMenuOpen(false)}>Men</Link>
+        <Link href="/collections/men" onClick={() => { rememberHome(); setMenuOpen(false); }}>Men</Link>
         <Link href="/collections/women" onClick={() => setMenuOpen(false)}>Women</Link>
         <Link href="/collections/couple-tshirts" onClick={() => setMenuOpen(false)}>Couple T-shirts</Link>
         <div className="mobile-secondary-links"><Link href="/account">Account</Link><button type="button">Search</button></div>
