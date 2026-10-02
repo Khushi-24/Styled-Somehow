@@ -25,7 +25,7 @@ export default function CherryProduct() {
   } catch { setMessage("Could not save your cart. Please try again."); }
  }
  return <main className="product-page">
-  <nav className="product-nav" aria-label="Product navigation"><Link href="/" className="brand-logo" aria-label="Styled Somehow home"><span>STYLED</span><span>SOMEHOW</span></Link><Link href="/#new-in">← Continue shopping</Link></nav>
+  <nav className="product-nav" aria-label="Product navigation"><Link href="/" className="brand-logo" aria-label="Styled Somehow home"><span>STYLED</span><span>SOMEHOW</span></Link><Link href="/#new-in-product-cherry-zest">← Continue shopping</Link></nav>
   <p className="product-breadcrumb"><Link href="/">Home</Link> / Cherry Zest</p>
   <div className="product-layout">
    <section className="product-gallery" aria-label="Product photos">
