@@ -56,7 +56,15 @@ export default function NewIn() {
      window.history.replaceState(window.history.state, "", `${window.location.pathname}${window.location.search}#new-in-product-chilli-crush`);
    }}>
     <div className="new-in__image"><Image src="/images/chilli-crush-1.webp" alt="Black Chilli Crush oversized T-shirt with red chilli artwork on pink" fill sizes="(max-width: 620px) 70vw, (max-width: 980px) 45vw, 25vw" /><span className="new-in__badge">NEW</span></div>
-    <h3>Chilli Crush Oversized T-Shirt</h3><p className="product-price"><del>₹900</del><span>₹599</span><span className="product-saving">Save 33%</span></p>
+    <h3>Chilli Crush Oversized T-Shirt</h3><p className="product-price"><del>₹900</del><span>₹699</span><span className="product-saving">Save 22%</span></p>
+   </Link>
+  </article><article id="new-in-product-bitchari" className="new-in__product">
+   <Link href="/products/bitchari-oversized-t-shirt" onClick={event => {
+     if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+     window.history.replaceState(window.history.state, "", `${window.location.pathname}${window.location.search}#new-in-product-bitchari`);
+   }}>
+    <div className="new-in__image"><Image src="/images/bitchari-1.webp" alt="Black Bitchआरी oversized T-shirt with yellow lettering with pink shadow" fill sizes="(max-width: 620px) 70vw, (max-width: 980px) 45vw, 25vw" /><span className="new-in__badge">NEW</span></div>
+    <h3>Bitchआरी Oversized T-Shirt</h3><p className="product-price"><del>₹900</del><span>₹599</span><span className="product-saving">Save 33%</span></p>
    </Link>
   </article></div>
  </section>;
