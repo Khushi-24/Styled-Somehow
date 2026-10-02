@@ -25,7 +25,7 @@ export default function CherryProduct() {
   } catch { setMessage("Could not save your cart. Please try again."); }
  }
  return <main className="product-page">
-  <nav className="product-nav" aria-label="Product navigation"><Link href="/" className="brand-logo" aria-label="Styled Somehow home"><span>STYLED</span><span>SOMEHOW</span></Link><Link href="/">← Continue shopping</Link></nav>
+  <nav className="product-nav" aria-label="Product navigation"><Link href="/" className="brand-logo" aria-label="Styled Somehow home"><span>STYLED</span><span>SOMEHOW</span></Link><Link href="/#new-in">← Continue shopping</Link></nav>
   <p className="product-breadcrumb"><Link href="/">Home</Link> / Cherry Zest</p>
   <div className="product-layout">
    <section className="product-gallery" aria-label="Product photos">
@@ -41,7 +41,7 @@ export default function CherryProduct() {
     <div className="product-gallery__controls"><button type="button" onClick={() => movePhoto(-1)} aria-label="Previous photo">‹</button><span aria-live="polite">{photo + 1} / 4</span><button type="button" onClick={() => movePhoto(1)} aria-label="Next photo">›</button></div>
    </section>
    <section className="product-information" aria-labelledby="product-title">
-    <p className="product-kicker">NEW IN</p><h1 id="product-title">Cherry Zest Oversized T-Shirt</h1>
+    <h1 id="product-title">Cherry Zest Oversized T-Shirt</h1>
     <p className="product-price product-price--large"><del>₹999</del><span>₹599</span><span className="product-saving">Save 40%</span></p>
     <p className="product-description">A little sweet, a little tangy. Cherry-and-citrus artwork on a white oversized tee.</p>
     <dl className="product-highlights"><div><dt>Composition</dt><dd>100% Cotton</dd></div><div><dt>GSM</dt><dd>240</dd></div><div><dt>Colour</dt><dd>White</dd></div><div><dt>Fit</dt><dd>Oversized</dd></div><div><dt>Sleeves</dt><dd>Short</dd></div></dl>
