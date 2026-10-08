@@ -7,28 +7,26 @@ The first admin slice is `/admin`. It uses Spring Boot authentication and a MySQ
 Java 21, the repository Gradle wrapper, MySQL 8+, Node/npm. The current execution environment has Java 17 and cannot download Gradle, so backend compilation/integration checks have not been run here. Frontend lint and production build passed. HTTP rendering checks for home, admin, both collections, existing product pages and unknown-product 404 passed against an isolated catalogue fixture server. Those checks do not verify the Spring backend or browser interactions.
 
 1. Create an empty `styled_somehow` database and a dedicated local database user with permissions for this database. Do not use root for the application.
-2. Export the variables below in your backend terminal; Spring does not load `.env` files automatically. Keep actual secrets out of Git and shell history where possible.
+2. Temporary local settings now live directly in `backend/src/main/resources/application.properties`. Replace `your_database_username` and `your_database_password` with your local MySQL credentials. No environment setup is needed for this local configuration.
 
-```bash
-export DB_URL='jdbc:mysql://localhost:3306/styled_somehow'
-export DB_USERNAME='your_app_user'
-export DB_PASSWORD='your_database_password'
-export ADMIN_USERNAME='your_owner_username'
-export ADMIN_PASSWORD_HASH='your_bcrypt_hash'
-export SESSION_COOKIE_SECURE=false
-export MEDIA_DIRECTORY="$PWD/storage/media"
-bash gradlew bootRun
+The local admin username is `admin`. Set `admin.password-hash` in `application.properties` to a BCrypt hash of a password you choose. No shared password is published. Generate the hash locally in an interactive terminal from the backend folder:
+
+```powershell
+$classpath = .\gradlew.bat -q adminRuntimeClasspath
+java -cp "$classpath" com.styledsomehow.backend.security.PasswordHash
 ```
 
-`ADMIN_PASSWORD_HASH` must be a BCrypt hash of a strong owner password. Generate it locally with a trusted BCrypt tool (cost 12 recommended), or use the password helper:
+The helper prompts for your password without echoing it. Copy the resulting hash into `admin.password-hash`. Keep the completed credentials local. The session cookie is temporarily configured for local HTTP (`secure=false`); production needs HTTPS and secure cookies.
 
-```bash
-java -cp "$(bash gradlew -q adminRuntimeClasspath)" com.styledsomehow.backend.security.PasswordHash
+From the backend directory run:
+
+```powershell
+.\gradlew.bat bootRun
 ```
 
-The helper reads the password without echoing it. The hash itself is printed for placement in the private environment. There is no default admin account/password. Production must use HTTPS and `SESSION_COOKIE_SECURE=true` (the default).
+On Linux/macOS use `bash gradlew bootRun`. Do not commit your real database password after replacing the placeholder. Before deployment, move credentials into private environment configuration, set private admin credentials and enable secure cookies.
 
-3. In the frontend directory, copy `.env.example` to `.env.local`, then:
+3. In the frontend directory, no `.env.local` is required for localhost. The frontend already defaults to `http://127.0.0.1:8080`. Run:
 
 ```bash
 npm install
