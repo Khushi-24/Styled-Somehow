@@ -8,6 +8,7 @@ import java.util.List;
 @Entity
 @Table(name="products")
 public class Product {
+ @Transient @com.fasterxml.jackson.annotation.JsonProperty(access=com.fasterxml.jackson.annotation.JsonProperty.Access.READ_ONLY) public java.util.Map<String,java.util.Map<String,Boolean>> availability;
  @Id @GeneratedValue(strategy=GenerationType.IDENTITY) public Long id;
  @Version public Long version;
  @NotBlank @Size(max=100) @Pattern(regexp="[a-z0-9]+(?:-[a-z0-9]+)*") @Column(unique=true,nullable=false,length=100) public String slug;

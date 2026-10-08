@@ -67,3 +67,15 @@ Backend tests use an isolated H2 database in MySQL compatibility mode and Flyway
 Acceptance: unauthorized access rejected; CSRF-free mutations rejected; incorrect login rejected; real login works; upload photo; create draft hidden publicly; publish visible in the chosen collection/New In/detail; edit price; archive hidden; stale concurrent edit rejected; logout rejects mutations; restart preserves edits/media. On 390px mobile and desktop verify original logo, gallery swipe/rotation, full artwork, fixed desktop details, colour photos/video, and return to the exact originating card.
 
 Automatic shipping is the chosen plan, but its provider remains unselected; no courier account is connected or booking request sent by this code.
+
+## Shared blank inventory
+
+Open `/admin/inventory` from **Manage stock** after signing in. All products use one confirmed oversized blank type. Stock is shared by colour and size, not duplicated per artwork. Exact colour names `White` and `Black` map to those stock pools; other colours are unavailable until their inventory support is added.
+
+V2 imports White and Black S/M/L at 12 each, XL at zero, once via Flyway. Do not edit V1 or rerun opening quantities manually. Restarting does not reset inventory. Future garment types require separate pools/mapping before use.
+
+Use **Adjust**, enter a positive/negative quantity change and a reason, then save. Negative stock is rejected. The history shows the last 100 changes; older entries remain in the database. Version checks reject stale edits and request identifiers prevent duplicate retries. Low stock threshold is 3; XL remains visible but unavailable until restocked.
+
+Public product availability is shared, and add-to-cart rechecks it. Cart additions do not consume or reserve stock. Reservation/consumption and order concurrency protection will be implemented with checkout; this slice does not make live ordering safe yet.
+
+Check locally: initial total 72; XL disabled on product pages; subtract White S until zero and verify all White designs disable S after reload; restock and verify re-enabled; reason/history shown; restart preserves updates. Backend tests were added but still cannot run in this workspace without Java 21 and reachable Gradle dependencies.

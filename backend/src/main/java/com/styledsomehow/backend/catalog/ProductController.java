@@ -9,9 +9,10 @@ import java.util.*;
 @Transactional
 public class ProductController {
  private final ProductRepository products;
- public ProductController(ProductRepository products){this.products=products;}
- @GetMapping("/api/products") public List<Product> published(){return all().stream().filter(p->p.status==Product.Status.PUBLISHED).toList();}
- @GetMapping("/api/products/{slug}") public Product one(@PathVariable String slug){return products.findBySlug(slug).filter(p->p.status==Product.Status.PUBLISHED).orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND));}
+ private final com.styledsomehow.backend.inventory.InventoryService inventory;
+ public ProductController(ProductRepository products,com.styledsomehow.backend.inventory.InventoryService inventory){this.products=products;this.inventory=inventory;}
+ @GetMapping("/api/products") public List<Product> published(){var availability=inventory.availability();return all().stream().filter(p->p.status==Product.Status.PUBLISHED).peek(p->p.availability=availability).toList();}
+ @GetMapping("/api/products/{slug}") public Product one(@PathVariable String slug){var p=products.findBySlug(slug).filter(v->v.status==Product.Status.PUBLISHED).orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND));p.availability=inventory.availability();return p;}
  @GetMapping("/api/admin/products") public List<Product> all(){return products.findAll().stream().sorted(Comparator.comparingInt((Product p)->p.sortOrder).thenComparing(p->p.id)).toList();}
  @PostMapping("/api/admin/products") @ResponseStatus(HttpStatus.CREATED) public Product create(@Valid @RequestBody Product p){
   if(p.id!=null||p.version!=null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"New product cannot have an ID or version");

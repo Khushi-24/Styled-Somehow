@@ -20,8 +20,10 @@ Remove this file after all launch items are completed and verified. Keep setup a
 - [ ] Video upload/transcoding and image optimization; current Sabr video remains supported.
 
 ## Inventory and fulfilment
-- [ ] Define shared blank garment types, colour/size quantities and design-to-blank mapping.
-- [ ] Admin stock adjustments, movement ledger and low-stock alerts.
+- [x] One shared oversized blank type confirmed; all designs share colour/size stock. Opening: White/Black S/M/L 12 each; XL 0.
+- [x] Admin stock adjustments with reasons, movement ledger and low-stock indicators (3 or fewer).
+- [x] Product size buttons reflect shared stock; cart addition rechecks current availability.
+- [ ] Verify adjustment/history/restart and unavailable sizes against real MySQL.
 - [ ] Atomic checkout reservation, expiry and payment-time stock consumption.
 - [ ] Printing queue/capacity, dispatch lead time and fulfilment statuses.
 - [ ] Pause orders independently of browsing; maintenance mode where needed.
