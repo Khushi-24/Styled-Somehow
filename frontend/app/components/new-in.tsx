@@ -3,7 +3,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect } from "react";
 
-export default function NewIn() {
+import { Product, productAnchor, money, saving } from "../../lib/product";
+export default function NewIn({products}: {products: Product[]}) {
  useEffect(() => {
   let frame = 0;
   function restoreProduct() {
@@ -26,46 +27,14 @@ export default function NewIn() {
  }, []);
  return <section id="new-in" className="new-in" aria-labelledby="new-in-title">
   <header><h2 id="new-in-title">New In</h2><p>Upgrade your closet with everything trendy and new</p></header>
-  <div className="new-in__grid"><article id="new-in-product-cherry-zest" className="new-in__product">
-   <Link href="/products/cherry-zest-oversized-t-shirt" onClick={event => {
-     if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-     window.history.replaceState(window.history.state, "", `${window.location.pathname}${window.location.search}#new-in-product-cherry-zest`);
-   }}>
-    <div className="new-in__image"><Image src="/images/cherry-zest-1.webp" alt="White Cherry Zest oversized T-shirt with cherry and citrus artwork" fill sizes="(max-width: 620px) 70vw, (max-width: 980px) 45vw, 25vw" /><span className="new-in__badge">NEW</span></div>
-    <h3>Cherry Zest Oversized T-Shirt</h3><p className="product-price"><del>₹999</del><span>₹599</span><span className="product-saving">Save 40%</span></p>
-   </Link>
-  </article><article id="new-in-product-untamed-torque" className="new-in__product">
-   <Link href="/products/untamed-torque-oversized-t-shirt" onClick={event => {
-     if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-     window.history.replaceState(window.history.state, "", `${window.location.pathname}${window.location.search}#new-in-product-untamed-torque`);
-   }}>
-    <div className="new-in__image"><Image src="/images/untamed-torque-front.webp" alt="White Untamed Torque oversized T-shirt with split-car artwork" fill sizes="(max-width: 620px) 70vw, (max-width: 980px) 45vw, 25vw" /><span className="new-in__badge">NEW</span></div>
-    <h3>Untamed Torque Oversized T-Shirt</h3><p className="product-price"><del>₹1,200</del><span>₹999</span><span className="product-saving">Save 17%</span></p>
-   </Link>
-  </article><article id="new-in-product-shes-winning" className="new-in__product">
-   <Link href="/products/shes-winning-oversized-t-shirt" onClick={event => {
-     if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-     window.history.replaceState(window.history.state, "", `${window.location.pathname}${window.location.search}#new-in-product-shes-winning`);
-   }}>
-    <div className="new-in__image"><Image src="/images/shes-winning-1.webp" alt="Black She’s Winning oversized T-shirt with pink statement artwork" fill sizes="(max-width: 620px) 70vw, (max-width: 980px) 45vw, 25vw" /><span className="new-in__badge">NEW</span></div>
-    <h3>She’s Winning Oversized T-Shirt</h3><p className="product-price"><del>₹900</del><span>₹599</span><span className="product-saving">Save 33%</span></p>
-   </Link>
-  </article><article id="new-in-product-chilli-crush" className="new-in__product">
-   <Link href="/products/chilli-crush-oversized-t-shirt" onClick={event => {
-     if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-     window.history.replaceState(window.history.state, "", `${window.location.pathname}${window.location.search}#new-in-product-chilli-crush`);
-   }}>
-    <div className="new-in__image"><Image src="/images/chilli-crush-1.webp" alt="Black Chilli Crush oversized T-shirt with red chilli artwork on pink" fill sizes="(max-width: 620px) 70vw, (max-width: 980px) 45vw, 25vw" /><span className="new-in__badge">NEW</span></div>
-    <h3>Chilli Crush Oversized T-Shirt</h3><p className="product-price"><del>₹900</del><span>₹699</span><span className="product-saving">Save 22%</span></p>
-   </Link>
-  </article><article id="new-in-product-bitchari" className="new-in__product">
-   <Link href="/products/bitchari-oversized-t-shirt" onClick={event => {
-     if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-     window.history.replaceState(window.history.state, "", `${window.location.pathname}${window.location.search}#new-in-product-bitchari`);
-   }}>
-    <div className="new-in__image"><Image src="/images/bitchari-1.webp" alt="Black Bitchआरी oversized T-shirt with yellow lettering with pink shadow" fill sizes="(max-width: 620px) 70vw, (max-width: 980px) 45vw, 25vw" /><span className="new-in__badge">NEW</span></div>
-    <h3>Bitchआरी Oversized T-Shirt</h3><p className="product-price"><del>₹900</del><span>₹599</span><span className="product-saving">Save 33%</span></p>
-   </Link>
-  </article></div>
+  <div className="new-in__grid">{products.filter(p => p.newIn).map(product => {
+   const anchor = productAnchor(product);
+   return <article key={product.id} id={`new-in-product-${anchor}`} className="new-in__product"><Link prefetch={false} href={`/products/${product.slug}`} onClick={event => {
+    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    window.history.replaceState(window.history.state, "", `${window.location.pathname}${window.location.search}#new-in-product-${anchor}`);
+   }}><div className="new-in__image"><Image src={product.media[0].url} alt={product.media[0].alt} fill sizes="(max-width: 620px) 70vw, (max-width: 980px) 45vw, 25vw" unoptimized={product.media[0].url.startsWith("/api/")} /><span className="new-in__badge">NEW</span></div>
+    <h3>{product.name}</h3><p className="product-price">{product.originalPrice > product.price && <del>{money(product.originalPrice)}</del>}<span>{money(product.price)}</span>{product.originalPrice > product.price && <span className="product-saving">Save {saving(product)}%</span>}</p>
+   </Link></article>;
+  })}</div>{products.filter(p => p.newIn).length === 0 && <p>New arrivals are on their way.</p>}
  </section>;
 }

@@ -10,7 +10,7 @@ Confirmed by Khushi on 8 October:
 - Continue planning the custom website using the existing stack.
 - Print T-shirts after orders rather than assume every design has finished stock.
 - Launch with prepaid payments first.
-- Book courier shipments manually initially.
+- Use automatic courier booking and tracking updates (provider/account still to be chosen).
 
 Implementation defaults:
 - One Next.js app for storefront and /admin; one Spring Boot app; one MySQL database.
@@ -19,7 +19,7 @@ Implementation defaults:
 - Guest checkout first; customer accounts are deferred.
 - Razorpay is the proposed payment gateway, subject to account approval and confirmed commercial terms.
 - One owner admin initially, with backend-enforced authentication, password hashing, secure session cookies, CSRF protection for cookie-authenticated mutations, login rate limits and TOTP MFA.
-- Manual shipping booking with tracking entered in admin.
+- Automatic shipping integration: booking, labels/AWB and tracking sync, with admin retry and exception handling.
 - Local development first; pay for a server when a deployment rehearsal is useful.
 
 Before checkout can go live, confirm:
@@ -172,7 +172,7 @@ Proposed workflow:
 - Gateway payment order is created with server-calculated total.
 - Verified successful/captured payment converts reservation into allocated blanks and a confirmed order.
 - Printing starts -> consume the allocated blank; log wastage/damage/reprint adjustments.
-- Packed -> manually book courier -> enter carrier/tracking -> dispatched -> delivered.
+- Packed -> create courier shipment automatically -> receive AWB/label -> dispatch/pickup -> courier events update tracking -> delivered.
 - A cancellation before printing returns allocation once; after printing, a printed item is not added back as a blank.
 - Returned printed items need inspection and separate handling; launch admin can mark them unavailable pending review rather than pretend they are unused blanks.
 - Paid orders persist even when new sales are paused.
@@ -197,7 +197,7 @@ Guest cart may remain browser-local for convenience, but backend owns prices, di
 - Apply request limits/validation to login, checkout and uploads.
 
 Initial notifications: order receipt/payment pending where needed, payment confirmation, dispatch/tracking, cancellation/refund update.
-Manual shipping means entered tracking, not automatic courier status sync. Staff may update delivery status manually with a record.
+Automatic shipping must prevent duplicate bookings, verify courier callbacks, handle retries and reconcile missed tracking events. A failed booking stays visible for staff resolution; the chosen provider and any fees are not yet confirmed.
 
 ## 8. Pausing and recovery
 
@@ -227,7 +227,7 @@ Operations: uptime/health checks, disk/memory/CPU alerts, log rotation, certific
 | 1: Catalogue foundation | Shared product model/API and one reusable detail page; preserve all media/prices/navigation | All six products render consistently; no duplicated price sources |
 | 2: Admin and blanks | Owner auth/MFA; product/media editor; collections; blank pools/mappings; stock ledger; pause controls | Product publish/edit/archive works without code; protected APIs reject unauthorised users; shared blank stock correct |
 | 3: Shopping | Cart page, guest address/checkout, shipping configuration and stock reservations | Server totals authoritative; stale cart and simultaneous last-blank tests pass |
-| 4: Payments/orders | Razorpay test mode, webhook/reconciliation/refunds, print queue, manual shipment/tracking, transactional emails | Success/failure/pending/duplicate/late payments and refunds verified; no duplicate order/stock movement |
+| 4: Payments/orders | Razorpay test mode, webhook/reconciliation/refunds, print queue, automatic shipment booking/tracking, transactional emails | Success/failure/pending/duplicate/late payments and refunds verified; no duplicate order/stock movement |
 | 5: Deployment rehearsal | Single-server deployment, persistent media/DB, HTTPS, backup/restore and load tests | 2 GiB capacity either demonstrated or upgrade documented; rollback/restore rehearsed |
 | 6: Launch verification | Approved policies, real stock, live gateway/account/domain and mobile QA | Controlled real payment/refund, correct email/tracking, admin workflow and launch checklist pass |
 
@@ -257,3 +257,7 @@ Future features must be planned without changing stock/payment safety.
 
 This plan prices website infrastructure and standard gateway use, not T-shirt unit economics. Before launch, calculate per-item blank + print + packaging + shipping + gateway + return allowance and margin for each current price.
 The site does not resolve seller tax/registration obligations. Confirm those for the actual business before activating sales.
+
+## Current implementation work
+
+See IMPLEMENTATION_CHECKLIST.md for the temporary completion list and ADMIN_SETUP.md for the first product-management slice. Provider-specific shipping fees and API requirements remain unverified until a courier service is selected.
