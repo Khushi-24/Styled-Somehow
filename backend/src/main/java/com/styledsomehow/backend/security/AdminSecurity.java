@@ -14,7 +14,7 @@ public class AdminSecurity {
  }
  @Bean BCryptPasswordEncoder encoder(){return new BCryptPasswordEncoder(12);}
  @Bean SecurityFilterChain security(HttpSecurity http,LoginThrottle throttle)throws Exception{
-  http.authorizeHttpRequests(a->a.dispatcherTypeMatchers(jakarta.servlet.DispatcherType.ERROR).permitAll().requestMatchers("/api/health","/api/products/**","/api/media/**","/api/auth/csrf","/api/auth/login","/api/cart/quote","/api/checkout","/api/checkout/**").permitAll().requestMatchers("/api/admin/**","/api/auth/me","/api/auth/logout").hasRole("ADMIN").anyRequest().denyAll())
+  http.authorizeHttpRequests(a->a.dispatcherTypeMatchers(jakarta.servlet.DispatcherType.ERROR).permitAll().requestMatchers("/api/health","/api/products/**","/api/media/**","/api/auth/csrf","/api/auth/login","/api/cart/quote","/api/checkout","/api/checkout/**","/api/order-access/**").permitAll().requestMatchers("/api/admin/**","/api/auth/me","/api/auth/logout").hasRole("ADMIN").anyRequest().denyAll())
    .exceptionHandling(e->e.authenticationEntryPoint((r,s,x)->s.sendError(401)).accessDeniedHandler((r,s,x)->s.sendError(403)))
    .formLogin(f->f.loginProcessingUrl("/api/auth/login").successHandler((r,s,a)->s.setStatus(204)).failureHandler((r,s,e)->s.sendError(401)))
    .logout(l->l.logoutUrl("/api/auth/logout").logoutSuccessHandler((r,s,a)->s.setStatus(204)))

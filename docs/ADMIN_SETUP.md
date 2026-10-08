@@ -101,3 +101,32 @@ Acceptance checks:
 6. Verify simultaneous attempts at the last blank allow only one reservation. Test on real MySQL, not only H2.
 
 Frontend lint/build checks run locally. Java integration and concurrency tests have been added but cannot execute in this workspace with its Java 17 and unreachable Gradle download. Run `./gradlew.bat test` using Java 21 locally before proceeding to payments. V3 migration adds reservation/order tables; do not alter already applied V1/V2 migrations.
+
+
+## Secure guest order access (email OTP)
+
+Customers can use `/orders` from another browser with the order reference and checkout email. This is read-only order access, not customer registration or a full account. Homepage account icons now lead to this page. Courier tracking is still pending integration.
+
+Brevo is the initial transactional email provider. Its currently advertised free plan is 300 sends/day shared across all emails (verified 8 October 2026). The application conservatively caps OTP requests at 200 in any rolling 24 hours, five per email/browser per hour, twenty per observed client IP per hour, and one per email per minute. Requests for nonexistent/mismatched orders also consume limits. Behind a reverse proxy configure trusted forwarded client IP handling before launch; otherwise users share the proxy IP limit. Do not trust arbitrary forwarded headers from the public internet.
+
+Create a Brevo account, authenticate the sending domain / verify the sender, and create a transactional API key. In your local `backend/src/main/resources/application.properties` add:
+
+```properties
+email.brevo-api-key=YOUR_PRIVATE_BREVO_API_KEY
+email.sender=YOUR_VERIFIED_SENDER_EMAIL
+order-access.secret=YOUR_PRIVATE_RANDOM_SECRET_AT_LEAST_32_CHARACTERS
+```
+
+Generate the last value locally in PowerShell with:
+
+```powershell
+[guid]::NewGuid().ToString("N") + [guid]::NewGuid().ToString("N")
+```
+
+Never commit these filled values, show them in screenshots, or send them in chat. Production should supply these through private configuration/environment references. Blank/missing settings keep the backend running but disable email order access with a clear unavailable message. No emails are actually sent until configured. No paid provider subscriptions are activated by this code.
+
+Codes expire after ten minutes, permit five attempts and are single-use, keyed with a private HMAC secret, and bound to the requesting browser session. Verification grants read access to exactly one order for thirty minutes, with a Close order access button. A verified guest cannot cancel another browser's checkout through this lookup. Changing the secret invalidates outstanding codes. Failed delivery does not expose provider errors or undo abuse limits. Customers receive a generic response so unmatched details don't disclose orders. Challenge records contain hashes and are removed after thirty days during requests.
+
+Test using a real email address: create a pending checkout, save the reference, open another browser/private window, visit `/orders`, enter the reference and email, retrieve the real email OTP, and verify. Confirm wrong/reused codes fail, a code cannot verify in another browser, and Close removes access. Pending checkouts remain explicitly unpaid; viewing one is not payment confirmation. Actual provider delivery, domain DNS, MySQL migration V4 and mobile layout still need manual verification.
+
+Automatic purchase confirmation emails and customer accounts remain future work alongside verified payment integration.

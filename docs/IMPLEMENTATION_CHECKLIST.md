@@ -60,3 +60,12 @@ Remove this file after all launch items are completed and verified. Keep setup a
 ## Verification updates
 
 Khushi confirmed inventory adjustments/history/persistence tests completed. Cart/checkout implementation exists; real MySQL end-to-end, last-blank concurrency and desktop/mobile checkout QA remain pending. Pending checkout is unpaid and must not enter printing/shipping.
+
+
+## Guest email access
+- [x] Implement read-only cross-browser order access via short-lived email OTP and Brevo delivery adapter.
+- [x] Browser-bound single-use codes, attempt/resend/global limits, hashed storage and session expiry.
+- [ ] Configure private Brevo API key, verified sender/domain and order access secret.
+- [ ] Verify real delivery, MySQL V4 migration, proxy IP handling, desktop/mobile flow and abuse limits.
+- [ ] Optional customer accounts, saved addresses and order history.
+- [ ] Send order confirmations only after verified successful payment.

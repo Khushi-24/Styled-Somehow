@@ -61,7 +61,7 @@ export default function StorefrontHero() {
         </nav>
         <div className="header-actions">
           <button className="icon-button desktop-action" type="button" aria-label="Search"><Icon name="search" /></button>
-          <Link className="icon-button desktop-action" href="/account" aria-label="Account"><Icon name="user" /></Link>
+          <Link className="icon-button desktop-action" href="/orders" aria-label="View your order"><Icon name="user" /></Link>
           <Link className="icon-button bag-button" href="/cart" aria-label={`Cart, ${cartCount} items`}><Icon name="bag" /><span className="cart-count">{cartCount}</span></Link>
           <button className="icon-button menu-button" type="button" aria-label={menuOpen ? "Close menu" : "Open menu"} aria-expanded={menuOpen} onClick={() => setMenuOpen((open) => !open)}><Icon name={menuOpen ? "close" : "menu"} /></button>
         </div>
@@ -76,7 +76,7 @@ export default function StorefrontHero() {
         <Link href="/collections/men" onClick={() => { rememberHome(); setMenuOpen(false); }}>Men</Link>
         <Link href="/collections/women" onClick={() => { rememberHome(); setMenuOpen(false); }}>Women</Link>
         <Link href="/collections/couple-tshirts" onClick={() => setMenuOpen(false)}>Couple T-shirts</Link>
-        <div className="mobile-secondary-links"><Link href="/account">Account</Link><button type="button">Search</button></div>
+        <div className="mobile-secondary-links"><Link href="/orders">View your order</Link><button type="button">Search</button></div>
       </div>
 
       <div className="slides">
