@@ -24,13 +24,14 @@ Remove this file after all launch items are completed and verified. Keep setup a
 - [x] Admin stock adjustments with reasons, movement ledger and low-stock indicators (3 or fewer).
 - [x] Product size buttons reflect shared stock; cart addition rechecks current availability.
 - [ ] Verify adjustment/history/restart and unavailable sizes against real MySQL.
-- [ ] Atomic checkout reservation, expiry and payment-time stock consumption.
+- [x] Atomic shared-stock reservation, cancellation and expiry for pending checkout.
+- [ ] Payment-time stock consumption and late-payment reconciliation.
 - [ ] Printing queue/capacity, dispatch lead time and fulfilment statuses.
 - [ ] Pause orders independently of browsing; maintenance mode where needed.
 
 ## Cart, checkout, payments and orders
-- [ ] Cart page, quantity changes/removal, guest checkout and address validation.
-- [ ] Authoritative backend price/stock/shipping calculation; no trust in local cart prices.
+- [x] Cart page, quantity changes/removal, guest checkout and address format validation.
+- [x] Authoritative backend price/shared-stock totals; free shipping (₹0), no minimum order.
 - [ ] Razorpay approval, test integration, server payment verification and signed webhooks.
 - [ ] Idempotent orders/payment processing, retries, reconciliation and late-payment handling.
 - [ ] Admin orders, cancellation/refunds and customer support workflow.
@@ -55,3 +56,7 @@ Remove this file after all launch items are completed and verified. Keep setup a
 - [ ] End-to-end payment/refund/shipping checks, concurrency checks and mobile QA.
 - [ ] Reconfirm actual hosting/courier/email costs before paid activation.
 - [ ] Remove this temporary checklist once every launch item is verified.
+
+## Verification updates
+
+Khushi confirmed inventory adjustments/history/persistence tests completed. Cart/checkout implementation exists; real MySQL end-to-end, last-blank concurrency and desktop/mobile checkout QA remain pending. Pending checkout is unpaid and must not enter printing/shipping.

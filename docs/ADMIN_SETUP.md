@@ -79,3 +79,25 @@ Use **Adjust**, enter a positive/negative quantity change and a reason, then sav
 Public product availability is shared, and add-to-cart rechecks it. Cart additions do not consume or reserve stock. Reservation/consumption and order concurrency protection will be implemented with checkout; this slice does not make live ordering safe yet.
 
 Check locally: initial total 72; XL disabled on product pages; subtract White S until zero and verify all White designs disable S after reload; restock and verify re-enabled; reason/history shown; restart preserves updates. Backend tests were added but still cannot run in this workspace without Java 21 and reachable Gradle dependencies.
+
+## Cart and guest checkout — free shipping
+
+Homepage bag and product-page Cart links open `/cart`. Cart quantities/removal persist in this browser. Names/prices are refreshed from the catalogue, and `/api/cart/quote` recalculates totals from database prices. Shipping is always ₹0, with no minimum order value.
+
+`/checkout` collects an Indian delivery address, email, 10-digit mobile and six-digit PIN. Format validation does not yet verify courier serviceability. The server creates an UNPAID `PENDING_PAYMENT` record with immutable line prices and an address snapshot; this is not a confirmed sale. Do not print or dispatch these records. Payment and email integrations are still pending.
+
+Checkout reserves shared colour/size blanks for 15 minutes. Expiry runs every minute and also before checkout operations; cancellation releases immediately. On-hand quantities do not decrease on reservation. Admin inventory shows on-hand, reserved and available separately. Stock adjustments cannot reduce on-hand below existing reservations. Paid-order consumption will be added with payment verification.
+
+Database locks serialize checkout reservation changes across the eight current pools, including different designs using the same blank. READ_COMMITTED transactions avoid stale stock reads. This intentionally conservative small-store approach needs capacity testing before live launch. Retried checkout requests reuse an idempotency identifier; the backend rejects changed payloads and allows one active checkout per browser session. Customer reads/cancellation require that same browser session and an opaque order reference. Logging into admin preserves the guest reference through session rotation; logging out/session expiry can lose access until reservation expiry. Admin `/admin/orders` lists the most recent 100 records for inspection.
+
+Cart remains intact until a future verified payment flow clears it. No pay button, gateway request, customer email or shipment is sent yet. Do not put real customer data into test fixtures or Git. Before live use add payment verification, checkout abuse limits, serviceability, approved policies/tax settings and reservation reconciliation after payment.
+
+Acceptance checks:
+1. Add a tee, open cart, change quantity and remove an item; reload and verify persistence/count.
+2. Check ₹0 shipping and current server prices. Combined White S quantities across Cherry/Untamed must not exceed the shared available blanks.
+3. Create pending checkout; inspect `/admin/orders` and reserved/available inventory.
+4. Repeat submission/reload: no duplicate reservation. Another browser session must not read its reference.
+5. Cancel: available stock returns. Create another and let it expire: stock returns within the next expiry sweep, or immediately on checkout refresh.
+6. Verify simultaneous attempts at the last blank allow only one reservation. Test on real MySQL, not only H2.
+
+Frontend lint/build checks run locally. Java integration and concurrency tests have been added but cannot execute in this workspace with its Java 17 and unreachable Gradle download. Run `./gradlew.bat test` using Java 21 locally before proceeding to payments. V3 migration adds reservation/order tables; do not alter already applied V1/V2 migrations.

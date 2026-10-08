@@ -7,5 +7,6 @@ public class BlankStock {
  public String colour;
  public String size;
  public int quantity;
+ public int reserved;
  public int lowStockThreshold;
 }

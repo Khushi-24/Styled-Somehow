@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import {readCart} from "../../lib/cart";
 import { useEffect, useState } from "react";
 
 const slides = [
@@ -30,6 +31,8 @@ export default function StorefrontHero() {
   function rememberHome() {
     window.history.replaceState(window.history.state, "", `${window.location.pathname}${window.location.search}`);
   }
+  const [cartCount,setCartCount]=useState(0);
+  useEffect(()=>{function update(){setCartCount(readCart().reduce((n,i)=>n+i.quantity,0));}const timer=setTimeout(update,0);window.addEventListener("cart-updated",update);window.addEventListener("storage",update);window.addEventListener("pageshow",update);return()=>{clearTimeout(timer);window.removeEventListener("cart-updated",update);window.removeEventListener("storage",update);window.removeEventListener("pageshow",update);};},[]);
   const [activeSlide, setActiveSlide] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -59,7 +62,7 @@ export default function StorefrontHero() {
         <div className="header-actions">
           <button className="icon-button desktop-action" type="button" aria-label="Search"><Icon name="search" /></button>
           <Link className="icon-button desktop-action" href="/account" aria-label="Account"><Icon name="user" /></Link>
-          <Link className="icon-button bag-button" href="/cart" aria-label="Cart, 0 items"><Icon name="bag" /><span className="cart-count">0</span></Link>
+          <Link className="icon-button bag-button" href="/cart" aria-label={`Cart, ${cartCount} items`}><Icon name="bag" /><span className="cart-count">{cartCount}</span></Link>
           <button className="icon-button menu-button" type="button" aria-label={menuOpen ? "Close menu" : "Open menu"} aria-expanded={menuOpen} onClick={() => setMenuOpen((open) => !open)}><Icon name={menuOpen ? "close" : "menu"} /></button>
         </div>
       </header>

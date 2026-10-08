@@ -2,6 +2,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import {useRef,useState} from "react";
+import {writeCart,readCart} from "../../lib/cart";
 import {Product,money,saving} from "../../lib/product";
 export default function ProductView({product:p,returnUrl}: {product:Product;returnUrl:string}) {
  const [colour,setColour]=useState(p.media[0].colour);
@@ -13,12 +14,12 @@ export default function ProductView({product:p,returnUrl}: {product:Product;retu
  function available(s:string){return p.availability?.[colour]?.[s]===true;}
  async function add(){if(!size||!available(size)){setMessage("This size is out of stock.");return;}try{
   const response=await fetch(`/api/products/${encodeURIComponent(p.slug)}`,{cache:"no-store"});if(!response.ok)throw new Error("Stock check failed");const fresh:Product=await response.json();if(fresh.availability?.[colour]?.[size]!==true){setMessage("This size is now out of stock. Please refresh the page.");return;}
-  const stored=JSON.parse(localStorage.getItem("styled-somehow-cart")||"[]");const cart=Array.isArray(stored)?stored:[];
+  const cart=readCart();
   const item=cart.find((v:{slug:string;size:string;colour:string})=>v.slug===p.slug&&v.size===size&&v.colour===colour);
-  if(item)item.quantity+=1;else cart.push({slug:p.slug,name:p.name,size,colour,price:p.price,quantity:1});
-  localStorage.setItem("styled-somehow-cart",JSON.stringify(cart));setMessage(`${p.name} · ${colour} · ${size} added to your cart.`);
+  if(item&&item.quantity>=20){setMessage("Maximum 20 of this variant per checkout.");return;}if(item)item.quantity+=1;else cart.push({slug:p.slug,name:p.name,size,colour,price:p.price,quantity:1});
+  writeCart(cart);setMessage(`${p.name} · ${colour} · ${size} added to your cart.`);
  }catch{setMessage("Could not save your cart. Please try again.");}}
- return <main className="product-page"><nav className="product-nav" aria-label="Product navigation"><Link className="brand-logo" href="/" aria-label="Styled Somehow home"><span>STYLED</span><span>SOMEHOW</span></Link><Link href={returnUrl}>← Continue shopping</Link></nav><p className="product-breadcrumb"><Link href="/">Home</Link> / {p.name}</p>
+ return <main className="product-page"><nav className="product-nav" aria-label="Product navigation"><Link className="brand-logo" href="/" aria-label="Styled Somehow home"><span>STYLED</span><span>SOMEHOW</span></Link><Link href={returnUrl}>← Continue shopping</Link><Link href="/cart">Cart</Link></nav><p className="product-breadcrumb"><Link href="/">Home</Link> / {p.name}</p>
  <div className="product-layout"><section className="product-gallery" aria-label="Product photos"><div className="product-gallery__rail" ref={gallery} onScroll={e=>setPhoto(Math.round(e.currentTarget.scrollLeft/e.currentTarget.clientWidth))}>
  {slides.map(({media:m,highlights},i)=><div key={`${colour}-${i}`} className={`product-gallery__slide${m.contain&&!highlights?" product-gallery__slide--detail":""}`} role="group" aria-label={`Photo ${i+1} of ${slides.length}`}>
  {m.kind==="video"?<video className="product-video" src={m.url} controls playsInline preload="metadata" aria-label={m.alt}/>:<Image src={m.url} alt={highlights?`${p.name} style highlights`:m.alt} fill sizes="(max-width: 820px) 100vw, 55vw" preload={i===0} unoptimized={m.url.startsWith("/api/")} />}
