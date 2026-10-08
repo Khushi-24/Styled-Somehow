@@ -69,3 +69,6 @@ Khushi confirmed inventory adjustments/history/persistence tests completed. Cart
 - [ ] Verify real delivery, MySQL V4 migration, proxy IP handling, desktop/mobile flow and abuse limits.
 - [ ] Optional customer accounts, saved addresses and order history.
 - [ ] Send order confirmations only after verified successful payment.
+
+- [x] Gmail-only checkout/order lookup validation and helper text.
+- [x] Canonical Gmail inbox daily cap and persisted three-hour block on sixth request, with alias/browser bypass tests.

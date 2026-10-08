@@ -11,15 +11,25 @@ import java.util.*;
 @Service @Transactional
 public class OrderAccessService {
  private final ChallengeRepository challenges;private final AccessBudgetRepository budget;private final OrderRepository orders;private final EmailDelivery mail;private final String secret;
+ private final EmailBlockRepository blocks;
  private final SecureRandom random=new SecureRandom();
  public record Result(String challengeId,String message){}
- public OrderAccessService(ChallengeRepository challenges,AccessBudgetRepository budget,OrderRepository orders,EmailDelivery mail,@Value("${order-access.secret:}") String secret){this.challenges=challenges;this.budget=budget;this.orders=orders;this.mail=mail;this.secret=secret;}
+ public OrderAccessService(ChallengeRepository challenges,AccessBudgetRepository budget,OrderRepository orders,EmailDelivery mail,EmailBlockRepository blocks,@Value("${order-access.secret:}") String secret){this.challenges=challenges;this.budget=budget;this.orders=orders;this.mail=mail;this.secret=secret;this.blocks=blocks;}
  private void configured(){if(secret.length()<32||!mail.ready())throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,"Order email access is not available yet. Please contact the store.");}
  private String hash(String value){try{var mac=javax.crypto.Mac.getInstance("HmacSHA256");mac.init(new javax.crypto.spec.SecretKeySpec(secret.getBytes(java.nio.charset.StandardCharsets.UTF_8),"HmacSHA256"));return HexFormat.of().formatHex(mac.doFinal(value.getBytes(java.nio.charset.StandardCharsets.UTF_8)));}catch(GeneralSecurityException e){throw new IllegalStateException(e);}}
+ @Transactional(noRollbackFor=ResponseStatusException.class)
  public Result request(String orderId,String email,String browser,String ip){
-  configured();budget.lockBudget();Instant now=Instant.now();String eh=hash(email.trim().toLowerCase(Locale.ROOT)),bh=hash(browser),ih=hash(ip);
+  if(!GmailAddress.valid(email))throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Only @gmail.com addresses are accepted");
+  configured();budget.lockBudget();Instant now=Instant.now();String eh=hash(GmailAddress.inbox(email)),bh=hash(browser),ih=hash(ip);
+  var block=blocks.findById(eh).orElse(null);
+  if(block!=null&&block.blockedUntil.isAfter(now))throw new ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS,"OTP access for this Gmail address is blocked for 3 hours after exceeding the daily limit. Please try after "+block.blockedUntil);
+  if(challenges.countByEmailHashAndCreatedAtAfter(eh,now.minusSeconds(86400))>=5){
+   if(block==null){block=new EmailBlock();block.emailHash=eh;block.blockedUntil=now.plusSeconds(10800);blocks.saveAndFlush(block);throw new ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS,"Daily limit exceeded. OTP access for this Gmail address is blocked for 3 hours.");}
+   throw new ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS,"The 3-hour block has ended, but the limit of 5 OTP requests in 24 hours still applies. Please try when an earlier request is more than 24 hours old.");
+  }
+  if(block!=null)blocks.delete(block);
   challenges.deleteByCreatedAtBefore(now.minusSeconds(30L*86400));
-  if(challenges.countByCreatedAtAfter(now.minusSeconds(86400))>=200||challenges.countByEmailHashAndCreatedAtAfter(eh,now.minusSeconds(3600))>=5||challenges.countByIpHashAndCreatedAtAfter(ih,now.minusSeconds(3600))>=20||challenges.countByBrowserHashAndCreatedAtAfter(bh,now.minusSeconds(3600))>=5||challenges.countByEmailHashAndCreatedAtAfter(eh,now.minusSeconds(60))>0)
+  if(challenges.countByCreatedAtAfter(now.minusSeconds(86400))>=200||challenges.countByIpHashAndCreatedAtAfter(ih,now.minusSeconds(3600))>=20||challenges.countByBrowserHashAndCreatedAtAfter(bh,now.minusSeconds(3600))>=5||challenges.countByEmailHashAndCreatedAtAfter(eh,now.minusSeconds(60))>0)
    throw new ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS,"Too many code requests. Please wait before trying again.");
   var challenge=new AccessChallenge();challenge.id=UUID.randomUUID().toString();challenge.emailHash=eh;challenge.browserHash=bh;challenge.ipHash=ih;challenge.createdAt=now;challenge.expiresAt=now.plusSeconds(600);
   String code=String.format(Locale.ROOT,"%06d",random.nextInt(1000000));challenge.codeHash=hash(challenge.id+":"+code);
@@ -33,6 +43,7 @@ public class OrderAccessService {
  // Return failure instead of throwing, so failed attempts are committed.
  public Optional<String> verify(String id,String code,String browser){
   configured();budget.lockBudget();var found=challenges.findById(id);if(found.isEmpty())return Optional.empty();var c=found.get();
+  if(blocks.findById(c.emailHash).filter(b->b.blockedUntil.isAfter(Instant.now())).isPresent())return Optional.empty();
   if(!c.browserHash.equals(hash(browser))||c.consumed||c.attempts>=5||!c.expiresAt.isAfter(Instant.now()))return Optional.empty();
   c.attempts++;
   boolean matches=MessageDigest.isEqual(c.codeHash.getBytes(java.nio.charset.StandardCharsets.US_ASCII),hash(c.id+":"+code).getBytes(java.nio.charset.StandardCharsets.US_ASCII));

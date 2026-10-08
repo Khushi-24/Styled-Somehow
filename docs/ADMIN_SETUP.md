@@ -107,7 +107,7 @@ Frontend lint/build checks run locally. Java integration and concurrency tests h
 
 Customers can use `/orders` from another browser with the order reference and checkout email. This is read-only order access, not customer registration or a full account. Homepage account icons now lead to this page. Courier tracking is still pending integration.
 
-Brevo is the initial transactional email provider. Its currently advertised free plan is 300 sends/day shared across all emails (verified 8 October 2026). The application conservatively caps OTP requests at 200 in any rolling 24 hours, five per email/browser per hour, twenty per observed client IP per hour, and one per email per minute. Requests for nonexistent/mismatched orders also consume limits. Behind a reverse proxy configure trusted forwarded client IP handling before launch; otherwise users share the proxy IP limit. Do not trust arbitrary forwarded headers from the public internet.
+Brevo is the initial transactional email provider. Its currently advertised free plan is 300 sends/day shared across all emails (verified 8 October 2026). The application conservatively caps OTP requests at 200 in any rolling 24 hours, five per canonical Gmail inbox per rolling 24 hours, five per browser per hour, twenty per observed client IP per hour, and one per email per minute. Requests for nonexistent/mismatched orders also consume limits. Behind a reverse proxy configure trusted forwarded client IP handling before launch; otherwise users share the proxy IP limit. Do not trust arbitrary forwarded headers from the public internet.
 
 Create a Brevo account, authenticate the sending domain / verify the sender, and create a transactional API key. In your local `backend/src/main/resources/application.properties` add:
 
@@ -130,3 +130,12 @@ Codes expire after ten minutes, permit five attempts and are single-use, keyed w
 Test using a real email address: create a pending checkout, save the reference, open another browser/private window, visit `/orders`, enter the reference and email, retrieve the real email OTP, and verify. Confirm wrong/reused codes fail, a code cannot verify in another browser, and Close removes access. Pending checkouts remain explicitly unpaid; viewing one is not payment confirmation. Actual provider delivery, domain DNS, MySQL migration V4 and mobile layout still need manual verification.
 
 Automatic purchase confirmation emails and customer accounts remain future work alongside verified payment integration.
+
+
+### Gmail-only and daily request blocks
+
+Checkout and order lookup accept only the exact `gmail.com` domain (case-insensitive), with visible field hints and backend validation. This excludes legitimate customers using other providers and does not guarantee a Gmail account is not disposable. Existing non-Gmail orders cannot use the new OTP lookup; contact the store instead.
+
+Gmail dotted addresses and +tags share one inbox limit. Five accepted OTP requests are allowed per rolling 24 hours. The sixth starts a persisted three-hour block on requests and code verification for that inbox, across browser sessions/IP addresses. Repeated requests during the block do not extend it. After three hours, the five-per-24-hour allowance still applies until an older request ages out; the block does not grant five extra requests. Once quota is available and the block has ended, requests resume normally. Failed delivery and unmatched references count as accepted requests; invalid-domain submissions and attempts rejected by the minute/IP/browser/global limits do not create a sent-code request.
+
+V5 clears pre-existing short-lived OTP challenges to apply canonical inbox hashing consistently. Existing orders and stock are preserved. Apply migrations by restarting the backend after pulling. Private keys/secrets remain unchanged.

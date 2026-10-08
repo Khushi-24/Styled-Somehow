@@ -12,7 +12,7 @@ import java.util.*;
 public class OrderAccessController {
  private final OrderAccessService access;private final CheckoutService checkout;private final OrderRepository orders;
  public OrderAccessController(OrderAccessService access,CheckoutService checkout,OrderRepository orders){this.access=access;this.checkout=checkout;this.orders=orders;}
- public record Request(@NotBlank @Pattern(regexp="[a-fA-F0-9-]{36}") String orderId,@NotBlank @Email @Size(max=180) String email){}
+ public record Request(@NotBlank @Pattern(regexp="[a-fA-F0-9-]{36}") String orderId,@NotBlank @Email @Pattern(regexp=GmailAddress.PATTERN,message="Only @gmail.com addresses are accepted") @Size(max=180) String email){}
  public record Verify(@NotBlank @Pattern(regexp="[a-fA-F0-9-]{36}") String challengeId,@NotBlank @Pattern(regexp="[0-9]{6}") String code){}
  private String browser(HttpSession session){synchronized(session){var key=session.getAttribute("order-access-browser");if(key==null){key=UUID.randomUUID().toString();session.setAttribute("order-access-browser",key);}return key.toString();}}
  @PostMapping("/request") public OrderAccessService.Result request(@Valid @RequestBody Request request,HttpServletRequest servlet){return access.request(request.orderId(),request.email(),browser(servlet.getSession()),servlet.getRemoteAddr());}
