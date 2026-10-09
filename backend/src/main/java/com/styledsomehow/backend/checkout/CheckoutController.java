@@ -12,6 +12,6 @@ public class CheckoutController {
  @PostMapping("/api/checkout") public PendingOrder create(@Valid @RequestBody Checkout request,HttpSession session){return checkout.create(request,key(session));}
  @GetMapping("/api/checkout/{id}") public PendingOrder get(@PathVariable String id,HttpSession session){return checkout.get(id,key(session));}
  @PostMapping("/api/checkout/{id}/cancel") public PendingOrder cancel(@PathVariable String id,HttpSession session){return checkout.cancel(id,key(session));}
- private String key(HttpSession session){synchronized(session){var value=session.getAttribute("guest-checkout-key");if(value==null){value=java.util.UUID.randomUUID().toString();session.setAttribute("guest-checkout-key",value);}return CheckoutService.digest(value.toString());}}
+ public static String key(HttpSession session){synchronized(session){var value=session.getAttribute("guest-checkout-key");if(value==null){value=java.util.UUID.randomUUID().toString();session.setAttribute("guest-checkout-key",value);}return CheckoutService.digest(value.toString());}}
  @GetMapping("/api/admin/orders") public List<PendingOrder> orders(){return checkout.adminOrders();}
 }

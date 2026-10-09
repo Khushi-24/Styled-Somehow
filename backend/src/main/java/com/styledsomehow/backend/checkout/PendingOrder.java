@@ -10,6 +10,11 @@ public class PendingOrder {
  @JsonIgnore @Column(length=36) public String requestId;
  @JsonIgnore @Column(length=64) public String requestFingerprint;
  public String status;
+ @JsonIgnore @Column(length=100,unique=true) public String gatewayOrderId;
+ @Column(length=100) public String paymentId;
+ public String paymentMode;
+ @JsonIgnore @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.TIMESTAMP) public Instant paymentCheckedAt;
+ @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.TIMESTAMP) public Instant paidAt;
  @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.TIMESTAMP) public Instant createdAt;
  @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.TIMESTAMP) public Instant expiresAt;
  public int subtotal;

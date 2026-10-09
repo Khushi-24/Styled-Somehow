@@ -139,3 +139,28 @@ Checkout and order lookup accept only the exact `gmail.com` domain (case-insensi
 Gmail dotted addresses and +tags share one inbox limit. Five accepted OTP requests are allowed per rolling 24 hours. The sixth starts a persisted three-hour block on requests and code verification for that inbox, across browser sessions/IP addresses. Repeated requests during the block do not extend it. After three hours, the five-per-24-hour allowance still applies until an older request ages out; the block does not grant five extra requests. Once quota is available and the block has ended, requests resume normally. Failed delivery and unmatched references count as accepted requests; invalid-domain submissions and attempts rejected by the minute/IP/browser/global limits do not create a sent-code request.
 
 V5 clears pre-existing short-lived OTP challenges to apply canonical inbox hashing consistently. Existing orders and stock are preserved. Apply migrations by restarting the backend after pulling. Private keys/secrets remain unchanged.
+
+
+## Razorpay test payments
+
+This release accepts only `rzp_test_` keys. It cannot accept live payments. Keep real credentials private and out of Git. Add these entries only to your local `backend/src/main/resources/application.properties`:
+
+```properties
+payments.razorpay.key-id=YOUR_TEST_KEY_ID
+payments.razorpay.key-secret=YOUR_TEST_KEY_SECRET
+payments.razorpay.webhook-secret=YOUR_PRIVATE_RANDOM_SECRET_AT_LEAST_32_CHARACTERS
+```
+
+Generate the separate webhook secret in PowerShell with `[guid]::NewGuid().ToString("N") + [guid]::NewGuid().ToString("N")`. It is not the Razorpay API secret. Restart the backend (Flyway applies V6), then restart the frontend. In the Razorpay TEST dashboard, enable automatic capture. The backend confirms only captured payments, not authorized payments or an unverified browser success message.
+
+Create a checkout, click **Pay in Razorpay TEST mode**, and complete a Razorpay sandbox payment. Verify PAID/TEST in admin Orders, quantity reduced once in Inventory, and the original reservation released. Retry refreshing/verification and confirm there is no second deduction. Also test failure, modal dismissal, cancellation and payment after the 15-minute reservation expires. A late payment uses available unreserved stock, or enters the persistent refund queue. Refund retries reuse the same idempotency key. Unexpected amounts/currencies or refunds made directly in Razorpay require manual review.
+
+Admin Orders includes payment references, refund references, retry counts and review reasons. Test payments reduce your development inventory; restore quantities through Inventory after testing. Do not dispatch any TEST order.
+
+For webhooks, the backend must have a public HTTPS address; Razorpay cannot call localhost. When that address exists, configure the TEST webhook URL `https://YOUR_BACKEND/api/payments/razorpay/webhook`, with the same local webhook secret, and events `payment.captured`, `payment.authorized`, `payment.failed`, `refund.processed`, `refund.failed`. The webhook verifies the raw request signature and fetches payment details from Razorpay. Duplicate deliveries cannot consume stock twice.
+
+Local testing does not require a public webhook: while the backend is running, a scheduled job rotates through gateway orders and reconciles pending refunds every minute. Large queues can take multiple cycles. **Check payment status** also fetches current gateway data immediately. Background reconciliation continues if the browser closes; it stops when the backend stops.
+
+Automated tests mock the provider. Real sandbox checkout, dashboard capture settings, webhook delivery, refunds, mobile popup behavior and MySQL migration must still be verified locally. Live launch requires a separate review, production credential handling, policies, monitoring, refund operations and disabling test mode; simply replacing keys will not enable live payments.
+
+References: https://razorpay.com/docs/payments/payment-gateway/web-integration/standard/integration-steps/ and https://github.com/razorpay/markdown-docs/blob/master/api/refunds/normal-refunds-idempotent.md

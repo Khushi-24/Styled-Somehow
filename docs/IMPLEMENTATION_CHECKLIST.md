@@ -72,3 +72,13 @@ Khushi confirmed inventory adjustments/history/persistence tests completed. Cart
 
 - [x] Gmail-only checkout/order lookup validation and helper text.
 - [x] Canonical Gmail inbox daily cap and persisted three-hour block on sixth request, with alias/browser bypass tests.
+
+
+### Razorpay TEST integration
+- [x] Server-priced gateway orders and signature/provider verification.
+- [x] Captured payment stock deduction with duplicate protection.
+- [x] Late/cancelled payment handling and persistent idempotent refund retries.
+- [x] Signed webhook endpoint and scheduled reconciliation.
+- [x] Customer test checkout and admin payment/refund visibility.
+- [ ] Real Razorpay sandbox payment, refund, public webhook and mobile checkout verification.
+- [ ] Live onboarding, production secrets and payment launch review.
