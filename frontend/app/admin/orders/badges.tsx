@@ -1,0 +1,5 @@
+const labels:Record<string,string>={PENDING_PAYMENT:"Awaiting payment",PAID:"Paid",EXPIRED:"Expired",CANCELLED:"Cancelled",REFUND_PENDING:"Refund queued",REFUND_REQUESTED:"Refund processing",REFUNDED:"Refunded",PAYMENT_REVIEW:"Needs review",REVIEW_REQUIRED:"Needs review"};
+export function StatusBadge({status}:{status:string}){const tone=status==="PAID"?"success":status==="REFUNDED"?"info":["PAYMENT_REVIEW","REVIEW_REQUIRED"].includes(status)?"danger":status.startsWith("REFUND")||status==="PENDING_PAYMENT"?"warning":"neutral";return <span className={`ops-badge ops-badge--${tone}`}>{labels[status]||status.replaceAll("_"," ")}</span>;}
+export function ModeBadge({mode}:{mode?:string}){return <span className={`ops-badge ops-badge--${mode==="TEST"?"test":mode==="LIVE"?"live":"neutral"}`}>{mode==="TEST"?"TEST · simulated":mode==="LIVE"?"LIVE · real payment": "Mode not assigned"}</span>;}
+export const shortRef=(id:string)=>id.slice(0,8);
+export const dateLabel=(value?:string)=>value?new Date(value).toLocaleString("en-IN",{dateStyle:"medium",timeStyle:"short"}):"—";
