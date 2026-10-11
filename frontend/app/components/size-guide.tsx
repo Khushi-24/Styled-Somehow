@@ -14,7 +14,7 @@ export default function SizeGuide({ sizes }: { sizes: string[] }) {
   const dimension = (inches: number) => unit === "in" ? String(inches) : (inches * 2.54).toFixed(1);
 
   return (
-    <details className="product-details" open>
+    <details className="product-details">
       <summary>Size guide</summary>
       <div className="size-guide-toolbar">
         <p>Garment measurements</p>
