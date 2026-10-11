@@ -1,6 +1,6 @@
 "use client";
 import Image from "next/image";
-import SizeGuide from "./size-guide";
+import SizeGuide, {measurements} from "./size-guide";
 import Link from "next/link";
 import {useRef,useState} from "react";
 import {writeCart,readCart} from "../../lib/cart";
@@ -9,6 +9,7 @@ export default function ProductView({product:p,returnUrl}: {product:Product;retu
  const [colour,setColour]=useState(p.media[0].colour);
  const [size,setSize]=useState(()=>p.sizes.find(s=>p.availability?.[p.media[0].colour]?.[s]===true)??"");const [message,setMessage]=useState("");const [photo,setPhoto]=useState(0);
  const gallery=useRef<HTMLDivElement>(null);
+ const selectedMeasurement=measurements.find(m=>m.size===size);
  const images=p.media.filter(m=>m.colour===colour);
  const slides=[{media:images[0],highlights:false},{media:images[1]?.kind==="image"?images[1]:images[0],highlights:true},...images.slice(1).map(media=>({media,highlights:false}))];
  function move(direction:number){gallery.current?.scrollTo({left:((photo+direction+slides.length)%slides.length)*gallery.current.clientWidth,behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"});}
@@ -28,7 +29,7 @@ export default function ProductView({product:p,returnUrl}: {product:Product;retu
  </div><div className="product-gallery__controls"><button onClick={()=>move(-1)} aria-label="Previous photo">‹</button><span aria-live="polite">{photo+1} / {slides.length}</span><button onClick={()=>move(1)} aria-label="Next photo">›</button></div></section>
  <section className="product-information" aria-labelledby="product-title"><h1 id="product-title">{p.name}</h1><p className="product-price product-price--large">{p.originalPrice>p.price&&<del>{money(p.originalPrice)}</del>}<span>{money(p.price)}</span>{p.originalPrice>p.price&&<span className="product-saving">Save {saving(p)}%</span>}</p><p className="product-description">{p.description}</p><dl className="product-highlights"><div><dt>Composition</dt><dd>{p.composition}</dd></div><div><dt>GSM</dt><dd>{p.gsm}</dd></div><div><dt>Colour</dt><dd>{colour}</dd></div><div><dt>Fit</dt><dd>Oversized</dd></div><div><dt>Sleeves</dt><dd>Short</dd></div></dl>
  {p.colours.length>1&&<fieldset className="product-sizes"><legend>Colour: {colour}</legend><div>{p.colours.map(c=><button key={c} aria-pressed={c===colour} onClick={()=>{setColour(c);setSize(p.sizes.find(s=>p.availability?.[c]?.[s]===true)??"");setPhoto(0);setMessage("");gallery.current?.scrollTo({left:0,top:0,behavior:"instant"});}}>{c}</button>)}</div></fieldset>}
- <fieldset className="product-sizes"><legend>Size{size?`: ${size}`:" — select your size"}</legend><div>{p.sizes.map(s=><button key={s} disabled={!available(s)} title={!available(s)?"Out of stock":undefined} aria-label={`${s}${!available(s)?" — out of stock":""}`} aria-pressed={size===s} onClick={()=>{setSize(s);setMessage("");}}>{s}</button>)}</div></fieldset>
+ <fieldset className="product-sizes"><legend><span className="product-size-heading"><span>Size{size?`: ${size}`:" — select your size"}</span>{selectedMeasurement&&<span className="product-size-measurements"><span>Chest {selectedMeasurement.chest} inches</span><span>Length {selectedMeasurement.length} inches</span></span>}</span></legend><div>{p.sizes.map(s=><button key={s} disabled={!available(s)} title={!available(s)?"Out of stock":undefined} aria-label={`${s}${!available(s)?" — out of stock":""}`} aria-pressed={size===s} onClick={()=>{setSize(s);setMessage("");}}>{s}</button>)}</div></fieldset>
  <p className="stock-availability">{p.sizes.some(available)?"Unavailable sizes are marked as out of stock.":"This colour is currently out of stock."}</p>
  <SizeGuide sizes={p.sizes}/>
  <button className="product-add" disabled={!size||!available(size)} onClick={add}>{size?"Add to cart":"Select a size"}</button><p className="product-cart-message" role="status">{message}</p><details className="product-details" open><summary>Product details</summary><p>{p.details}</p></details></section></div></main>;

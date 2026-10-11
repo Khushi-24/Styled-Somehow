@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useState } from "react";
 
-const measurements = [
+export const measurements = [
   { size: "S", chest: 40, sleeve: 9.7, opening: 7.5, length: 27.5 },
   { size: "M", chest: 43, sleeve: 10.3, opening: 7.8, length: 28.5 },
   { size: "L", chest: 45, sleeve: 10.5, opening: 8.5, length: 29.5 },
