@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import {readCart} from "../../lib/cart";
 import { useEffect, useState } from "react";
 
 const slides = [
@@ -27,6 +28,11 @@ function Icon({ name }: { name: "search" | "user" | "bag" | "menu" | "close" }) 
 }
 
 export default function StorefrontHero() {
+  function rememberHome() {
+    window.history.replaceState(window.history.state, "", `${window.location.pathname}${window.location.search}`);
+  }
+  const [cartCount,setCartCount]=useState(0);
+  useEffect(()=>{function update(){setCartCount(readCart().reduce((n,i)=>n+i.quantity,0));}const timer=setTimeout(update,0);window.addEventListener("cart-updated",update);window.addEventListener("storage",update);window.addEventListener("pageshow",update);return()=>{clearTimeout(timer);window.removeEventListener("cart-updated",update);window.removeEventListener("storage",update);window.removeEventListener("pageshow",update);};},[]);
   const [activeSlide, setActiveSlide] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -49,14 +55,14 @@ export default function StorefrontHero() {
             <button type="button" className="nav-link">COLLECTIONS <span aria-hidden="true">⌄</span></button>
             <div className="dropdown-menu">{collectionLinks.map(([label, href]) => <Link key={label} href={href}>{label}</Link>)}</div>
           </div>
-          <Link className="nav-link" href="/collections/men">MEN</Link>
-          <Link className="nav-link" href="/collections/women">WOMEN</Link>
+          <Link className="nav-link" href="/collections/men" onClick={rememberHome}>MEN</Link>
+          <Link className="nav-link" href="/collections/women" onClick={rememberHome}>WOMEN</Link>
           <Link className="nav-link" href="/collections/couple-tshirts">COUPLE T-SHIRTS</Link>
         </nav>
         <div className="header-actions">
           <button className="icon-button desktop-action" type="button" aria-label="Search"><Icon name="search" /></button>
-          <Link className="icon-button desktop-action" href="/account" aria-label="Account"><Icon name="user" /></Link>
-          <Link className="icon-button bag-button" href="/cart" aria-label="Cart, 0 items"><Icon name="bag" /><span className="cart-count">0</span></Link>
+          <Link className="icon-button desktop-action" href="/orders" aria-label="View your order"><Icon name="user" /></Link>
+          <Link className="icon-button bag-button" href="/cart" aria-label={`Cart, ${cartCount} items`}><Icon name="bag" /><span className="cart-count">{cartCount}</span></Link>
           <button className="icon-button menu-button" type="button" aria-label={menuOpen ? "Close menu" : "Open menu"} aria-expanded={menuOpen} onClick={() => setMenuOpen((open) => !open)}><Icon name={menuOpen ? "close" : "menu"} /></button>
         </div>
       </header>
@@ -67,10 +73,10 @@ export default function StorefrontHero() {
         <Link href="/collections/graphic-tees" onClick={() => setMenuOpen(false)}>Graphic Tees</Link>
         <Link href="/collections/plain-tees" onClick={() => setMenuOpen(false)}>Plain Tees</Link>
         <Link href="/collections/joggers" onClick={() => setMenuOpen(false)}>Joggers</Link>
-        <Link href="/collections/men" onClick={() => setMenuOpen(false)}>Men</Link>
-        <Link href="/collections/women" onClick={() => setMenuOpen(false)}>Women</Link>
+        <Link href="/collections/men" onClick={() => { rememberHome(); setMenuOpen(false); }}>Men</Link>
+        <Link href="/collections/women" onClick={() => { rememberHome(); setMenuOpen(false); }}>Women</Link>
         <Link href="/collections/couple-tshirts" onClick={() => setMenuOpen(false)}>Couple T-shirts</Link>
-        <div className="mobile-secondary-links"><Link href="/account">Account</Link><button type="button">Search</button></div>
+        <div className="mobile-secondary-links"><Link href="/orders">View your order</Link><button type="button">Search</button></div>
       </div>
 
       <div className="slides">

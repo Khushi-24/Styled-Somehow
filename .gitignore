@@ -25,3 +25,7 @@ Thumbs.db
 
 # Logs
 *.log
+# Local catalogue storage and Gradle outputs
+backend/storage/
+backend/.gradle/
+backend/build/
