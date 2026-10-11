@@ -1,5 +1,6 @@
 "use client";
 import Image from "next/image";
+import SizeGuide from "./size-guide";
 import Link from "next/link";
 import {useRef,useState} from "react";
 import {writeCart,readCart} from "../../lib/cart";
@@ -29,6 +30,6 @@ export default function ProductView({product:p,returnUrl}: {product:Product;retu
  {p.colours.length>1&&<fieldset className="product-sizes"><legend>Colour: {colour}</legend><div>{p.colours.map(c=><button key={c} aria-pressed={c===colour} onClick={()=>{setColour(c);setSize("");setPhoto(0);setMessage("");gallery.current?.scrollTo({left:0,top:0,behavior:"instant"});}}>{c}</button>)}</div></fieldset>}
  <fieldset className="product-sizes"><legend>Size{size?`: ${size}`:" — select your size"}</legend><div>{p.sizes.map(s=><button key={s} disabled={!available(s)} title={!available(s)?"Out of stock":undefined} aria-label={`${s}${!available(s)?" — out of stock":""}`} aria-pressed={size===s} onClick={()=>{setSize(s);setMessage("");}}>{s}</button>)}</div></fieldset>
  <p className="stock-availability">{p.sizes.some(available)?"Unavailable sizes are marked as out of stock.":"This colour is currently out of stock."}</p>
- <details className="product-details"><summary>Size guide</summary><p>Temporary reference: Bonkers Corner oversized T-shirt sizing. Product measurements will be updated when confirmed.</p><table className="product-size-table"><caption>Garment measurements in inches</caption><thead><tr><th>Size</th><th>Chest</th><th>Length</th></tr></thead><tbody>{[["S",44,28],["M",46,29],["L",48,30],["XL",51,30.5]].filter(([s])=>p.sizes.includes(String(s))).map(([s,c,l])=><tr key={s}><th scope="row">{s}</th><td>{c}</td><td>{l}</td></tr>)}</tbody></table></details>
+ <SizeGuide sizes={p.sizes}/>
  <button className="product-add" disabled={!size||!available(size)} onClick={add}>{size?"Add to cart":"Select a size"}</button><p className="product-cart-message" role="status">{message}</p><details className="product-details" open><summary>Product details</summary><p>{p.details}</p></details></section></div></main>;
 }
