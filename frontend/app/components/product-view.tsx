@@ -7,7 +7,7 @@ import {writeCart,readCart} from "../../lib/cart";
 import {Product,money,saving} from "../../lib/product";
 export default function ProductView({product:p,returnUrl}: {product:Product;returnUrl:string}) {
  const [colour,setColour]=useState(p.media[0].colour);
- const [size,setSize]=useState("");const [message,setMessage]=useState("");const [photo,setPhoto]=useState(0);
+ const [size,setSize]=useState(()=>p.sizes.find(s=>p.availability?.[p.media[0].colour]?.[s]===true)??"");const [message,setMessage]=useState("");const [photo,setPhoto]=useState(0);
  const gallery=useRef<HTMLDivElement>(null);
  const images=p.media.filter(m=>m.colour===colour);
  const slides=[{media:images[0],highlights:false},{media:images[1]?.kind==="image"?images[1]:images[0],highlights:true},...images.slice(1).map(media=>({media,highlights:false}))];
@@ -27,7 +27,7 @@ export default function ProductView({product:p,returnUrl}: {product:Product;retu
  {highlights&&<div className="gallery-highlights"><h2>Style<br/>Highlights</h2><dl><div><dt>Composition</dt><dd>{p.composition}</dd></div><div><dt>GSM</dt><dd>{p.gsm}</dd></div><div><dt>Colour</dt><dd>{colour}</dd></div><div><dt>Sleeve length</dt><dd>Short Sleeve</dd></div><div><dt>Fit</dt><dd>Oversized Fit</dd></div></dl></div>}</div>)}
  </div><div className="product-gallery__controls"><button onClick={()=>move(-1)} aria-label="Previous photo">‹</button><span aria-live="polite">{photo+1} / {slides.length}</span><button onClick={()=>move(1)} aria-label="Next photo">›</button></div></section>
  <section className="product-information" aria-labelledby="product-title"><h1 id="product-title">{p.name}</h1><p className="product-price product-price--large">{p.originalPrice>p.price&&<del>{money(p.originalPrice)}</del>}<span>{money(p.price)}</span>{p.originalPrice>p.price&&<span className="product-saving">Save {saving(p)}%</span>}</p><p className="product-description">{p.description}</p><dl className="product-highlights"><div><dt>Composition</dt><dd>{p.composition}</dd></div><div><dt>GSM</dt><dd>{p.gsm}</dd></div><div><dt>Colour</dt><dd>{colour}</dd></div><div><dt>Fit</dt><dd>Oversized</dd></div><div><dt>Sleeves</dt><dd>Short</dd></div></dl>
- {p.colours.length>1&&<fieldset className="product-sizes"><legend>Colour: {colour}</legend><div>{p.colours.map(c=><button key={c} aria-pressed={c===colour} onClick={()=>{setColour(c);setSize("");setPhoto(0);setMessage("");gallery.current?.scrollTo({left:0,top:0,behavior:"instant"});}}>{c}</button>)}</div></fieldset>}
+ {p.colours.length>1&&<fieldset className="product-sizes"><legend>Colour: {colour}</legend><div>{p.colours.map(c=><button key={c} aria-pressed={c===colour} onClick={()=>{setColour(c);setSize(p.sizes.find(s=>p.availability?.[c]?.[s]===true)??"");setPhoto(0);setMessage("");gallery.current?.scrollTo({left:0,top:0,behavior:"instant"});}}>{c}</button>)}</div></fieldset>}
  <fieldset className="product-sizes"><legend>Size{size?`: ${size}`:" — select your size"}</legend><div>{p.sizes.map(s=><button key={s} disabled={!available(s)} title={!available(s)?"Out of stock":undefined} aria-label={`${s}${!available(s)?" — out of stock":""}`} aria-pressed={size===s} onClick={()=>{setSize(s);setMessage("");}}>{s}</button>)}</div></fieldset>
  <p className="stock-availability">{p.sizes.some(available)?"Unavailable sizes are marked as out of stock.":"This colour is currently out of stock."}</p>
  <SizeGuide sizes={p.sizes}/>
