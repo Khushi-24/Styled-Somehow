@@ -2,6 +2,7 @@
 import Image from "next/image";
 import SizeGuide, {measurements} from "./size-guide";
 import Link from "next/link";
+import {openCart} from "./cart-drawer";
 import {useRouter} from "next/navigation";
 import {useRef,useState} from "react";
 import {writeCart,readCart} from "../../lib/cart";
@@ -21,9 +22,9 @@ export default function ProductView({product:p,returnUrl}: {product:Product;retu
   const cart=readCart();
   const item=cart.find((v:{slug:string;size:string;colour:string})=>v.slug===p.slug&&v.size===size&&v.colour===colour);
   if(item&&item.quantity>=20){setMessage("Maximum 20 of this variant per checkout.");return;}if(item)item.quantity+=1;else cart.push({slug:p.slug,name:p.name,size,colour,price:p.price,quantity:1});
-  writeCart(cart);if(buyNow){router.push("/checkout");}else{setMessage(`${p.name} · ${colour} · ${size} added to your cart.`);}
+  writeCart(cart);if(buyNow){router.push("/checkout");}else{setMessage(`${p.name} · ${colour} · ${size} added to your cart.`);openCart();}
  }catch{setMessage("Could not save your cart. Please try again.");}finally{setBusy(false);}}
- return <main className="product-page"><nav className="product-nav" aria-label="Product navigation"><Link className="brand-logo" href="/" aria-label="Styled Somehow home"><span>STYLED</span><span>SOMEHOW</span></Link><Link href={returnUrl}>← Continue shopping</Link><Link href="/cart">Cart</Link></nav><p className="product-breadcrumb"><Link href="/">Home</Link> / {p.name}</p>
+ return <main className="product-page"><nav className="product-nav" aria-label="Product navigation"><Link className="brand-logo" href="/" aria-label="Styled Somehow home"><span>STYLED</span><span>SOMEHOW</span></Link><Link href={returnUrl}>← Continue shopping</Link><Link href="/cart" onClick={e=>{e.preventDefault();openCart();}}>Cart</Link></nav><p className="product-breadcrumb"><Link href="/">Home</Link> / {p.name}</p>
  <div className="product-layout"><section className="product-gallery" aria-label="Product photos"><div className="product-gallery__rail" ref={gallery} onScroll={e=>setPhoto(Math.round(e.currentTarget.scrollLeft/e.currentTarget.clientWidth))}>
  {slides.map(({media:m,highlights},i)=><div key={`${colour}-${i}`} className={`product-gallery__slide${m.contain&&!highlights?" product-gallery__slide--detail":""}`} role="group" aria-label={`Photo ${i+1} of ${slides.length}`}>
  {m.kind==="video"?<video className="product-video" src={m.url} controls playsInline preload="metadata" aria-label={m.alt}/>:<Image src={m.url} alt={highlights?`${p.name} style highlights`:m.alt} fill sizes="(max-width: 820px) 100vw, 55vw" preload={i===0} unoptimized={m.url.startsWith("/api/")} />}

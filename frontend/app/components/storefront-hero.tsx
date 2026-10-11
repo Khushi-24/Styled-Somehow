@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import {openCart} from "./cart-drawer";
 import {readCart} from "../../lib/cart";
 import { useEffect, useState } from "react";
 
@@ -62,7 +63,7 @@ export default function StorefrontHero() {
         <div className="header-actions">
           <button className="icon-button desktop-action" type="button" aria-label="Search"><Icon name="search" /></button>
           <Link className="icon-button desktop-action" href="/orders" aria-label="View your order"><Icon name="user" /></Link>
-          <Link className="icon-button bag-button" href="/cart" aria-label={`Cart, ${cartCount} items`}><Icon name="bag" /><span className="cart-count">{cartCount}</span></Link>
+          <Link className="icon-button bag-button" href="/cart" onClick={e=>{e.preventDefault();openCart();}} aria-label={`Cart, ${cartCount} items`}><Icon name="bag" /><span className="cart-count">{cartCount}</span></Link>
           <button className="icon-button menu-button" type="button" aria-label={menuOpen ? "Close menu" : "Open menu"} aria-expanded={menuOpen} onClick={() => setMenuOpen((open) => !open)}><Icon name={menuOpen ? "close" : "menu"} /></button>
         </div>
       </header>
