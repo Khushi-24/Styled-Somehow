@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api")
 public class HealthController {
 
-	@GetMapping("/health ")
+	@GetMapping("/health")
 	public HealthResponse health() {
 		return HealthResponse.of("UP", "styled-somehow-backend");
 	}
