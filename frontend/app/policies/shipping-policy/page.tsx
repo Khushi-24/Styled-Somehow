@@ -1,16 +1,17 @@
 import Link from "next/link";
+import styles from "./shipping-policy.module.css";
 
 export const metadata = { title: "Shipping policy | Styled Somehow" };
 
 export default function ShippingPolicy() {
   return (
-    <main className="shopping-page" style={{ maxWidth: 800 }}>
-      <nav className="product-nav" aria-label="Policy navigation">
+    <main className={styles.page}><div className={styles.shell}>
+      <nav className={styles.nav} aria-label="Policy navigation">
         <Link className="brand-logo" href="/" aria-label="Styled Somehow home"><span>STYLED</span><span>SOMEHOW</span></Link>
         <Link href="/#new-in">Continue shopping</Link>
       </nav>
-      <h1>Shipping policy</h1>
-      <div style={{ lineHeight: 1.8 }}>
+      <header className={styles.hero}><span className={styles.eyebrow}>THE DELIVERY DETAILS</span><h1>Good style.<br/>On its way.</h1><p>Shipping policy</p><span className={styles.benefit}>Free shipping on orders ₹999 &amp; above</span></header>
+      <div className={styles.content}>
         <section aria-labelledby="shipping-charges">
           <h2 id="shipping-charges">What are the shipping charges?</h2>
           <p>Enjoy free shipping when your product subtotal is ₹999 or more, after product discounts. For orders below ₹999, charges depend on your delivery PIN code and are displayed at checkout before you pay.</p>
@@ -34,6 +35,6 @@ export default function ShippingPolicy() {
           <p>Email <a href="mailto:contact@styledsomehow.in" style={{ textDecoration: "underline" }}>contact@styledsomehow.in</a> with your order reference so we can help.</p>
         </section>
       </div>
-    </main>
+    </div></main>
   );
 }
