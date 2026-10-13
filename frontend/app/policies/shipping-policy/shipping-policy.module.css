@@ -3,3 +3,5 @@
 .nav :global(.brand-logo){color:#fff;grid-column:2;justify-self:center}
 
 @media(max-width:620px){.nav{grid-template-columns:1fr;gap:16px}.nav :global(.brand-logo){grid-column:1}.nav>a:last-child{grid-column:1;justify-self:center}}
+
+.actions{grid-column:3;justify-self:end;display:flex;align-items:center;gap:12px}.actions a,.actions button{display:flex;position:relative;align-items:center;justify-content:center;width:44px;height:44px;border:0;background:transparent;color:#fff;cursor:pointer}.actions svg{width:25px;height:25px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}.cartCount{position:absolute;top:0;right:0;background:white;color:#080808;border-radius:50%;min-width:19px;height:19px;font-size:10px;display:grid;place-items:center;padding:0 3px}@media(max-width:620px){.actions{grid-column:1;justify-self:center}}
