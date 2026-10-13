@@ -6,8 +6,8 @@ import PolicyActions from "./policy-actions";
 import { useEffect, useState } from "react";
 
 const slides = [
-  { image: "/images/feel-the-vibe.webp", alt: "Styled Somehow Feel the Vibe campaign", href: "/collections/new-drop", position: "center" },
-  { image: "/images/the-lineup.webp", alt: "Styled Somehow graphic tees and everyday basics lineup", href: "/collections/all", position: "center" },
+  { image: "/images/red-streetwear-hero.webp", alt: "Styled Somehow red streetwear campaign: Style you don’t have to think about. Comfort you never want to take off. Shop now.", href: "/#new-in", position: "center" },
+  { image: "/images/the-lineup.webp", alt: "Styled Somehow graphic tees and everyday basics lineup", href: "/#new-in", position: "center" },
 ] as const;
 
 const collectionLinks = [
@@ -43,7 +43,7 @@ export default function StorefrontHero() {
   const moveSlide = (direction: number) => setActiveSlide((current) => (current + direction + slides.length) % slides.length);
 
   return (
-    <section className="storefront" aria-label="Styled Somehow featured collections">
+    <section className="storefront storefront--campaign" aria-label="Styled Somehow featured collections">
       <header className={`site-header ${activeSlide === 0 ? "header-on-dark" : "header-on-light"} ${menuOpen ? "menu-is-open" : ""}`}>
         <Link className="brand-logo" href="/" aria-label="Styled Somehow home">
           <span>STYLED</span>
