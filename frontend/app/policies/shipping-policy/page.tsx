@@ -10,7 +10,7 @@ export default function ShippingPolicy() {
         <Link className="brand-logo" href="/" aria-label="Styled Somehow home"><span>STYLED</span><span>SOMEHOW</span></Link>
         <Link href="/#new-in">Continue shopping</Link>
       </nav>
-      <header className={styles.hero}><span className={styles.eyebrow}>THE DELIVERY DETAILS</span><h1>Good style.<br/>On its way.</h1><p>Shipping policy</p><span className={styles.benefit}>Free shipping on orders ₹999 &amp; above</span></header>
+      <header className={styles.hero}><h1>Shipping policy</h1><span className={styles.benefit}>Free shipping on orders ₹999 &amp; above</span></header>
       <div className={styles.content}>
         <section aria-labelledby="shipping-charges">
           <h2 id="shipping-charges">What are the shipping charges?</h2>
