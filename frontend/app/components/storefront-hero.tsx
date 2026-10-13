@@ -17,8 +17,9 @@ const collectionLinks = [
   ["Best Sellers", "/collections/best-sellers"],
 ] as const;
 
-function Icon({ name }: { name: "search" | "user" | "bag" | "menu" | "close" }) {
+function Icon({ name }: { name: "home" | "search" | "user" | "bag" | "menu" | "close" }) {
   const paths = {
+    home: <path d="M3 10 12 3l9 7M5 9v12h14V9M9 21v-7h6v7"/>,
     search: <><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.25 4.25"/></>,
     user: <><circle cx="12" cy="8" r="4"/><path d="M4.75 21c.7-4.25 3.12-6.5 7.25-6.5s6.55 2.25 7.25 6.5"/></>,
     bag: <><path d="M4.5 8.5h15l-1 12h-13l-1-12Z"/><path d="M9 9V6a3 3 0 0 1 6 0v3"/></>,
@@ -60,7 +61,7 @@ export default function StorefrontHero() {
           <Link className="nav-link" href="/collections/women" onClick={rememberHome}>WOMEN</Link>
           <Link className="nav-link" href="/collections/couple-tshirts">COUPLE T-SHIRTS</Link>
         </nav>
-        <div className="header-actions">
+        <div className="header-actions"><Link className="icon-button" href="/" aria-label="Home" title="Home"><Icon name="home"/></Link>
           <button className="icon-button desktop-action" type="button" aria-label="Search"><Icon name="search" /></button>
           <Link className="icon-button desktop-action" href="/orders" aria-label="View your order"><Icon name="user" /></Link>
           <Link className="icon-button bag-button" href="/cart" onClick={e=>{e.preventDefault();openCart();}} aria-label={`Cart, ${cartCount} items`}><Icon name="bag" /><span className="cart-count">{cartCount}</span></Link>

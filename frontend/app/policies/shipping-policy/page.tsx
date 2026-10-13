@@ -9,7 +9,7 @@ export default function ShippingPolicy() {
     <main className={styles.page}><div className={styles.shell}>
       <nav className={styles.nav} aria-label="Policy navigation">
         <Link className="brand-logo" href="/" aria-label="Styled Somehow home"><span>STYLED</span><span>SOMEHOW</span></Link>
-        <PolicyActions/>
+        <PolicyActions dark/>
       </nav>
       <header className={styles.hero}><h1>Shipping policy</h1></header>
       <div className={styles.content}>
