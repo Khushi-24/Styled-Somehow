@@ -1,16 +1,12 @@
-import Link from "next/link";
 import styles from "./shipping-policy.module.css";
-import PolicyActions from "../../components/policy-actions";
+import StoreHeader from "../../components/store-header";
 
 export const metadata = { title: "Shipping policy | Styled Somehow" };
 
 export default function ShippingPolicy() {
   return (
     <main className={styles.page}><div className={styles.shell}>
-      <nav className={styles.nav} aria-label="Policy navigation">
-        <Link className="brand-logo" href="/" aria-label="Styled Somehow home"><span>STYLED</span><span>SOMEHOW</span></Link>
-        <PolicyActions dark/>
-      </nav>
+      <StoreHeader dark/>
       <header className={styles.hero}><h1>Shipping policy</h1></header>
       <div className={styles.content}>
         <section aria-labelledby="shipping-charges">

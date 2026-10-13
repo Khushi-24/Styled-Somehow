@@ -2,8 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import {openCart} from "./cart-drawer";
-import {readCart} from "../../lib/cart";
+import PolicyActions from "./policy-actions";
 import { useEffect, useState } from "react";
 
 const slides = [
@@ -33,8 +32,6 @@ export default function StorefrontHero() {
   function rememberHome() {
     window.history.replaceState(window.history.state, "", `${window.location.pathname}${window.location.search}`);
   }
-  const [cartCount,setCartCount]=useState(0);
-  useEffect(()=>{function update(){setCartCount(readCart().reduce((n,i)=>n+i.quantity,0));}const timer=setTimeout(update,0);window.addEventListener("cart-updated",update);window.addEventListener("storage",update);window.addEventListener("pageshow",update);return()=>{clearTimeout(timer);window.removeEventListener("cart-updated",update);window.removeEventListener("storage",update);window.removeEventListener("pageshow",update);};},[]);
   const [activeSlide, setActiveSlide] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -61,11 +58,7 @@ export default function StorefrontHero() {
           <Link className="nav-link" href="/collections/women" onClick={rememberHome}>WOMEN</Link>
           <Link className="nav-link" href="/collections/couple-tshirts">COUPLE T-SHIRTS</Link>
         </nav>
-        <div className="header-actions"><Link className="icon-button" href="/" aria-label="Home" title="Home"><Icon name="home"/></Link>
-          <button className="icon-button desktop-action" type="button" aria-label="Search"><Icon name="search" /></button>
-          <Link className="icon-button desktop-action" href="/orders" aria-label="View your order"><Icon name="user" /></Link>
-          <Link className="icon-button bag-button" href="/cart" onClick={e=>{e.preventDefault();openCart();}} aria-label={`Cart, ${cartCount} items`}><Icon name="bag" /><span className="cart-count">{cartCount}</span></Link>
-          <button className="icon-button menu-button" type="button" aria-label={menuOpen ? "Close menu" : "Open menu"} aria-expanded={menuOpen} onClick={() => setMenuOpen((open) => !open)}><Icon name={menuOpen ? "close" : "menu"} /></button>
+        <div className="header-actions"><PolicyActions dark={activeSlide===0||menuOpen}/>          <button className="icon-button menu-button" type="button" aria-label={menuOpen ? "Close menu" : "Open menu"} aria-expanded={menuOpen} onClick={() => setMenuOpen((open) => !open)}><Icon name={menuOpen ? "close" : "menu"} /></button>
         </div>
       </header>
 
