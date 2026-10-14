@@ -1,4 +1,5 @@
 import NewIn from "./components/new-in";
+import InteractiveProductRack from "./components/interactive-product-rack";
 import ShopFor from "./components/shop-for";
 import StorefrontHero from "./components/storefront-hero";
 
@@ -10,6 +11,7 @@ export default async function Home() {
     <main>
       <StorefrontHero />
       <ShopFor />
+      {products && <InteractiveProductRack products={products} />}
       {products ? <NewIn products={products} /> : <section className="new-in"><h2>New In</h2><p>Our collection is temporarily unavailable. Please try again shortly.</p></section>}
     </main>
   );
