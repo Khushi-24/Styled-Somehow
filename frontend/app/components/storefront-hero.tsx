@@ -80,7 +80,7 @@ export default function StorefrontHero() {
           return <Link key={slide.image} href={slide.href} className={`hero-slide ${index === activeSlide ? "is-active" : ""}`} aria-hidden={index !== activeSlide} tabIndex={index === activeSlide ? 0 : -1}>
             <picture><source media="(max-width: 620px)" srcSet={mobile.srcSet} sizes={mobile.sizes}/>{/* Art-directed sources share one responsive image element. */}
             <img {...desktop} alt={slide.alt} loading={index===0?"eager":"lazy"} fetchPriority={index===0?"high":"auto"} style={{objectPosition:slide.position}}/></picture>
-            {index === 1 && <span className="lineup-cta">EXPLORE THE LINEUP <span aria-hidden="true">↗</span></span>}
+            {index === 1 && <span className="lineup-cta">SHOP NOW <span aria-hidden="true">→</span></span>}
           </Link>;
         })}
       </div>
