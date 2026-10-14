@@ -344,3 +344,7 @@ input,select,textarea{font-family:inherit}
 /* Show the full approved women’s campaign without cropping its lettering. */
 .collection-banner--women{height:auto;aspect-ratio:1672/941}
 .collection-banner--women img{object-fit:contain;object-position:center}
+
+.collection-banner--women{display:block}
+.collection-banner--women:focus-visible{outline:3px solid #090909;outline-offset:-3px}
+#women-collection{scroll-margin-top:24px}
