@@ -67,12 +67,12 @@ export default function InteractiveProductRack({ products }: { products: Product
       <small>{manual?"YOUR TURN — TAP OR HOVER TO EXPLORE":"AUTO PREVIEW — HOVER OR TAP TO EXPLORE"}</small>
     </div>
     <style jsx global>{`
-      .ss-rack{background:#f5f3ef;color:#191919;overflow:hidden;padding:76px 0 60px;isolation:isolate}
+      .ss-rack{background:#f5f3ef;color:#191919;overflow:hidden;padding:48px 0 32px;isolation:isolate}
       .ss-rack-intro{text-align:center;padding:0 18px}
       .ss-rack-intro>span{font-size:10px;letter-spacing:.28em;color:#777}
       .ss-rack-intro h2{font:900 clamp(36px,6vw,76px)/1 Arial,Helvetica,sans-serif;letter-spacing:-.065em;margin:12px 0}
       .ss-rack-intro p{color:#777;font-size:14px;margin:0}
-      .ss-rack-stage{position:relative;height:clamp(340px,43vw,535px);max-width:1350px;margin:32px auto 0}
+      .ss-rack-stage{position:relative;height:clamp(340px,43vw,535px);max-width:1350px;margin:12px auto 0}
       .ss-rack-rail{position:absolute;left:6%;right:6%;top:38px;height:9px;background:linear-gradient(#777,#eee 31%,#aaa 67%,#777);border-radius:10px;box-shadow:0 4px 5px #0002}
       .ss-rack-rail:before,.ss-rack-rail:after{content:"";position:absolute;top:-2px;width:10px;height:14px;background:#999}
       .ss-rack-rail:before{left:0}.ss-rack-rail:after{right:0}
@@ -91,7 +91,7 @@ export default function InteractiveProductRack({ products }: { products: Product
       .ss-rack-actions button{border:1px solid #ccc;background:transparent;width:44px;height:42px;cursor:pointer}
       .ss-rack-actions a{background:#181818;color:white;font-size:11px;letter-spacing:.1em;padding:16px 26px;font-weight:700}
       .ss-rack-details small{font-size:9px;color:#888;letter-spacing:.11em}
-      @media(max-width:680px){.ss-rack{padding:52px 0 45px}.ss-rack-stage{height:345px}.ss-rack-rail{left:4%;right:4%}.ss-rack-item{width:156px;height:78%}.ss-rack-intro h2{font-size:39px}}
+      @media(max-width:680px){.ss-rack{padding:32px 0 24px}.ss-rack-stage{height:345px}.ss-rack-rail{left:4%;right:4%}.ss-rack-item{width:156px;height:78%}.ss-rack-intro h2{font-size:39px}}
       @media(prefers-reduced-motion:reduce){.ss-rack-item{transition:none}}
     `}</style>
   </section>;

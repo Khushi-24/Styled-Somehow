@@ -326,3 +326,11 @@ input,select,textarea{font-family:inherit}
  .shop-for{padding:24px 0 0}
  .storefront--campaign .lineup-cta{left:16px;bottom:52px}
 }
+
+/* Compact, consistent collection section rhythm. */
+.new-in{padding-top:48px;padding-bottom:32px}
+.new-in header{margin-bottom:24px}
+@media(max-width:680px){
+ .new-in{padding-top:32px;padding-bottom:24px}
+ .new-in header{margin-bottom:24px}
+}
