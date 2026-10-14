@@ -62,7 +62,7 @@ export default function InteractiveProductRack({ products }: { products: Product
         })}
       </div>
     </div>
-    <div className="ss-rack-details" aria-live="polite"><span>{audience(selected)} / {String(active+1).padStart(2,"0")}—{String(items.length).padStart(2,"0")}</span><h3>{selected.name}</h3><p>{money(selected.price)}</p>
+    <div className="ss-rack-details" aria-live="polite"><h3>{selected.name}</h3><p>{money(selected.price)}</p>
       <div className="ss-rack-actions"><button type="button" onClick={()=>choose(active-1)} aria-label="Previous product">←</button><Link prefetch={false} href={`/products/${selected.slug}`}>EXPLORE DESIGN ↗</Link><button type="button" onClick={()=>choose(active+1)} aria-label="Next product">→</button></div>
       <small>{manual?"HOVER TO PREVIEW — CLICK OR TAP TO SHOP":"AUTO PREVIEW — CLICK OR TAP TO SHOP"}</small>
     </div>
@@ -85,7 +85,6 @@ export default function InteractiveProductRack({ products }: { products: Product
       .ss-rack-photo img{transition:filter .5s}
       .ss-rack-item:not(.is-selected) .ss-rack-photo img{filter:saturate(.8)}
       .ss-rack-details{text-align:center;min-height:165px;padding:0 16px}
-      .ss-rack-details>span{font-size:10px;letter-spacing:.15em;color:#8a8178}
       .ss-rack-details h3{font-size:clamp(19px,2.4vw,26px);letter-spacing:-.04em;margin:8px 0}
       .ss-rack-details p{font-size:13px;margin:5px}
       .ss-rack-actions{display:flex;align-items:center;justify-content:center;gap:14px;margin:15px 0}
