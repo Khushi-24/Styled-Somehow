@@ -6,7 +6,7 @@ import PolicyActions from "./policy-actions";
 import { useEffect, useState } from "react";
 
 const slides = [
-  { image: "/images/red-streetwear-hero.webp", mobileImage:"/images/red-streetwear-hero-mobile.webp", alt: "Styled Somehow red streetwear campaign: Style you don’t have to think about. Comfort you never want to take off. Shop now.", href: "/#new-in", position: "center" },
+  { image: "/images/red-streetwear-hero.webp", mobileImage:"/images/red-streetwear-hero-mobile-refined.webp", alt: "Styled Somehow red streetwear campaign: Style you don’t have to think about. Comfort you never want to take off. Shop now.", href: "/#new-in", position: "center" },
   { image: "/images/the-lineup.webp", mobileImage:"/images/the-lineup-mobile.webp", alt: "Styled Somehow graphic tees and everyday basics lineup", href: "/#new-in", position: "center" },
 ] as const;
 
