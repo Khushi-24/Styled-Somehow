@@ -36,7 +36,7 @@ export default function ShopFor() {
           <Link id={`shop-${collection.audience}`} onClick={event => {
             if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
             window.history.replaceState(window.history.state, "", `${window.location.pathname}${window.location.search}#shop-${collection.audience}`);
-          }} className="shop-for__card" href={`/collections/${collection.audience}`} key={collection.audience} aria-label={`Explore ${collection.audience}'s collection`}>
+          }} className="shop-for__card" href={`/collections/${collection.audience}?from=shop-${collection.audience}`} key={collection.audience} aria-label={`Explore ${collection.audience}'s collection`}>
             <Image src={collection.image} alt={collection.alt} fill sizes="(max-width: 620px) calc(100vw - 24px), calc(50vw - 36px)" />
             <div className="shop-for__caption">
               <h2>{collection.title}</h2>
