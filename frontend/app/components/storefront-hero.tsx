@@ -35,7 +35,7 @@ export default function StorefrontHero() {
   const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
-    const timer = window.setInterval(() => setActiveSlide((current) => (current + 1) % slides.length), 6500);
+    const timer = window.setInterval(() => setActiveSlide((current) => (current + 1) % slides.length), 2500);
     return () => window.clearInterval(timer);
   }, []);
 
