@@ -1,13 +1,12 @@
 "use client";
 
-import {getImageProps} from "next/image";
 import Link from "next/link";
 import PolicyActions from "./policy-actions";
 import { useEffect, useState } from "react";
 
 const slides = [
   { image: "/images/red-streetwear-hero.webp", mobileImage:"/images/red-streetwear-hero-mobile-refined.webp", alt: "Styled Somehow red streetwear campaign: Style you don’t have to think about. Comfort you never want to take off. Shop now.", href: "/#new-in", position: "center" },
-  { image: "/images/the-lineup.webp", mobileImage:"/images/the-lineup-mobile.webp", alt: "Styled Somehow graphic tees and everyday basics lineup", href: "/#new-in", position: "center" },
+  { image: "/images/the-lineup-approved.webp", mobileImage:"/images/the-lineup-approved.webp", alt: "Styled Somehow graphic tees and everyday basics lineup", href: "/#new-in", position: "center" },
 ] as const;
 
 const collectionLinks = [
@@ -76,8 +75,8 @@ export default function StorefrontHero() {
 
       <div className="slides">
         {slides.map((slide, index) => {
-          const desktop=index===0?{src:slide.image,alt:slide.alt,width:1672,height:941}:getImageProps({src:slide.image,alt:slide.alt,width:1672,height:941,quality:index===0?95:75,sizes:"100vw"}).props;
-          const mobile=index===0?{srcSet:slide.mobileImage,sizes:"100vw"}:getImageProps({src:slide.mobileImage,alt:slide.alt,width:1122,height:1402,quality:index===0?95:75,sizes:"100vw"}).props;
+          const desktop={src:slide.image,alt:slide.alt,width:index===0?1672:2048,height:index===0?941:1024};
+          const mobile={srcSet:slide.mobileImage,sizes:"100vw"};
           return <Link key={slide.image} href={slide.href} className={`hero-slide ${index === activeSlide ? "is-active" : ""}`} aria-hidden={index !== activeSlide} tabIndex={index === activeSlide ? 0 : -1}>
             <picture><source media="(max-width: 620px)" srcSet={mobile.srcSet} sizes={mobile.sizes}/>{/* Art-directed sources share one responsive image element. */}
             <img {...desktop} alt={slide.alt} loading={index===0?"eager":"lazy"} fetchPriority={index===0?"high":"auto"} style={{objectPosition:slide.position}}/></picture>
