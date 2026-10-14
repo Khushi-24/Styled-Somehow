@@ -1,13 +1,13 @@
 "use client";
 
-import Image from "next/image";
+import {getImageProps} from "next/image";
 import Link from "next/link";
 import PolicyActions from "./policy-actions";
 import { useEffect, useState } from "react";
 
 const slides = [
-  { image: "/images/red-streetwear-hero.webp", alt: "Styled Somehow red streetwear campaign: Style you don’t have to think about. Comfort you never want to take off. Shop now.", href: "/#new-in", position: "center" },
-  { image: "/images/the-lineup.webp", alt: "Styled Somehow graphic tees and everyday basics lineup", href: "/#new-in", position: "center" },
+  { image: "/images/red-streetwear-hero.webp", mobileImage:"/images/red-streetwear-hero-mobile.webp", alt: "Styled Somehow red streetwear campaign: Style you don’t have to think about. Comfort you never want to take off. Shop now.", href: "/#new-in", position: "center" },
+  { image: "/images/the-lineup.webp", mobileImage:"/images/the-lineup-mobile.webp", alt: "Styled Somehow graphic tees and everyday basics lineup", href: "/#new-in", position: "center" },
 ] as const;
 
 const collectionLinks = [
@@ -75,12 +75,15 @@ export default function StorefrontHero() {
       </div>
 
       <div className="slides">
-        {slides.map((slide, index) => (
-          <Link key={slide.image} href={slide.href} className={`hero-slide ${index === activeSlide ? "is-active" : ""}`} aria-hidden={index !== activeSlide} tabIndex={index === activeSlide ? 0 : -1}>
-            <Image src={slide.image} alt={slide.alt} fill priority={index === 0} sizes="100vw" style={{ objectPosition: slide.position }} />
+        {slides.map((slide, index) => {
+          const desktop=getImageProps({src:slide.image,alt:slide.alt,width:1672,height:941,sizes:"100vw"}).props;
+          const mobile=getImageProps({src:slide.mobileImage,alt:slide.alt,width:1122,height:1402,sizes:"100vw"}).props;
+          return <Link key={slide.image} href={slide.href} className={`hero-slide ${index === activeSlide ? "is-active" : ""}`} aria-hidden={index !== activeSlide} tabIndex={index === activeSlide ? 0 : -1}>
+            <picture><source media="(max-width: 620px)" srcSet={mobile.srcSet} sizes={mobile.sizes}/>{/* Art-directed sources share one responsive image element. */}
+            <img {...desktop} alt={slide.alt} loading={index===0?"eager":"lazy"} fetchPriority={index===0?"high":"auto"} style={{objectPosition:slide.position}}/></picture>
             {index === 1 && <span className="lineup-cta">EXPLORE THE LINEUP <span aria-hidden="true">↗</span></span>}
-          </Link>
-        ))}
+          </Link>;
+        })}
       </div>
 
       <div className="carousel-controls">

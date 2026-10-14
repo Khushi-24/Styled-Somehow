@@ -289,3 +289,5 @@ input,select,textarea{font-family:inherit}
 .store-header .store-actions button{padding:0;border:0;background:transparent;color:inherit;border-radius:0}
 
 @media(min-width:621px){.storefront--campaign{min-height:0;height:auto;aspect-ratio:16/9;background:#080808}.storefront--campaign .hero-slide img{object-fit:contain}.storefront--campaign .slides{background:#080808}}
+
+.hero-slide picture{display:block;width:100%;height:100%}.hero-slide picture img{width:100%;height:100%;display:block}@media(max-width:620px){.storefront--campaign{height:calc(58px + 125vw + 48px)}.storefront--campaign .slides{inset:58px 0 48px}.storefront--campaign .hero-slide img{object-fit:contain}.storefront--campaign .lineup-cta{bottom:16px;left:16px}.storefront--campaign .carousel-controls{bottom:8px}}
