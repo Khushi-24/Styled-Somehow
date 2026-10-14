@@ -340,3 +340,7 @@ input,select,textarea{font-family:inherit}
  .new-in header{padding:32px 18px;margin:0;text-align:center}
  .new-in header h2{margin:0 0 12px}
 }
+
+/* Show the full approved women’s campaign without cropping its lettering. */
+.collection-banner--women{height:auto;aspect-ratio:1672/941}
+.collection-banner--women img{object-fit:contain;object-position:center}
