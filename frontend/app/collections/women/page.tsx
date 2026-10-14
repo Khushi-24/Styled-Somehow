@@ -1,3 +1,4 @@
+import WomenCollectionBanner from "../../components/women-collection-banner";
 import StoreHeader from "../../components/store-header";
 import Image from "next/image";
 import Link from "next/link";
@@ -9,7 +10,7 @@ export default async function Collection() {
  const all = await getProducts().catch(() => null);
  const products = all?.filter(p => p.collections.includes("women")).sort((a,b)=>a.collectionOrder-b.collectionOrder || a.sortOrder-b.sortOrder);
  return <main className="collection-page"><StoreHeader/>
- <Link href="#women-collection" className="collection-banner collection-banner--women" aria-label="Shop women — browse the collection below"><Image src="/images/women-pastel-editorial.webp" alt="Shop Women: braided model in a white oversized tee and blue jeans reclining in a pastel pink studio" fill sizes="100vw" unoptimized preload /></Link>
+ <WomenCollectionBanner />
  <section id="women-collection" className="collection-products"><header className="collection-heading"><h1>Women’s Collection</h1><p>{products ? `${products.length} products` : "Collection temporarily unavailable"}</p></header>
  <div className="collection-grid">{products?.map(p => <article id={productAnchor(p)} key={p.id} className="new-in__product"><Link prefetch={false} href={`/products/${p.slug}?from=women`}><div className="new-in__image"><Image src={p.media[0].url} alt={p.media[0].alt} fill sizes="(max-width: 620px) 46vw, 25vw" unoptimized={p.media[0].url.startsWith("/api/")} />{p.newIn && <span className="new-in__badge">NEW</span>}</div><h2>{p.name}</h2><p className="product-price">{p.originalPrice>p.price && <del>{money(p.originalPrice)}</del>}<span>{money(p.price)}</span>{p.originalPrice>p.price && <span className="product-saving">Save {saving(p)}%</span>}</p>{p.colours.length>1 && <p className="collection-colours">{p.colours.join(" / ")}</p>}</Link></article>)}</div>{products?.length === 0 && <p>New styles are on their way.</p>}</section></main>;
 }
