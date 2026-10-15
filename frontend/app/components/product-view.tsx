@@ -1,4 +1,5 @@
 "use client";
+import ProductDelivery from "./product-delivery";
 import StoreHeader from "./store-header";
 import Image from "next/image";
 import SizeGuide, {measurements} from "./size-guide";
@@ -36,6 +37,7 @@ export default function ProductView({product:p,returnUrl}: {product:Product;retu
  <fieldset className="product-sizes"><legend><span className="product-size-heading"><span>Size{size?`: ${size}`:" — select your size"}</span>{selectedMeasurement&&<span className="product-size-measurements"><span>Chest {selectedMeasurement.chest} inches</span><span>Length {selectedMeasurement.length} inches</span></span>}</span></legend><div>{p.sizes.map(s=><button key={s} disabled={busy||!available(s)} title={!available(s)?"Out of stock":undefined} aria-label={`${s}${!available(s)?" — out of stock":""}`} aria-pressed={size===s} onClick={()=>{setSize(s);setMessage("");}}>{s}</button>)}</div></fieldset>
  {!p.sizes.some(available)&&<p className="stock-availability">This colour is currently out of stock.</p>}
  <div className="product-purchase-actions"><button className="product-add" disabled={busy||!size||!available(size)} onClick={()=>add()}>{busy?"Please wait…":size?"Add to cart":"Select a size"}</button><button className="product-buy-now" disabled={busy||!size||!available(size)} onClick={()=>add(true)}>Buy It Now</button></div><p className="product-cart-message" role="status">{message}</p>
+ <ProductDelivery key={`${p.slug}-${colour}-${size}`} slug={p.slug} colour={colour} size={size}/>
  <SizeGuide sizes={p.sizes}/>
  <details className="product-details" open><summary>Product details</summary><p className="product-description">{p.description}</p><dl className="product-specifications"><div><dt>Composition</dt><dd>{p.composition}</dd></div><div><dt>Fabric weight</dt><dd>{p.gsm} GSM</dd></div><div><dt>Colour</dt><dd>{colour}</dd></div><div><dt>Fit</dt><dd>Oversized</dd></div><div><dt>Sleeves</dt><dd>Short</dd></div></dl><p>{p.details}</p></details></section></div></main>;
 }
