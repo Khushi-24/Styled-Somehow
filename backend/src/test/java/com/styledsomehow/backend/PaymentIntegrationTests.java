@@ -14,6 +14,9 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 @SpringBootTest @Transactional @org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 class PaymentIntegrationTests {
+ @org.springframework.test.context.bean.override.mockito.MockitoBean com.styledsomehow.backend.shipping.ShippingGateway shipping;
+ @org.junit.jupiter.api.BeforeEach void stubShipping(){org.mockito.Mockito.when(shipping.rate(org.mockito.ArgumentMatchers.anyString(),org.mockito.ArgumentMatchers.anyInt(),org.mockito.ArgumentMatchers.anyInt())).thenReturn(new com.styledsomehow.backend.shipping.ShippingGateway.Rate(1,"Blue Dart",0));}
+
  @Autowired CheckoutService checkout;@Autowired PaymentService payments;@Autowired StockRepository stocks;@Autowired OrderRepository orders;@Autowired PaymentRepository receipts;
  @MockitoBean PaymentGateway gateway;
  @Autowired org.springframework.test.web.servlet.MockMvc mvc;

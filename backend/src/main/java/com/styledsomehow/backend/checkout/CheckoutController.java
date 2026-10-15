@@ -9,6 +9,7 @@ public class CheckoutController {
  private final CheckoutService checkout;
  public CheckoutController(CheckoutService checkout){this.checkout=checkout;}
  @PostMapping("/api/cart/quote") public Quote quote(@Valid @RequestBody Cart cart,HttpSession session){key(session);return checkout.quote(cart);}
+ @PostMapping("/api/checkout/shipping-quote") public Quote shippingQuote(@Valid @RequestBody ShippingCart cart,HttpSession session){key(session);return checkout.shippingQuote(cart);}
  @PostMapping("/api/checkout") public PendingOrder create(@Valid @RequestBody Checkout request,HttpSession session){return checkout.create(request,key(session));}
  @GetMapping("/api/checkout/{id}") public PendingOrder get(@PathVariable String id,HttpSession session){return checkout.get(id,key(session));}
  @PostMapping("/api/checkout/{id}/cancel") public PendingOrder cancel(@PathVariable String id,HttpSession session){return checkout.cancel(id,key(session));}
