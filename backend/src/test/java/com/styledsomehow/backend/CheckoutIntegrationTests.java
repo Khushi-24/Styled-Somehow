@@ -12,7 +12,7 @@ import static org.assertj.core.api.Assertions.*;
 @SpringBootTest @Transactional
 class CheckoutIntegrationTests {
  @org.springframework.test.context.bean.override.mockito.MockitoBean com.styledsomehow.backend.shipping.ShippingGateway shipping;
- @org.junit.jupiter.api.BeforeEach void stubShipping(){org.mockito.Mockito.when(shipping.rate(org.mockito.ArgumentMatchers.anyString(),org.mockito.ArgumentMatchers.anyInt(),org.mockito.ArgumentMatchers.anyInt())).thenReturn(new com.styledsomehow.backend.shipping.ShippingGateway.Rate(1,"Blue Dart",0));}
+ @org.junit.jupiter.api.BeforeEach void stubShipping(){org.mockito.Mockito.when(shipping.rate(org.mockito.ArgumentMatchers.anyString(),org.mockito.ArgumentMatchers.anyInt(),org.mockito.ArgumentMatchers.anyInt())).thenReturn(new com.styledsomehow.backend.shipping.ShippingGateway.Rate(1,"Delhivery",0));}
 
  @Autowired CheckoutService checkout;
  @Autowired StockRepository stocks;
@@ -20,7 +20,7 @@ class CheckoutIntegrationTests {
  private Address address(){return new Address("Integration fixture","fixture@example.test","9999999999","Test address","","Ahmedabad","Gujarat","380054");}
  private Checkout request(String key){return new Checkout(List.of(new Item("cherry-zest-oversized-t-shirt","White","S",2)),address(),key,1198);}
  @Test void shippingIsAuthoritativeAndFreeThresholdStillChecksServiceability(){
-  org.mockito.Mockito.when(shipping.rate(org.mockito.ArgumentMatchers.anyString(),org.mockito.ArgumentMatchers.anyInt(),org.mockito.ArgumentMatchers.anyInt())).thenReturn(new com.styledsomehow.backend.shipping.ShippingGateway.Rate(1,"Blue Dart",85));
+  org.mockito.Mockito.when(shipping.rate(org.mockito.ArgumentMatchers.anyString(),org.mockito.ArgumentMatchers.anyInt(),org.mockito.ArgumentMatchers.anyInt())).thenReturn(new com.styledsomehow.backend.shipping.ShippingGateway.Rate(1,"Delhivery",85));
   var one=List.of(new Item("cherry-zest-oversized-t-shirt","White","S",1));
   assertThat(checkout.shippingQuote(new ShippingCart(one,"380015")).total()).isEqualTo(684);
   assertThat(checkout.shippingQuote(new ShippingCart(request(UUID.randomUUID().toString()).items(),"380015")).shipping()).isZero();

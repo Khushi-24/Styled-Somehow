@@ -16,7 +16,7 @@ export default function ProductDelivery({slug,colour,size}:{slug:string;colour:s
   try{
    const quote=await adminRequest<Quote>("/api/checkout/shipping-quote",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({items:[{slug,colour,size,quantity:1}],pinCode:pin})});
    if(request!==attempt.current)return;
-   setResult({ok:true,text:`Blue Dart delivery available. ${quote.shipping===0?"Free shipping for this T-shirt.":`Shipping ${money(quote.shipping)} for one T-shirt.`}`});
+   setResult({ok:true,text:`Delhivery delivery available. ${quote.shipping===0?"Free shipping for this T-shirt.":`Shipping ${money(quote.shipping)} for one T-shirt.`}`});
    try{localStorage.setItem(DELIVERY_PIN_KEY,pin);}catch{}
   }catch(error){if(request!==attempt.current)return;setResult({ok:false,text:error instanceof ApiError&&error.status===422?error.message:error instanceof Error?error.message:"Could not check delivery. Please try again."});}
   finally{if(request===attempt.current)setBusy(false);}
@@ -25,6 +25,6 @@ export default function ProductDelivery({slug,colour,size}:{slug:string;colour:s
   <form onSubmit={check} className={styles.form}><label htmlFor={`${id}-pin`} className={styles.srOnly}>Delivery PIN code</label><input id={`${id}-pin`} value={pin} onChange={event=>{attempt.current++;setBusy(false);setResult(null);setPin(event.target.value.replace(/\D/g,"").slice(0,6));}} placeholder="Enter delivery PIN code" pattern="[1-9][0-9]{5}" required maxLength={6} inputMode="numeric" autoComplete="postal-code" aria-describedby={`${id}-hint`}/><button disabled={busy||!size||!/^[1-9][0-9]{5}$/.test(pin)}>{busy?"Checking…":"Check"}</button></form>
   {!size&&<p>Select an available size to check delivery.</p>}
   {result&&<p className={result.ok?styles.success:styles.error} role="status">{result.text}</p>}
-  <p id={`${id}-hint`}>Blue Dart only. Final shipping is confirmed for your full cart at checkout.</p>
+  <p id={`${id}-hint`}>Delhivery only. Final shipping is confirmed for your full cart at checkout.</p>
  </section>;
 }

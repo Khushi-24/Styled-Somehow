@@ -47,11 +47,11 @@ public class ShiprocketGateway implements ShippingGateway {
   Rate best=null;
   for(var c:couriers){
    String name=c.path("courier_name").asText();String normalized=name.toLowerCase(Locale.ROOT).replaceAll("[^a-z]","");
-   if(!normalized.startsWith("bluedart")||c.path("blocked").asInt(0)!=0)continue;
+   if(!normalized.startsWith("delhivery")||c.path("blocked").asInt(0)!=0)continue;
    int id=c.path("courier_company_id").asInt(0);if(id<=0)continue;
    try{var rate=new BigDecimal(c.path("rate").asText());if(rate.signum()<=0)continue;int amount=rate.setScale(0,RoundingMode.CEILING).intValueExact();if(best==null||amount<best.rupees())best=new Rate(id,name,amount);}catch(NumberFormatException|ArithmeticException ignored){}
   }
-  if(best==null)throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,"Blue Dart delivery is unavailable for this PIN code. Please use another delivery address.");
+  if(best==null)throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,"Delhivery delivery is unavailable for this PIN code. Please use another delivery address.");
   return best;
  }
  private static ResponseStatusException unavailable(){return new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,"Cannot check delivery right now. Please try again shortly.");}
