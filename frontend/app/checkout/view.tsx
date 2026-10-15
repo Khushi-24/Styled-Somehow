@@ -3,7 +3,7 @@ import StoreHeader from "../components/store-header";
 import Link from "next/link";
 import PaymentButton from "./payment-button";
 import {useEffect,useRef,useState} from "react";
-import {adminRequest} from "../../lib/admin-api";
+import {adminRequest,ApiError} from "../../lib/admin-api";
 import {CartItem,Quote,PendingOrder,readCart,writeCart,checkoutItems} from "../../lib/cart";
 import {GMAIL_PATTERN,GMAIL_HINT,isGmail} from "../../lib/email";
 import {money} from "../../lib/product";
@@ -15,7 +15,7 @@ export default function CheckoutView(){
  const shippingAttempt=useRef(0);
  const pending=useRef<{signature:string;id:string}|null>(null);
  async function getQuote(cart:CartItem[]){return adminRequest<Quote>("/api/cart/quote",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({items:checkoutItems(cart)})});}
- useEffect(()=>{let live=true;async function load(){const cart=readCart();if(live)setItems(cart);const id=localStorage.getItem(ORDER_KEY);if(id){try{const saved=await adminRequest<PendingOrder>(`/api/checkout/${encodeURIComponent(id)}`);if(live){acceptOrder(saved);setNow(Date.now());}return;}catch(e){if(live)setError(e instanceof Error?e.message:"Cannot load pending order");}}
+ useEffect(()=>{let live=true;async function load(){const cart=readCart();if(live)setItems(cart);const id=localStorage.getItem(ORDER_KEY);if(id){try{const saved=await adminRequest<PendingOrder>(`/api/checkout/${encodeURIComponent(id)}`);if(live){acceptOrder(saved);setNow(Date.now());}return;}catch(e){if(e instanceof ApiError&&e.status===404){if(live&&localStorage.getItem(ORDER_KEY)===id)localStorage.removeItem(ORDER_KEY);}else{if(live)setError(e instanceof Error?e.message:"Cannot load pending order");return;}}}
  if(cart.length){try{const q=await getQuote(cart);if(live)setQuote(q);}catch(e){if(live)setError(e instanceof Error?e.message:"Could not validate checkout");}}}
  void load().catch(()=>{if(live)setError("Cannot load checkout in this browser.");}).finally(()=>{if(live)setLoading(false);});return()=>{live=false;};},[]);
  useEffect(()=>{if(!order)return;let live=true;const timer=setInterval(()=>{setNow(Date.now());if(Math.floor(Date.now()/1000)%10===0)adminRequest<PendingOrder>(`/api/checkout/${order.id}`).then(o=>{if(live)acceptOrder(o);}).catch(()=>{if(live)setError("Cannot confirm reservation status. Please refresh.");});},1000);return()=>{live=false;clearInterval(timer);};// The order ID owns this polling subscription.
