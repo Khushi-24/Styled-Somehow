@@ -1,6 +1,6 @@
 # Shiprocket checkout integration
 
-This stage checks prepaid Delhivery serviceability and rates. It does not create shipments, debit the Shiprocket wallet, assign AWBs, or schedule pickups.
+Checkout checks prepaid Delhivery serviceability and rates. Admin shipment booking can create a real Shiprocket order and assign a Delhivery AWB for a paid LIVE order only. Pickup scheduling and labels remain manual in Shiprocket.
 
 ## Local configuration
 
@@ -37,3 +37,18 @@ Orders over two items are blocked pending measured packaging details. Never extr
 7. Run `gradlew.bat test` from backend on Windows with Java 21. New tests cover rate filtering/rounding, authoritative shipping totals, tampered totals and unavailable-courier rejection.
 
 KYC is pending; account restrictions can prevent live rate responses. No real shipment needs to be booked for this stage.
+
+## Admin shipment booking
+
+- Flyway V8 adds one durable shipment booking per store order.
+- Open Admin > Orders > View details > Shipment.
+- Test/unpaid/refunded/review orders cannot call the provider through this feature.
+- Booking is off by default. Only after KYC verification and live-payment readiness, set SHIPROCKET_BOOKING_ENABLED=true in backend/.env and restart the backend. Leave it false during Razorpay TEST-mode development.
+- A live order first displays the Delhivery quote, parcel dimensions, pickup location and customer shipping amount. Admin must explicitly confirm the real booking.
+- Confirmation rechecks courier and price. A changed quote must be reviewed again. The quoted provider cost does not change the amount already paid by the customer.
+- Shiprocket IDs and the AWB are saved separately from payment status. BOOKED means an AWB was assigned, not that pickup or delivery occurred.
+- The committed CREATING marker prevents repeated or concurrent submissions from creating a second shipment.
+- If any external mutation times out or gives an uncertain response, REVIEW_REQUIRED prevents automatic retries. Search Shiprocket by the full store order reference and resolve there. If the process crashes at CREATING, ORDER_CREATED or ASSIGNING, also review in Shiprocket; there is deliberately no reset/rebook button.
+- Do not enable booking against test payments by changing their payment mode in the database. Test this feature with mocked Shiprocket responses using ShipmentIntegrationTests.
+
+Run `gradlew.bat test` locally with Java 21. Shipment tests cover test/live eligibility, idempotency, concurrent clicks, price changes, timeout review, stored order payloads, admin authorization and CSRF enforcement. No test sends a real shipment request.
