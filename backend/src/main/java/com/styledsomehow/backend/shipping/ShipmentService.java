@@ -14,8 +14,9 @@ import org.springframework.web.server.ResponseStatusException;
 @Service
 public class ShipmentService {
  private final OrderRepository orders;private final ShipmentRepository shipments;private final ShippingGateway rates;private final ShipmentGateway gateway;
+ private final double parcelLength,parcelBreadth,parcelHeight;
  private final TransactionTemplate tx;private final boolean enabled;private final String pickup;
- public ShipmentService(OrderRepository orders,ShipmentRepository shipments,ShippingGateway rates,ShipmentGateway gateway,PlatformTransactionManager manager,@Value("${shiprocket.booking-enabled:false}") boolean enabled,@Value("${shiprocket.pickup-location:Home}") String pickup){this.orders=orders;this.shipments=shipments;this.rates=rates;this.gateway=gateway;this.tx=new TransactionTemplate(manager);this.enabled=enabled;this.pickup=pickup;}
+ public ShipmentService(OrderRepository orders,ShipmentRepository shipments,ShippingGateway rates,ShipmentGateway gateway,PlatformTransactionManager manager,@Value("${shiprocket.booking-enabled:false}") boolean enabled,@Value("${shiprocket.pickup-location:Home}") String pickup,@Value("${shiprocket.parcel-length-cm:0}") double parcelLength,@Value("${shiprocket.parcel-breadth-cm:0}") double parcelBreadth,@Value("${shiprocket.parcel-height-cm:0}") double parcelHeight){this.parcelLength=parcelLength;this.parcelBreadth=parcelBreadth;this.parcelHeight=parcelHeight;this.orders=orders;this.shipments=shipments;this.rates=rates;this.gateway=gateway;this.tx=new TransactionTemplate(manager);this.enabled=enabled;this.pickup=pickup;}
  public record Preview(int courierId,String courier,int quotedCost,int customerShipping,int quantity,String weight,String dimensions,String pickupLocation){}
  public record Status(boolean bookingEnabled,ShipmentBooking booking){}
  private record Work(Map<String,Object> payload,ShippingGateway.Rate rate){}
@@ -26,14 +27,16 @@ public class ShipmentService {
  private void enabled(){if(!enabled)throw new ResponseStatusException(HttpStatus.CONFLICT,"Shipment booking is disabled. Complete Shiprocket KYC and live-payment setup before enabling it.");}
  private PendingOrder order(String id){return orders.lockForShipping(id).orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND));}
  public Preview preview(String id){
-  enabled();return tx.execute(status->{var o=order(id);eligible(o);if(shipments.existsById(id))throw new ResponseStatusException(HttpStatus.CONFLICT,"A booking already exists. Refresh its status; do not create another.");int quantity=o.items.stream().mapToInt(i->i.quantity).sum();var rate=rates.rate(o.pinCode,quantity,o.subtotal);return new Preview(rate.courierId(),rate.courier(),rate.rupees(),o.shipping,quantity,quantity==1?"0.7 kg":"1.5 kg",quantity==1?"31 × 39 × 4 cm":"31 × 39 × 8 cm",pickup);});
+  enabled();return tx.execute(status->{var o=order(id);eligible(o);if(shipments.existsById(id))throw new ResponseStatusException(HttpStatus.CONFLICT,"A booking already exists. Refresh its status; do not create another.");int quantity=o.items.stream().mapToInt(i->i.quantity).sum();var rate=rates.rate(o.pinCode,quantity,o.subtotal);return new Preview(rate.courierId(),rate.courier(),rate.rupees(),o.shipping,quantity,"Up to 0.5 kg",dimensionsReady()?parcelLength+" × "+parcelBreadth+" × "+parcelHeight+" cm":"Not configured",pickup);});
  }
+ private boolean dimensionsReady(){return parcelLength>0&&parcelBreadth>0&&parcelHeight>0&&Double.isFinite(parcelLength)&&Double.isFinite(parcelBreadth)&&Double.isFinite(parcelHeight);}
  public ShipmentBooking book(String id,int expectedCost,int expectedCourier){
   enabled();
+  if(!shipments.existsById(id)&&!dimensionsReady())throw new ResponseStatusException(HttpStatus.CONFLICT,"Confirm packed parcel dimensions before booking. Previous dimensions have been removed; book manually in Shiprocket using actual measurements.");
   Work work=tx.execute(status->{var o=order(id);eligible(o);if(shipments.existsById(id))return null;
    int quantity=o.items.stream().mapToInt(i->i.quantity).sum();var rate=rates.rate(o.pinCode,quantity,o.subtotal);
    if(rate.rupees()!=expectedCost||rate.courierId()!=expectedCourier)throw new ResponseStatusException(HttpStatus.CONFLICT,"Courier or price changed. Refresh the shipping quote before confirming.");
-   var payload=payload(o,quantity,pickup);var b=new ShipmentBooking();b.orderId=id;b.status="CREATING";b.courierId=rate.courierId();b.courier=rate.courier();b.quotedCost=rate.rupees();b.createdAt=Instant.now();b.updatedAt=b.createdAt;b.message="Creation started. Do not book again while processing.";shipments.saveAndFlush(b);return new Work(payload,rate);
+   var payload=payload(o,quantity,pickup);payload.put("length",parcelLength);payload.put("breadth",parcelBreadth);payload.put("height",parcelHeight);var b=new ShipmentBooking();b.orderId=id;b.status="CREATING";b.courierId=rate.courierId();b.courier=rate.courier();b.quotedCost=rate.rupees();b.createdAt=Instant.now();b.updatedAt=b.createdAt;b.message="Creation started. Do not book again while processing.";shipments.saveAndFlush(b);return new Work(payload,rate);
   });
   if(work==null)return shipments.findById(id).orElseThrow();
   try{
@@ -52,6 +55,6 @@ public class ShipmentService {
   var body=new LinkedHashMap<String,Object>();body.put("order_id",o.id);body.put("order_date",DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm").withZone(ZoneId.of("Asia/Kolkata")).format(o.createdAt));body.put("pickup_location",pickup);
   body.put("billing_customer_name",o.name);body.put("billing_last_name","");body.put("billing_address",o.line1);body.put("billing_address_2",o.line2==null?"":o.line2);body.put("billing_city",o.city);body.put("billing_pincode",o.pinCode);body.put("billing_state",o.state);body.put("billing_country","India");body.put("billing_email",o.email);body.put("billing_phone",o.phone);body.put("shipping_is_billing",true);
   body.put("order_items",o.items.stream().map(i->Map.of("name",i.name+" · "+i.colour+" · "+i.size,"sku",i.stockId+"-"+i.slug+"-"+i.colour+"-"+i.size,"units",i.quantity,"selling_price",i.unitPrice)).toList());
-  body.put("payment_method","Prepaid");body.put("sub_total",o.subtotal);body.put("shipping_charges",o.shipping);body.put("length",31);body.put("breadth",39);body.put("height",quantity==1?4:8);body.put("weight",quantity==1?0.7:1.5);return body;
+  body.put("payment_method","Prepaid");body.put("sub_total",o.subtotal);body.put("shipping_charges",o.shipping);body.put("weight",0.5);return body;
  }
 }
