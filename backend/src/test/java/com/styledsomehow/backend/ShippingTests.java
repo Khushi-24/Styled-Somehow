@@ -20,6 +20,16 @@ class ShippingTests {
   var rate=ShiprocketGateway.selectRate(node);
   assertThat(rate.rupees()).isEqualTo(99);assertThat(rate.transitDays()).isEqualTo(6);
  }
+ @Test void comparisonRetainsAboveLimitOptionsButCheckoutStillRejectsThem() throws Exception {
+  var json=new JsonMapper().readTree("[{\"courier_name\":\"Blue Dart Air\",\"courier_company_id\":1,\"rate\":132.84,\"rating\":4.7,\"estimated_delivery_days\":3},{\"courier_name\":\"DTDC\",\"courier_company_id\":2,\"rate\":50,\"blocked\":1}]");
+  var options=ShiprocketGateway.parseRates(json);assertThat(options).hasSize(1);assertThat(options.get(0).rating()).isEqualTo(4.7);
+  assertThatThrownBy(()->ShiprocketGateway.selectRate(json)).isInstanceOf(org.springframework.web.server.ResponseStatusException.class);
+ }
+ @Test void adminComparisonSendsActualPackedMeasurements() throws Exception {
+  var api=mock(ShiprocketClient.class);when(api.get(anyString(),anyMap())).thenReturn(new JsonMapper().readTree("{\"data\":{\"available_courier_companies\":[]}}"));
+  new ShiprocketGateway(api,"380015").options("560001",2,1198,new ShippingGateway.Parcel(0.48,30,25,4));
+  verify(api).get(eq("/courier/serviceability/"),eq(Map.of("pickup_postcode","380015","delivery_postcode","560001","cod",0,"weight","0.48","declared_value",1198,"length",30.0,"breadth",25.0,"height",4.0)));
+ }
  @Test void allows110ButRejectsAboveLimitAndInvalidRates() throws Exception {
   assertThat(ShiprocketGateway.selectRate(new JsonMapper().readTree("[{\"courier_name\":\"Xpressbees Surface\",\"courier_company_id\":1,\"rate\":110}]" )).rupees()).isEqualTo(110);
   for(String json:new String[]{"[]","[{\"courier_name\":\"Delhivery\",\"courier_company_id\":1}]","[{\"courier_name\":\"DTDC\",\"courier_company_id\":1,\"rate\":110.01}]"})assertThatThrownBy(()->ShiprocketGateway.selectRate(new JsonMapper().readTree(json))).isInstanceOf(org.springframework.web.server.ResponseStatusException.class);

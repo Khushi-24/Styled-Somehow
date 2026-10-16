@@ -29,14 +29,23 @@ public class ShipmentService {
  public Preview preview(String id){
   enabled();return tx.execute(status->{var o=order(id);eligible(o);if(shipments.existsById(id))throw new ResponseStatusException(HttpStatus.CONFLICT,"A booking already exists. Refresh its status; do not create another.");int quantity=o.items.stream().mapToInt(i->i.quantity).sum();var rate=rates.rate(o.pinCode,quantity,o.subtotal);return new Preview(rate.courierId(),rate.courier(),rate.rupees(),o.shipping,quantity,"Up to 0.5 kg",dimensionsReady()?parcelLength+" × "+parcelBreadth+" × "+parcelHeight+" cm":"Not configured",pickup);});
  }
+ public record Comparison(List<ShippingGateway.Rate> options,int customerShipping,int quantity,String pickupLocation,String deliveryPin,ShippingGateway.Parcel parcel){}
+ public Comparison compare(String id,ShippingGateway.Parcel parcel){
+  validateParcel(parcel);
+  return tx.execute(status->{var o=order(id);if(!"PAID".equals(o.status)||!("LIVE".equals(o.paymentMode)||"TEST".equals(o.paymentMode)))throw new ResponseStatusException(HttpStatus.CONFLICT,"Only paid orders can compare couriers.");if(shipments.existsById(id))throw new ResponseStatusException(HttpStatus.CONFLICT,"A booking already exists. Refresh shipment status.");int quantity=o.items.stream().mapToInt(i->i.quantity).sum();return new Comparison(rates.options(o.pinCode,quantity,o.subtotal,parcel),o.shipping,quantity,pickup,o.pinCode,parcel);});
+ }
+ private static void validateParcel(ShippingGateway.Parcel parcel){if(parcel==null||!parcel.valid())throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Enter actual packed weight and dimensions before comparing or booking.");}
  private boolean dimensionsReady(){return parcelLength>0&&parcelBreadth>0&&parcelHeight>0&&Double.isFinite(parcelLength)&&Double.isFinite(parcelBreadth)&&Double.isFinite(parcelHeight);}
  public ShipmentBooking book(String id,int expectedCost,int expectedCourier){
-  enabled();
   if(!shipments.existsById(id)&&!dimensionsReady())throw new ResponseStatusException(HttpStatus.CONFLICT,"Confirm packed parcel dimensions before booking. Previous dimensions have been removed; book manually in Shiprocket using actual measurements.");
+  return book(id,expectedCost,expectedCourier,new ShippingGateway.Parcel(0.5,parcelLength,parcelBreadth,parcelHeight));
+ }
+ public ShipmentBooking book(String id,int expectedCost,int expectedCourier,ShippingGateway.Parcel parcel){
+  enabled();validateParcel(parcel);
   Work work=tx.execute(status->{var o=order(id);eligible(o);if(shipments.existsById(id))return null;
-   int quantity=o.items.stream().mapToInt(i->i.quantity).sum();var rate=rates.rate(o.pinCode,quantity,o.subtotal);
+   int quantity=o.items.stream().mapToInt(i->i.quantity).sum();var rate=rates.options(o.pinCode,quantity,o.subtotal,parcel).stream().filter(option->option.courierId()==expectedCourier).findFirst().orElseThrow(()->new ResponseStatusException(HttpStatus.CONFLICT,"Selected courier is no longer available. Compare couriers again."));
    if(rate.rupees()!=expectedCost||rate.courierId()!=expectedCourier)throw new ResponseStatusException(HttpStatus.CONFLICT,"Courier or price changed. Refresh the shipping quote before confirming.");
-   var payload=payload(o,quantity,pickup);payload.put("length",parcelLength);payload.put("breadth",parcelBreadth);payload.put("height",parcelHeight);var b=new ShipmentBooking();b.orderId=id;b.status="CREATING";b.courierId=rate.courierId();b.courier=rate.courier();b.quotedCost=rate.rupees();b.createdAt=Instant.now();b.updatedAt=b.createdAt;b.message="Creation started. Do not book again while processing.";shipments.saveAndFlush(b);return new Work(payload,rate);
+   var payload=payload(o,quantity,pickup);payload.put("weight",parcel.weightKg());payload.put("length",parcel.lengthCm());payload.put("breadth",parcel.breadthCm());payload.put("height",parcel.heightCm());var b=new ShipmentBooking();b.orderId=id;b.status="CREATING";b.courierId=rate.courierId();b.courier=rate.courier();b.quotedCost=rate.rupees();b.createdAt=Instant.now();b.updatedAt=b.createdAt;b.message="Creation started. Do not book again while processing.";shipments.saveAndFlush(b);return new Work(payload,rate);
   });
   if(work==null)return shipments.findById(id).orElseThrow();
   try{
