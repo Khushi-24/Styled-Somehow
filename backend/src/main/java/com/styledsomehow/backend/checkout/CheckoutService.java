@@ -22,12 +22,16 @@ public class CheckoutService {
  }
  public void expireReservations(){prepare();}
  public Quote quote(Cart cart){return calculate(cart.items(),prepare());}
- public Quote shippingQuote(ShippingCart cart){int charge=shippingCharge(cart.items(),cart.pinCode());return withShipping(quote(new Cart(cart.items())),charge);}
+ public Quote shippingQuote(ShippingCart cart){var rate=shippingRate(cart.items(),cart.pinCode());var quote=quote(new Cart(cart.items()));int charge=quote.subtotal()>=999?0:rate.rupees();return new Quote(quote.items(),quote.subtotal(),charge,Math.addExact(quote.subtotal(),charge),rate.transitDays());}
  private int shippingCharge(List<Item> items,String pin){
+  var rate=shippingRate(items,pin);
+  int subtotal=0;for(var item:items){var p=products.findBySlug(item.slug()).orElseThrow();subtotal=Math.addExact(subtotal,Math.multiplyExact(p.price,item.quantity()));}
+  return subtotal>=999?0:rate.rupees();
+ }
+ private com.styledsomehow.backend.shipping.ShippingGateway.Rate shippingRate(List<Item> items,String pin){
   int quantity=items.stream().mapToInt(Item::quantity).sum();
   int subtotal=0;for(var item:items){var p=products.findBySlug(item.slug()).filter(v->v.status==Product.Status.PUBLISHED).orElseThrow(()->bad("A product is no longer available."));subtotal=Math.addExact(subtotal,Math.multiplyExact(p.price,item.quantity()));}
-  var rate=shipping.rate(pin,quantity,subtotal);
-  return subtotal>=999?0:rate.rupees();
+  return shipping.rate(pin,quantity,subtotal);
  }
  private Quote withShipping(Quote quote,int charge){return new Quote(quote.items(),quote.subtotal(),charge,Math.addExact(quote.subtotal(),charge));}
  private Quote calculate(List<Item> items,List<BlankStock> all){

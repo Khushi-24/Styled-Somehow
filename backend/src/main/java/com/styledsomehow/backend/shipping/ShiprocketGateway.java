@@ -10,6 +10,7 @@ import tools.jackson.databind.JsonNode;
 
 @Component
 public class ShiprocketGateway implements ShippingGateway {
+ private static final org.slf4j.Logger log=org.slf4j.LoggerFactory.getLogger(ShiprocketGateway.class);
  private final ShiprocketClient api;private final String pickup;
  public ShiprocketGateway(ShiprocketClient api,@Value("${shiprocket.pickup-postcode:380015}") String pickup){this.api=api;this.pickup=pickup;}
  public Rate rate(String pin,int quantity,int subtotal){
@@ -24,13 +25,19 @@ public class ShiprocketGateway implements ShippingGateway {
   Rate best=null;
   for(var c:couriers){
    String name=c.path("courier_name").asText();
+   log.info("Shipping option: courier={}, id={}, rate={}, blocked={}",name,c.path("courier_company_id").asInt(0),c.path("rate").asText(),c.path("blocked").asInt(0));
    if(!supportedCourier(name)||c.path("blocked").asInt(0)!=0)continue;
    int id=c.path("courier_company_id").asInt(0);if(id<=0)continue;
-   try{var rate=new BigDecimal(c.path("rate").asText());if(rate.signum()<=0)continue;int amount=rate.setScale(0,RoundingMode.CEILING).intValueExact();if(best==null||amount<best.rupees())best=new Rate(id,name,amount);}catch(NumberFormatException|ArithmeticException ignored){}
+   try{var rate=new BigDecimal(c.path("rate").asText());if(rate.signum()<=0)continue;int amount=rate.setScale(0,RoundingMode.CEILING).intValueExact();if(best==null||amount<best.rupees())best=new Rate(id,name,amount,transitDays(c));}catch(NumberFormatException|ArithmeticException ignored){}
   }
-  if(best==null)throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,"Delivery is unavailable with our supported couriers for this PIN code. Contact contact@styledsomehow.in for help.");
-  if(best.rupees()>110)throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,"Delivery to this PIN code needs a custom quote because shipping exceeds ₹110. Contact contact@styledsomehow.in before ordering.");
+  if(best==null)throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,"We don’t currently deliver to this location. For delivery assistance, email contact@styledsomehow.in.");
+  if(best.rupees()>110)throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,"We don’t currently deliver to this location. For delivery assistance, email contact@styledsomehow.in.");
   return best;
+ }
+ private static Integer transitDays(JsonNode courier){
+  String value=courier.path("estimated_delivery_days").asText().trim();
+  if(!value.matches("[0-9]{1,3}"))return null;
+  int days=Integer.parseInt(value);return days>0&&days<=90?days:null;
  }
  private static ResponseStatusException unavailable(){return new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,"Cannot check delivery right now. Please try again shortly.");}
 }
