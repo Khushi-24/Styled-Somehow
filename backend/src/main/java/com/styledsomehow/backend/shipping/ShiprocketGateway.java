@@ -19,7 +19,7 @@ public class ShiprocketGateway implements ShippingGateway {
   if(result==null||!result.path("data").path("available_courier_companies").isArray())throw unavailable();
   return selectRate(result.path("data").path("available_courier_companies"));
  }
- public static boolean supportedCourier(String name){String n=name.toLowerCase(Locale.ROOT).replaceAll("[^a-z]","");return n.startsWith("delhivery")||n.startsWith("dtdc")||n.startsWith("xpressbees");}
+ public static boolean supportedCourier(String name){String n=name.toLowerCase(Locale.ROOT).replaceAll("[^a-z]","");return n.startsWith("delhivery")||n.startsWith("dtdc")||n.startsWith("xpressbees")||n.startsWith("bluedart");}
  public static Rate selectRate(JsonNode couriers){
   Rate best=null;
   for(var c:couriers){

@@ -25,6 +25,6 @@ export default function ProductDelivery({slug,colour,size}:{slug:string;colour:s
   <form onSubmit={check} className={styles.form}><label htmlFor={`${id}-pin`} className={styles.srOnly}>Delivery PIN code</label><input id={`${id}-pin`} value={pin} onChange={event=>{attempt.current++;setBusy(false);setResult(null);setPin(event.target.value.replace(/\D/g,"").slice(0,6));}} placeholder="Enter delivery PIN code" pattern="[1-9][0-9]{5}" required maxLength={6} inputMode="numeric" autoComplete="postal-code" aria-describedby={`${id}-hint`}/><button disabled={busy||!size||!/^[1-9][0-9]{5}$/.test(pin)}>{busy?"Checking…":"Check"}</button></form>
   {!size&&<p>Select an available size to check delivery.</p>}
   {result&&<p className={result.ok?styles.success:styles.error} role="status">{result.text}</p>}
-  <p id={`${id}-hint`}>Delhivery, DTDC or Xpressbees, subject to availability. Final shipping is confirmed for your full cart at checkout.</p>
+  <p id={`${id}-hint`}>Delhivery, DTDC, Xpressbees or Blue Dart, subject to availability. Final shipping is confirmed for your full cart at checkout.</p>
  </section>;
 }

@@ -11,6 +11,10 @@ class ShippingTests {
   var node=new JsonMapper().readTree("[{\"courier_name\":\"OtherCourier\",\"courier_company_id\":2,\"rate\":10},{\"courier_name\":\"Delhivery Surface\",\"courier_company_id\":3,\"rate\":100},{\"courier_name\":\"DTDC Surface\",\"courier_company_id\":4,\"rate\":84.25},{\"courier_name\":\"Xpressbees\",\"courier_company_id\":5,\"rate\":60,\"blocked\":1}]");
   assertThat(ShiprocketGateway.selectRate(node)).isEqualTo(new ShippingGateway.Rate(4,"DTDC Surface",85));
  }
+ @Test void checksAllBlueDartOptionsInsteadOfRejectingExpensiveFirstOption() throws Exception {
+  var node=new JsonMapper().readTree("[{\"courier_name\":\"Blue Dart Air\",\"courier_company_id\":1,\"rate\":137.84},{\"courier_name\":\"Blue Dart Advantage Surface\",\"courier_company_id\":2,\"rate\":98.96}]");
+  assertThat(ShiprocketGateway.selectRate(node)).isEqualTo(new ShippingGateway.Rate(2,"Blue Dart Advantage Surface",99));
+ }
  @Test void allows110ButRejectsAboveLimitAndInvalidRates() throws Exception {
   assertThat(ShiprocketGateway.selectRate(new JsonMapper().readTree("[{\"courier_name\":\"Xpressbees Surface\",\"courier_company_id\":1,\"rate\":110}]" )).rupees()).isEqualTo(110);
   for(String json:new String[]{"[]","[{\"courier_name\":\"Delhivery\",\"courier_company_id\":1}]","[{\"courier_name\":\"DTDC\",\"courier_company_id\":1,\"rate\":110.01}]"})assertThatThrownBy(()->ShiprocketGateway.selectRate(new JsonMapper().readTree(json))).isInstanceOf(org.springframework.web.server.ResponseStatusException.class);

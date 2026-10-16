@@ -1,7 +1,7 @@
 # Shipping rules
 
 - Pickup: Home, PIN 380015. API credentials remain in backend/.env.
-- Approved shortlist: Delhivery, DTDC and Xpressbees. Select the cheapest valid, unblocked quote.
+- Approved shortlist: Delhivery, DTDC, Xpressbees and Blue Dart. Select the cheapest valid, unblocked quote.
 - Maximum provider quote: ₹110 inclusive. Quotes above ₹110 require contacting contact@styledsomehow.in; unavailable PIN codes are also blocked.
 - This maximum applies even when customer shipping is free (product subtotal ₹999+).
 - Below ₹999, customer shipping is the selected quote rounded up to a whole rupee. There is no ₹60 flat fee.
