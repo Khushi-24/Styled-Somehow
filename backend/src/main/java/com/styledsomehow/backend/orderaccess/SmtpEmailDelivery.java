@@ -36,7 +36,17 @@ public class SmtpEmailDelivery implements EmailDelivery {
  public void sendRecovery(String email,String code,List<String> references){
   send(email,"Your Styled Somehow order references","Your recent paid-order references (newest first):\n"+String.join("\n",references)+"\n\nYour access code for the most recent order is "+code+". It expires in 10 minutes. Enter it on "+storeUrl+"/orders. To view an older order, enter its reference and request a new code. Do not share this code.");
  }
- public void sendConfirmation(PendingOrder order){send(order.email,("TEST".equals(order.paymentMode)?"[TEST] ":"")+"Your Styled Somehow order is confirmed",confirmationText(order,storeUrl));}
+ public void sendConfirmation(PendingOrder order){
+  if(!ready())throw new IllegalStateException("SMTP is not configured");
+  try{
+   var message=client.createMimeMessage();var helper=new org.springframework.mail.javamail.MimeMessageHelper(message,true,"UTF-8");
+   helper.setFrom(new jakarta.mail.internet.InternetAddress(username,"Styled Somehow","UTF-8"));helper.setReplyTo(username);helper.setTo(order.email);
+   helper.setSubject(("TEST".equals(order.paymentMode)?"[TEST] ":"")+"Your Styled Somehow order is confirmed");
+   helper.setText(confirmationText(order,storeUrl),OrderEmailTemplate.html(order,storeUrl,"cid:styled-somehow-logo"));
+   helper.addInline("styled-somehow-logo",new org.springframework.core.io.ClassPathResource("email/logo.png"),"image/png");
+   client.send(message);
+  }catch(jakarta.mail.MessagingException|java.io.UnsupportedEncodingException failure){throw new IllegalStateException("Could not prepare confirmation email",failure);}
+ }
  static String confirmationText(PendingOrder o,String url){
   var text=new StringBuilder("Thank you for choosing Styled Somehow!\n\n");
   if("TEST".equals(o.paymentMode))text.append("TEST ORDER: No real money was charged. This order will not be dispatched.\n\n");

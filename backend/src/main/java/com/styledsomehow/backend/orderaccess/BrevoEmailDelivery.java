@@ -19,7 +19,10 @@ public class BrevoEmailDelivery implements EmailDelivery {
  }
  public boolean ready(){return !key.isBlank()&&sender.contains("@");}
  public void sendConfirmation(com.styledsomehow.backend.checkout.PendingOrder order){
-  send(order.email,("TEST".equals(order.paymentMode)?"[TEST] ":"")+"Your Styled Somehow order is confirmed",SmtpEmailDelivery.confirmationText(order,storeUrl.replaceAll("/+$","")));
+  String url=storeUrl.replaceAll("/+$","");
+  client.post().uri("/smtp/email").header("api-key",key).contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+   .body(Map.of("sender",Map.of("email",sender,"name","Styled Somehow"),"to",List.of(Map.of("email",order.email)),"subject",("TEST".equals(order.paymentMode)?"[TEST] ":"")+"Your Styled Somehow order is confirmed","textContent",SmtpEmailDelivery.confirmationText(order,url),"htmlContent",OrderEmailTemplate.html(order,url,url+"/images/styled-somehow-logo.webp")))
+   .retrieve().toBodilessEntity();
  }
  public void sendRecovery(String email,String code,List<String> references){
   send(email,"Your Styled Somehow order references","Your recent paid-order references (newest first):\n"+String.join("\n",references)+"\n\nYour access code for the most recent order is "+code+". It expires in 10 minutes. Enter it on the View your order page. To view an older order, enter its reference and request a new code. Do not share this code.");

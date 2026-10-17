@@ -36,3 +36,9 @@ Recovery: on /orders choose Forgot your order reference, enter the exact checkou
 7. A duplicate payment webhook/reconciliation must not produce another confirmation after one has been recorded as sent.
 
 Automated tests were added for sent-order suppression, failed-send retry, non-paid/config-disabled behavior and confirmation content. This environment could not download Gradle; backend compilation/tests and actual SMTP delivery must be verified locally. Frontend recovery lint/build passed in the preceding change.
+
+
+## Confirmation design update
+The paid page uses the approved bordered minimal layout: confirmation, copyable reference, email status and two actions. It resets scroll to the top when payment is confirmed, including after the payment UI releases its busy state. It polls a session-owned, no-store confirmation-email status endpoint for up to two minutes. SENT means the provider accepted the email and the database recorded it; it does not claim the message reached the inbox. Unknown/disabled delivery uses reference-based guidance instead.
+
+SMTP confirmation messages now contain multipart HTML and plain text. The HTML uses an embedded PNG version of the existing storefront logo, an order-access button, escaped product and address text, totals and an explicit TEST notice. Existing emails are not resent when a template changes. Verification requires a new TEST order. Backend execution remains unverified here because the Gradle download is unavailable; no browser or email-client render verification is claimed.

@@ -20,6 +20,7 @@ const emptyAddress:Address={name:"",email:"",phone:"",line1:"",line2:"",city:"",
 export default function CheckoutView(){
  const [items,setItems]=useState<CartItem[]>([]),[quote,setQuote]=useState<Quote|null>(null),[order,setOrder]=useState<PendingOrder|null>(null),[loading,setLoading]=useState(true),[busy,setBusy]=useState(false),[error,setError]=useState(""),[now,setNow]=useState(0);
  const [copyMessage,setCopyMessage]=useState("");
+ const [emailStatus,setEmailStatus]=useState<{id:string;status:string}|null>(null);
  const [address,setAddress]=useState<Address>(emptyAddress),[step,setStep]=useState(0),[checkedPin,setCheckedPin]=useState(""),[checkingShipping,setCheckingShipping]=useState(false);
  const [location,setLocation]=useState<Location|null>(null),[locationBusy,setLocationBusy]=useState(false),[locationError,setLocationError]=useState(""),[lookupRetry,setLookupRetry]=useState(0);
  const shippingAttempt=useRef(0),pending=useRef<{signature:string;id:string}|null>(null),creating=useRef(false),heading=useRef<HTMLHeadingElement>(null);
@@ -41,6 +42,18 @@ export default function CheckoutView(){
  async function startAgain(){setBusy(true);setError("");try{localStorage.removeItem(ORDER_KEY);pending.current=null;const cart=readCart();setItems(cart);setOrder(null);setCheckedPin("");setQuote(cart.length?await getQuote(cart):null);move(0);}catch(e){setError(e instanceof Error?e.message:"Cannot return to checkout.");}finally{setBusy(false);}}
  async function copyReference(){if(!order)return;try{await navigator.clipboard.writeText(order.id);setCopyMessage("Order reference copied.");}catch{setCopyMessage("Select and copy the order reference above.");}}
  const paid=order?.status==="PAID";
+ useEffect(()=>{
+  if(!paid||busy)return;
+  window.scrollTo({top:0,left:0,behavior:"instant"});
+  const frame=requestAnimationFrame(()=>{heading.current?.focus({preventScroll:true});window.scrollTo({top:0,left:0,behavior:"instant"});});
+  return()=>cancelAnimationFrame(frame);
+ },[paid,busy]);
+ const confirmedId=paid?order?.id:undefined;
+ useEffect(()=>{
+  if(!confirmedId)return;let live=true,attempts=0;let timer:ReturnType<typeof setTimeout>;
+  async function check(){try{const result=await adminRequest<{status:string}>(`/api/checkout/${confirmedId}/confirmation-email`);if(!live)return;setEmailStatus({id:confirmedId!,status:result.status});if(result.status!=="PENDING")return;}catch{if(!live)return;}if(++attempts<24)timer=setTimeout(()=>void check(),5000);}
+  void check();return()=>{live=false;clearTimeout(timer);};
+ },[confirmedId]);
  const seconds=order?Math.max(0,Math.ceil((Date.parse(order.expiresAt)-now)/1000)):0;
  const checked=!!checkedPin&&checkedPin===pin;
  const lines=order?order.items:quote?.items??[];
@@ -48,16 +61,17 @@ export default function CheckoutView(){
  const stage=order?2:step;
  function field(key:keyof Address,value:string){setAddress(a=>({...a,[key]:value}));}
  if(paid&&order)return <main className={`shopping-page ${styles.page}`}><StoreHeader backHref="/" backLabel="Continue shopping"/>
- <section className={styles.confirmation} aria-labelledby="confirmation-title">
- <header className={styles.confirmationHeader}><span className={styles.confirmationCheck} aria-hidden="true">✓</span><div><p className={styles.eyebrow}>ORDER CONFIRMED</p><h1 id="confirmation-title">Thank you for your order.</h1><p>{order.paymentMode==="TEST"?"Test payment successful":"Payment received"} · {money(order.total)}</p></div></header>
- {order.paymentMode==="TEST"&&<p className={styles.confirmationTest}>TEST ORDER · No real money charged. This order will not be dispatched.</p>}
- <div className={styles.confirmationGrid}>
- <div className={styles.confirmationDetails}><div className={styles.compactReference}><h2>Order reference</h2><strong>{order.id}</strong><button type="button" onClick={copyReference}>Copy reference</button>{copyMessage&&<p role="status">{copyMessage}</p>}</div>
- <div className={styles.confirmationAddress}><h2>Deliver to</h2><strong>{order.name}</strong><p>{order.line1}{order.line2&&<>, {order.line2}</>}<br/>{order.city}, {order.state} — {order.pinCode}</p></div>
- <div className={styles.confirmationContact}><h2>Contact</h2><p>{order.email}<br/>+91 {order.phone}</p></div></div>
- <div className={styles.confirmationSummary}><h2>Your order <span>({order.items.reduce((n,line)=>n+line.quantity,0)})</span></h2><div>{order.items.map((line,index)=><div className={styles.confirmationProduct} key={index}><Image src={line.image} alt={line.name} width={56} height={72}/><div><h3>{line.name}</h3><p>{line.colour} · {line.size} · Qty {line.quantity}</p><strong>{money(line.unitPrice*line.quantity)}</strong></div></div>)}</div>
- <dl className={styles.confirmationTotals}><div><dt>Subtotal</dt><dd>{money(order.subtotal)}</dd></div><div><dt>Shipping</dt><dd>{order.shipping===0?"Free":money(order.shipping)}</dd></div><div><dt>Total paid</dt><dd>{money(order.total)}</dd></div></dl></div></div>
- <footer className={styles.confirmationFooter}><p>View your order using your reference and checkout email.</p><div><Link href="/" className={styles.secondaryAction}>Continue shopping</Link><Link href={`/orders?reference=${encodeURIComponent(order.id)}`} className={styles.primaryAction}>View order →</Link></div></footer>
+ <section className={styles.successPanel} aria-labelledby="confirmation-title">
+ <div className={styles.successIcon} aria-hidden="true"><svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="22" stroke="currentColor" strokeWidth="1.6"/><path d="m14 24 7 7 14-15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg></div>
+ <h1 id="confirmation-title" ref={heading} tabIndex={-1}>Thank you!</h1><p className={styles.successSubtitle}>Your order is confirmed.</p>
+ {order.paymentMode==="TEST"&&<p className={styles.test}>TEST ORDER · No real money charged. This order will not be dispatched.</p>}
+ <div className={styles.successReference}><div><span>Order reference</span><strong>{order.id}</strong></div><button type="button" aria-label="Copy order reference" onClick={copyReference}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><rect x="8" y="3" width="12" height="15" rx="2"/><path d="M16 18v3H4V7h4"/></svg></button></div>
+ {copyMessage&&<p className={styles.copyFeedback} role="status">{copyMessage}</p>}
+ <div className={styles.successEmail} role="status"><svg viewBox="0 0 32 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><rect x="1" y="1" width="30" height="22" rx="2"/><path d="m2 2 14 11L30 2"/></svg>
+ <p>{emailStatus?.id===order.id&&emailStatus.status==="SENT"?"We’ve emailed your order details.":emailStatus?.id===order.id&&emailStatus.status==="PENDING"?"Your confirmation email is on its way.":"Keep your order reference handy."}</p>
+ <span>{emailStatus?.id===order.id&&emailStatus.status==="SENT"?"Use the link in your email to check your order status.":emailStatus?.id===order.id&&emailStatus.status==="PENDING"?"Your email will include a link to check your order status.":"View your order below using your checkout email."}</span></div>
+ <Link href={`/orders?reference=${encodeURIComponent(order.id)}`} className={styles.successPrimary}>View order</Link>
+ <Link href="/" className={styles.successContinue}>Continue shopping</Link>
  </section></main>;
  return <main className={`shopping-page ${styles.page}`}><StoreHeader backHref={paid?"/":"/cart"} backLabel={paid?"Continue shopping":"Back to cart"}/><header className={styles.intro}><div><p className={styles.eyebrow}>STYLED SOMEHOW</p><h1>{paid?"Order confirmation":"Checkout"}</h1><p>{paid?"Thanks for choosing Styled Somehow.":"No account needed. Just your details and your next favourite tee."}</p></div><Link href="/orders">Track an existing order ↗</Link></header>
  {!paid&&<ol className={styles.steps} aria-label="Checkout progress">{["Contact","Delivery","Review & pay"].map((label,index)=><li key={label} aria-current={stage===index?"step":undefined} className={stage===index?styles.active:stage>index?styles.complete:""}><span>{stage>index?"✓":index+1}</span>{label}</li>)}</ol>}

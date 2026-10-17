@@ -2,38 +2,19 @@
 
 .successMark{display:grid;place-items:center;width:52px;height:52px;margin-bottom:20px;border-radius:50%;background:#eaf5ed;color:#287140;font-size:28px}.reference{display:flex;flex-direction:column;align-items:flex-start;gap:8px;margin:24px 0;font-size:12px}.reference>span{color:#717171}.reference strong{font-size:13px;overflow-wrap:anywhere;max-width:100%}.reference button{font-size:12px;text-decoration:underline}.confirmationActions{margin-top:24px}.continueShopping{display:block;text-align:center;padding:14px;font-size:13px;text-decoration:underline}
 
-.confirmation{max-width:940px;margin:32px auto 48px;border:1px solid #e3e3e3;border-radius:12px;overflow:hidden;background:#fff}
-.confirmationHeader{display:flex;align-items:center;gap:16px;padding:26px 30px}
-.confirmationCheck{display:grid;place-items:center;width:44px;height:44px;flex-shrink:0;background:#eaf5ed;color:#287140;border-radius:50%;font-size:24px}
-.confirmationHeader .eyebrow{font-size:10px;letter-spacing:.13em;color:#287140;font-weight:700;margin:0 0 5px}
-.confirmationHeader h1{font-size:25px!important;line-height:1.25;margin:0!important;letter-spacing:-.025em}
-.confirmationHeader p:last-child{font-size:12px;color:#666;margin:8px 0 0}
-.confirmationTest{font-size:11px;line-height:1.5;background:#fff6dc;color:#74500a;padding:9px 30px;margin:0}
-.confirmationGrid{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid #eee}
-.confirmationDetails,.confirmationSummary{padding:24px 30px;min-width:0}
-.confirmationDetails{display:grid;align-content:start;gap:22px}
-.confirmationSummary{background:#fafafa;border-left:1px solid #eee}
-.confirmation h2{font-size:12px;font-weight:700;margin:0 0 9px;color:#666}
-.confirmation h2 span{font-weight:400}
-.compactReference{display:flex;align-items:flex-start;flex-wrap:wrap;gap:8px}
-.compactReference h2{flex-basis:100%;margin:0}
-.compactReference strong{font-size:12px;line-height:1.6;overflow-wrap:anywhere;max-width:100%;font-weight:500}
-.compactReference button{border:0!important;background:transparent!important;padding:0!important;font-size:11px!important;text-decoration:underline;color:#666!important}
-.compactReference p{font-size:11px;width:100%;margin:0;color:#287140}
-.confirmationAddress strong{font-size:13px}
-.confirmationAddress p,.confirmationContact p{font-size:13px;line-height:1.65;margin:5px 0 0;overflow-wrap:anywhere}
-.confirmationProduct{display:flex;gap:12px;align-items:flex-start;padding:10px 0 14px}
-.confirmationProduct img{width:56px;height:72px;object-fit:contain;background:#eee;border-radius:4px;flex-shrink:0}
-.confirmationProduct h3{font-size:12px;line-height:1.5;margin:0}
-.confirmationProduct p{font-size:11px;color:#777;margin:5px 0}
-.confirmationProduct strong{font-size:12px}
-.confirmationTotals{margin:6px 0 0;border-top:1px solid #e3e3e3;padding-top:8px}
-.confirmationTotals>div{display:flex;justify-content:space-between;gap:12px;font-size:12px;margin:10px 0}
-.confirmationTotals dd{margin:0}
-.confirmationTotals>div:last-child{border-top:1px solid #e3e3e3;margin-top:15px;padding-top:15px;font-size:17px;font-weight:700}
-.confirmationFooter{border-top:1px solid #eee;padding:18px 30px;display:flex;align-items:center;justify-content:space-between;gap:20px}
-.confirmationFooter p{font-size:11px;line-height:1.6;color:#777;max-width:260px;margin:0}
-.confirmationFooter>div{display:flex;align-items:center;gap:12px;flex-shrink:0}
-.primaryAction,.secondaryAction{display:inline-flex;justify-content:center;align-items:center;min-height:42px;padding:10px 18px;border-radius:5px;font-size:12px;font-weight:600}
-.primaryAction{background:#161616;color:#fff}.secondaryAction{border:1px solid #d9d9d9;color:#161616}
-@media(max-width:640px){.confirmation{margin:20px auto 30px}.confirmationHeader{padding:22px 20px;gap:12px}.confirmationHeader h1{font-size:21px!important}.confirmationTest{padding:9px 20px}.confirmationGrid{grid-template-columns:1fr}.confirmationDetails,.confirmationSummary{padding:20px}.confirmationDetails{gap:18px}.confirmationSummary{border-left:0;border-top:1px solid #eee}.confirmationFooter{padding:18px 20px;flex-direction:column;align-items:stretch;gap:14px}.confirmationFooter p{max-width:none}.confirmationFooter>div{display:grid;grid-template-columns:1fr 1fr;gap:8px}.primaryAction,.secondaryAction{padding:10px 8px;font-size:11px}}
+.successPanel{max-width:560px;margin:32px auto 48px;padding:32px 28px 24px;border:1px solid #dedede;border-radius:10px;text-align:center;background:#fff}
+.successIcon{width:48px;height:48px;margin:0 auto 16px;color:#287140}.successIcon svg{width:100%;height:100%}
+.successPanel h1{font-size:32px!important;line-height:1.15;letter-spacing:-.035em;margin:0 0 10px!important}
+.successSubtitle{font-size:16px;line-height:1.5;margin:0 0 24px}
+.successPanel .test{font-size:10px;margin:0 0 18px}
+.successReference{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;border-radius:6px;background:#f6f5f4;text-align:left}
+.successReference>div{min-width:0}.successReference span{display:block;text-transform:uppercase;letter-spacing:.06em;font-size:10px;color:#6b6b6b;margin-bottom:6px}
+.successReference strong{display:block;font-size:12px;font-weight:500;overflow-wrap:anywhere;line-height:1.5}
+.successReference button{display:grid;place-items:center;padding:6px!important;border:0!important;background:transparent!important;color:#161616!important;min-width:36px;min-height:36px;flex-shrink:0}
+.successReference svg{width:21px;height:21px}
+.copyFeedback{font-size:11px;margin:8px 0 0;color:#287140}
+.successEmail{margin:24px 0;line-height:1.6}.successEmail svg{width:30px;height:24px;display:block;margin:0 auto 12px}
+.successEmail p{font-size:14px;margin:0 0 5px}.successEmail span{font-size:12px;color:#717171;display:block}
+.successPrimary{display:flex;justify-content:center;align-items:center;min-height:46px;border-radius:5px;background:#161616;color:#fff;font-weight:650;font-size:13px;width:100%}
+.successContinue{display:inline-block;text-decoration:underline;font-size:12px;margin-top:18px;padding:6px}
+@media(max-width:600px){.successPanel{margin:20px auto 30px;padding:26px 18px 20px}.successPanel h1{font-size:28px!important}.successReference{padding:12px;gap:8px}.successReference strong{font-size:11px}.successEmail{margin:22px 0}.successSubtitle{font-size:15px;margin-bottom:20px}}
