@@ -12,8 +12,9 @@ import static com.styledsomehow.backend.checkout.CheckoutDtos.*;
 @Transactional(isolation=Isolation.READ_COMMITTED)
 public class CheckoutService {
  private final com.styledsomehow.backend.shipping.ShippingGateway shipping;
+ private final com.styledsomehow.backend.address.PostalLocationService locations;
  private final ProductRepository products;private final StockRepository stocks;private final OrderRepository orders;
- public CheckoutService(ProductRepository products,StockRepository stocks,OrderRepository orders,com.styledsomehow.backend.shipping.ShippingGateway shipping){this.shipping=shipping;this.products=products;this.stocks=stocks;this.orders=orders;}
+ public CheckoutService(ProductRepository products,StockRepository stocks,OrderRepository orders,com.styledsomehow.backend.shipping.ShippingGateway shipping,com.styledsomehow.backend.address.PostalLocationService locations){this.locations=locations;this.shipping=shipping;this.products=products;this.stocks=stocks;this.orders=orders;}
  private List<BlankStock> prepare(){var all=stocks.lockedAll();expire(all);return all;}
  private void expire(List<BlankStock> all){for(var order:orders.findByStatus("PENDING_PAYMENT"))if(!order.expiresAt.isAfter(Instant.now()))release(order,all,"EXPIRED");}
  private void release(PendingOrder order,List<BlankStock> all,String status){
@@ -49,6 +50,7 @@ public class CheckoutService {
   return new Quote(lines,subtotal,0,subtotal);
  }
  public PendingOrder create(Checkout request,String sessionKey){
+  locations.validate(request.address());
   String fingerprint=fingerprint(request);
   int charge=shippingCharge(request.items(),request.address().pinCode());var all=prepare();
   var previous=orders.findBySessionKeyAndRequestId(sessionKey,request.requestId());

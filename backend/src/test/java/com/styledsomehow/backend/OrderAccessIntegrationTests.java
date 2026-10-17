@@ -14,6 +14,7 @@ import static com.styledsomehow.backend.checkout.CheckoutDtos.*;
 @org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 @SpringBootTest(properties="order-access.secret=integration-test-only-not-a-deployed-secret-123456789") @Transactional
 class OrderAccessIntegrationTests {
+ @org.springframework.test.context.bean.override.mockito.MockitoBean com.styledsomehow.backend.address.PostalLocationService locations;
  @org.springframework.test.context.bean.override.mockito.MockitoBean com.styledsomehow.backend.shipping.ShippingGateway shipping;
  @org.junit.jupiter.api.BeforeEach void stubShipping(){org.mockito.Mockito.when(shipping.rate(org.mockito.ArgumentMatchers.anyString(),org.mockito.ArgumentMatchers.anyInt(),org.mockito.ArgumentMatchers.anyInt())).thenReturn(new com.styledsomehow.backend.shipping.ShippingGateway.Rate(1,"Delhivery",0));}
 

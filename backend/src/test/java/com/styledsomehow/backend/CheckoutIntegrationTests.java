@@ -11,6 +11,7 @@ import static com.styledsomehow.backend.checkout.CheckoutDtos.*;
 import static org.assertj.core.api.Assertions.*;
 @SpringBootTest @Transactional
 class CheckoutIntegrationTests {
+ @org.springframework.test.context.bean.override.mockito.MockitoBean com.styledsomehow.backend.address.PostalLocationService locations;
  @org.springframework.test.context.bean.override.mockito.MockitoBean com.styledsomehow.backend.shipping.ShippingGateway shipping;
  @org.junit.jupiter.api.BeforeEach void stubShipping(){org.mockito.Mockito.when(shipping.rate(org.mockito.ArgumentMatchers.anyString(),org.mockito.ArgumentMatchers.anyInt(),org.mockito.ArgumentMatchers.anyInt())).thenReturn(new com.styledsomehow.backend.shipping.ShippingGateway.Rate(1,"Delhivery",0));}
 
@@ -31,6 +32,11 @@ class CheckoutIntegrationTests {
   org.mockito.Mockito.when(shipping.rate(org.mockito.ArgumentMatchers.anyString(),org.mockito.ArgumentMatchers.anyInt(),org.mockito.ArgumentMatchers.anyInt())).thenThrow(new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY,"Unavailable"));
   assertThatThrownBy(()->checkout.create(request(UUID.randomUUID().toString()),"unavailable")).isInstanceOf(org.springframework.web.server.ResponseStatusException.class);
   assertThat(stocks.findAll()).allMatch(s->s.reserved==0);
+ }
+ @Test void mismatchedLocationIsRejectedBeforeReservingStockOrCallingShipping(){
+  org.mockito.Mockito.doThrow(new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY,"City and PIN mismatch")).when(locations).validate(org.mockito.ArgumentMatchers.any());
+  assertThatThrownBy(()->checkout.create(request(UUID.randomUUID().toString()),"invalid-location")).isInstanceOf(org.springframework.web.server.ResponseStatusException.class);
+  org.mockito.Mockito.verifyNoInteractions(shipping);assertThat(stocks.findAll()).allMatch(stock->stock.reserved==0);
  }
  @Test void authoritativePriceAndFreeShipping(){var q=checkout.quote(new Cart(request(UUID.randomUUID().toString()).items()));assertThat(q.subtotal()).isEqualTo(1198);assertThat(q.shipping()).isZero();assertThat(q.total()).isEqualTo(1198);}
  @Test void combinedDesignsCannotExceedSharedBlanks(){assertThatThrownBy(()->checkout.quote(new Cart(List.of(new Item("cherry-zest-oversized-t-shirt","White","M",7),new Item("untamed-torque-oversized-t-shirt","White","M",6))))).isInstanceOf(org.springframework.web.server.ResponseStatusException.class);}

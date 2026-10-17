@@ -29,3 +29,13 @@
 
 - Extended diagnostic also GETs /orders/show/{id}. Shows the exact PIN request and a strict allowlist of saved shipment fields (PINs, pickup identifiers, channel, payment codes, values and parcel measurements). Names, emails, phone numbers and street addresses are excluded. Missing values remain unknown. Failure to read details does not discard the two courier result tables.
 - Screenshot confirmed the dashboard adds ₹5 for Smart Order to existing-order API freight. No universal fee is hardcoded into checkout or booking.
+
+## Checkout and PIN validation
+- Checkout uses Contact → Delivery → Review & pay. Guest checkout remains available and the existing Gmail restriction is retained. Contact/address values survive step navigation; the final review prominently shows the delivery PIN.
+- GET /api/checkout/location/{pin} proxies Shiprocket /open/postcode/details with postcode. No new external account or client-side provider credentials are needed. The backend caches successful results for 24 hours, bounded to 4,096 PINs.
+- City/town must be selected from the returned postal city or locality names; state is read-only. Postal city/district is labelled separately because it may not be the town name. House/street and landmark remain manually entered.
+- Changing the PIN immediately clears mapped city/state, previous lookup and delivery validation. Stale lookup and shipping responses cannot overwrite the new PIN. A failed lookup offers retry and blocks continuation; missing data is never guessed.
+- CheckoutService validates the submitted city and state against the lookup before reserving inventory. Case and whitespace variations are accepted. A mismatched PIN/city/state or provider outage blocks order creation. Existing paid orders are not rewritten.
+- Pay securely prepares an idempotent checkout and opens Razorpay without a separate pending-checkout action. A pending checkout is recovered after refresh; editing its delivery cancels the prior reservation first. Payment status can still be checked when its payment window has expired.
+- Test mode remains explicit. Price and shipping recalculation, CSRF, payment verification, reservation expiry, late payments and stock protections remain server-controlled. No real payments or shipments are initiated by tests here.
+- Verify 362720 using real provider data: city/state options must belong to that PIN, and a forged Ahmedabad city must be rejected. Repeat after changing PIN and for lookup/shipping failures.

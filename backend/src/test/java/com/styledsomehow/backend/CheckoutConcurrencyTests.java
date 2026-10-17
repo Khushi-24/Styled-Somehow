@@ -12,6 +12,7 @@ import static com.styledsomehow.backend.checkout.CheckoutDtos.*;
 import static org.assertj.core.api.Assertions.*;
 @SpringBootTest
 class CheckoutConcurrencyTests {
+ @org.springframework.test.context.bean.override.mockito.MockitoBean com.styledsomehow.backend.address.PostalLocationService locations;
  @org.springframework.test.context.bean.override.mockito.MockitoBean com.styledsomehow.backend.shipping.ShippingGateway shipping;
  @org.junit.jupiter.api.BeforeEach void stubShipping(){org.mockito.Mockito.when(shipping.rate(org.mockito.ArgumentMatchers.anyString(),org.mockito.ArgumentMatchers.anyInt(),org.mockito.ArgumentMatchers.anyInt())).thenReturn(new com.styledsomehow.backend.shipping.ShippingGateway.Rate(1,"Delhivery",0));}
 

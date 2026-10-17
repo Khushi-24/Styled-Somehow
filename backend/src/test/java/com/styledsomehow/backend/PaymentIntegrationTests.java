@@ -14,6 +14,7 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 @SpringBootTest @Transactional @org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 class PaymentIntegrationTests {
+ @org.springframework.test.context.bean.override.mockito.MockitoBean com.styledsomehow.backend.address.PostalLocationService locations;
  @org.springframework.test.context.bean.override.mockito.MockitoBean com.styledsomehow.backend.shipping.ShippingGateway shipping;
  @org.junit.jupiter.api.BeforeEach void stubShipping(){org.mockito.Mockito.when(shipping.rate(org.mockito.ArgumentMatchers.anyString(),org.mockito.ArgumentMatchers.anyInt(),org.mockito.ArgumentMatchers.anyInt())).thenReturn(new com.styledsomehow.backend.shipping.ShippingGateway.Rate(1,"Delhivery",0));}
 
