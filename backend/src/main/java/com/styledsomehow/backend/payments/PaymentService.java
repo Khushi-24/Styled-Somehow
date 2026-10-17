@@ -46,7 +46,7 @@ public class PaymentService {
    var stock=all.stream().filter(s->s.id.equals(entry.getKey())).findFirst().orElseThrow();if(reserved)stock.reserved-=entry.getValue();stock.quantity-=entry.getValue();
    var movement=new StockMovement();movement.requestId=UUID.nameUUIDFromBytes((payment.id()+":"+stock.id).getBytes(java.nio.charset.StandardCharsets.UTF_8)).toString();movement.stockId=stock.id;movement.colour=stock.colour;movement.size=stock.size;movement.delta=-entry.getValue();movement.resultingQuantity=stock.quantity;movement.reason="TEST paid order "+o.id;movement.actor="Razorpay TEST";movement.occurredAt=Instant.now();movements.save(movement);
   }
-  o.status="PAID";o.paymentId=payment.id();o.paidAt=Instant.now();r.status="PAID";r.reason="Verified captured payment; stock consumed";stocks.flush();receipts.saveAndFlush(r);orders.saveAndFlush(o);
+  o.status="PAID";o.fulfilmentStage="PAID";o.paymentId=payment.id();o.paidAt=Instant.now();r.status="PAID";r.reason="Verified captured payment; stock consumed";stocks.flush();receipts.saveAndFlush(r);orders.saveAndFlush(o);
  }
  public void markChecked(String id){orders.findById(id).ifPresent(o->o.paymentCheckedAt=Instant.now());}
  public void reconcileOrder(String id){if(!gateway.ready())return;lock();var o=orders.findById(id).orElseThrow();if(o.gatewayOrderId!=null)for(var p:gateway.payments(o.gatewayOrderId))apply(p);}

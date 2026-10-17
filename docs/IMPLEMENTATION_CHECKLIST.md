@@ -82,3 +82,15 @@ Khushi confirmed inventory adjustments/history/persistence tests completed. Cart
 - [x] Customer test checkout and admin payment/refund visibility.
 - [ ] Real Razorpay sandbox payment, refund, public webhook and mobile checkout verification.
 - [ ] Live onboarding, production secrets and payment launch review.
+
+
+## Fulfilment milestone — 18 October 2026 (current status)
+- [x] Separate payment and fulfilment stages, admin preparation updates and internal history.
+- [x] Ready-to-ship gate before LIVE courier booking; AWB assignment records Courier booked.
+- [x] Physical-handover confirmation before manual Shipped status; TEST dispatch blocked.
+- [x] Private customer order progress and courier/AWB details without internal notes/costs.
+- [x] Cached Shiprocket tracking polling with manual admin refresh, outage retention and terminal-state protection.
+- [ ] Run backend suites and Flyway V10 against the local database.
+- [ ] Verify genuine LIVE booking → collection → tracking → delivery.
+- [ ] Dispatch emails and operational cancellation/rebooking flows.
+See fulfilment-tracking.md. Earlier OTP checklist entries are superseded by secure email links; public OTP/recovery endpoints are retired.

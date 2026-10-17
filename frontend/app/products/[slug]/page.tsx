@@ -7,11 +7,12 @@ export async function generateMetadata({params}: {params: Promise<{slug: string}
  const p = await getProduct((await params).slug).catch(() => null);
  return {title: p ? `${p.name} | styled_somehow` : "Product | styled_somehow"};
 }
-export default async function Page({params,searchParams}: {params: Promise<{slug: string}>; searchParams: Promise<{from?: string}>}) {
+export default async function Page({params,searchParams}: {params: Promise<{slug: string}>; searchParams: Promise<{from?: string; origin?: string}>}) {
  const product = await getProduct((await params).slug);
  if (!product) notFound();
- const {from} = await searchParams;
+ const {from,origin} = await searchParams;
+ const collectionQuery = origin === `shop-${from}` ? `?from=${origin}` : "";
  const anchor = productAnchor(product);
- const returnUrl = from === "men" || from === "women" ? `/collections/${from}#${anchor}` : `/#new-in-product-${anchor}`;
+ const returnUrl = from === "men" || from === "women" ? `/collections/${from}${collectionQuery}#${anchor}` : `/#new-in-product-${anchor}`;
  return <ProductView product={product} returnUrl={returnUrl} />;
 }

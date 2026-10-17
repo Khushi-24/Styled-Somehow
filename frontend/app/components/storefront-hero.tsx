@@ -1,13 +1,12 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
-import {readCart} from "../../lib/cart";
+import PolicyActions from "./policy-actions";
 import { useEffect, useState } from "react";
 
 const slides = [
-  { image: "/images/feel-the-vibe.webp", alt: "Styled Somehow Feel the Vibe campaign", href: "/collections/new-drop", position: "center" },
-  { image: "/images/the-lineup.webp", alt: "Styled Somehow graphic tees and everyday basics lineup", href: "/collections/all", position: "center" },
+  { image: "/images/red-streetwear-hero.webp", mobileImage:"/images/red-streetwear-hero-mobile-refined.webp", alt: "Styled Somehow red streetwear campaign: Style you don’t have to think about. Comfort you never want to take off. Shop now.", href: "/#new-in", position: "center" },
+  { image: "/images/the-lineup-approved.webp", mobileImage:"/images/the-lineup-mobile-approved.webp", alt: "Styled Somehow graphic tees and everyday basics lineup", href: "/#new-in", position: "center" },
 ] as const;
 
 const collectionLinks = [
@@ -16,8 +15,9 @@ const collectionLinks = [
   ["Best Sellers", "/collections/best-sellers"],
 ] as const;
 
-function Icon({ name }: { name: "search" | "user" | "bag" | "menu" | "close" }) {
+function Icon({ name }: { name: "home" | "search" | "user" | "bag" | "menu" | "close" }) {
   const paths = {
+    home: <path d="M3 10 12 3l9 7M5 9v12h14V9M9 21v-7h6v7"/>,
     search: <><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.25 4.25"/></>,
     user: <><circle cx="12" cy="8" r="4"/><path d="M4.75 21c.7-4.25 3.12-6.5 7.25-6.5s6.55 2.25 7.25 6.5"/></>,
     bag: <><path d="M4.5 8.5h15l-1 12h-13l-1-12Z"/><path d="M9 9V6a3 3 0 0 1 6 0v3"/></>,
@@ -31,20 +31,18 @@ export default function StorefrontHero() {
   function rememberHome() {
     window.history.replaceState(window.history.state, "", `${window.location.pathname}${window.location.search}`);
   }
-  const [cartCount,setCartCount]=useState(0);
-  useEffect(()=>{function update(){setCartCount(readCart().reduce((n,i)=>n+i.quantity,0));}const timer=setTimeout(update,0);window.addEventListener("cart-updated",update);window.addEventListener("storage",update);window.addEventListener("pageshow",update);return()=>{clearTimeout(timer);window.removeEventListener("cart-updated",update);window.removeEventListener("storage",update);window.removeEventListener("pageshow",update);};},[]);
   const [activeSlide, setActiveSlide] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
-    const timer = window.setInterval(() => setActiveSlide((current) => (current + 1) % slides.length), 6500);
+    const timer = window.setInterval(() => setActiveSlide((current) => (current + 1) % slides.length), 2500);
     return () => window.clearInterval(timer);
   }, []);
 
   const moveSlide = (direction: number) => setActiveSlide((current) => (current + direction + slides.length) % slides.length);
 
   return (
-    <section className="storefront" aria-label="Styled Somehow featured collections">
+    <section className="storefront storefront--campaign" aria-label="Styled Somehow featured collections">
       <header className={`site-header ${activeSlide === 0 ? "header-on-dark" : "header-on-light"} ${menuOpen ? "menu-is-open" : ""}`}>
         <Link className="brand-logo" href="/" aria-label="Styled Somehow home">
           <span>STYLED</span>
@@ -59,11 +57,7 @@ export default function StorefrontHero() {
           <Link className="nav-link" href="/collections/women" onClick={rememberHome}>WOMEN</Link>
           <Link className="nav-link" href="/collections/couple-tshirts">COUPLE T-SHIRTS</Link>
         </nav>
-        <div className="header-actions">
-          <button className="icon-button desktop-action" type="button" aria-label="Search"><Icon name="search" /></button>
-          <Link className="icon-button desktop-action" href="/orders" aria-label="View your order"><Icon name="user" /></Link>
-          <Link className="icon-button bag-button" href="/cart" aria-label={`Cart, ${cartCount} items`}><Icon name="bag" /><span className="cart-count">{cartCount}</span></Link>
-          <button className="icon-button menu-button" type="button" aria-label={menuOpen ? "Close menu" : "Open menu"} aria-expanded={menuOpen} onClick={() => setMenuOpen((open) => !open)}><Icon name={menuOpen ? "close" : "menu"} /></button>
+        <div className="header-actions"><PolicyActions dark={activeSlide===0||menuOpen}/>          <button className="icon-button menu-button" type="button" aria-label={menuOpen ? "Close menu" : "Open menu"} aria-expanded={menuOpen} onClick={() => setMenuOpen((open) => !open)}><Icon name={menuOpen ? "close" : "menu"} /></button>
         </div>
       </header>
 
@@ -80,12 +74,15 @@ export default function StorefrontHero() {
       </div>
 
       <div className="slides">
-        {slides.map((slide, index) => (
-          <Link key={slide.image} href={slide.href} className={`hero-slide ${index === activeSlide ? "is-active" : ""}`} aria-hidden={index !== activeSlide} tabIndex={index === activeSlide ? 0 : -1}>
-            <Image src={slide.image} alt={slide.alt} fill priority={index === 0} sizes="100vw" style={{ objectPosition: slide.position }} />
-            {index === 1 && <span className="lineup-cta">EXPLORE THE LINEUP <span aria-hidden="true">↗</span></span>}
-          </Link>
-        ))}
+        {slides.map((slide, index) => {
+          const desktop={src:slide.image,alt:slide.alt,width:index===0?1672:2048,height:index===0?941:1024};
+          const mobile={srcSet:slide.mobileImage,sizes:"100vw"};
+          return <Link key={slide.image} href={slide.href} className={`hero-slide ${index === activeSlide ? "is-active" : ""}`} aria-hidden={index !== activeSlide} tabIndex={index === activeSlide ? 0 : -1}>
+            <picture><source media="(max-width: 620px)" srcSet={mobile.srcSet} sizes={mobile.sizes}/>{/* Art-directed sources share one responsive image element. */}
+            <img {...desktop} alt={slide.alt} loading={index===0?"eager":"lazy"} fetchPriority={index===0?"high":"auto"} style={{objectPosition:slide.position}}/></picture>
+            {index === 1 && <span className="lineup-cta">SHOP NOW <span aria-hidden="true">→</span></span>}
+          </Link>;
+        })}
       </div>
 
       <div className="carousel-controls">

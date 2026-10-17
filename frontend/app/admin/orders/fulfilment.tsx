@@ -1,0 +1,25 @@
+"use client";
+import {useEffect,useState} from "react";
+import {PendingOrder} from "../../../lib/cart";
+import {adminRequest} from "../../../lib/admin-api";
+import {AdminFulfilment,fulfilmentLabels,fulfilmentSteps} from "../../../lib/fulfilment";
+import {dateLabel} from "./badges";
+import styles from "./fulfilment.module.css";
+export default function FulfilmentPanel({order,refreshKey,onStageChange}:{order:PendingOrder;refreshKey:number;onStageChange:(stage:string)=>void}){
+ const [data,setData]=useState<AdminFulfilment|null>(null),[error,setError]=useState(""),[busy,setBusy]=useState(false),[note,setNote]=useState(""),[ack,setAck]=useState(false),[message,setMessage]=useState("");
+ const path=`/api/admin/orders/${encodeURIComponent(order.id)}`;
+ useEffect(()=>{let live=true;adminRequest<AdminFulfilment>(`${path}/fulfilment`).then(result=>{if(live){setData(result);onStageChange(result.fulfilment.stage);}}).catch(e=>{if(live)setError(e instanceof Error?e.message:"Cannot load fulfilment.");});return()=>{live=false;};},[path,refreshKey,onStageChange]);
+ async function reload(){const result=await adminRequest<AdminFulfilment>(`${path}/fulfilment`);setData(result);onStageChange(result.fulfilment.stage);}
+ async function advance(stage:string){if(!data||busy)return;setBusy(true);setError("");setMessage("");try{const result=await adminRequest<AdminFulfilment>(`${path}/fulfilment`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({expectedStage:data.fulfilment.stage,stage,note})});setData(result);onStageChange(result.fulfilment.stage);setNote("");setAck(false);setMessage(`Saved: ${fulfilmentLabels[stage]||stage}`);}catch(e){setError(e instanceof Error?e.message:"Cannot update fulfilment.");try{await reload();}catch{}}finally{setBusy(false);}}
+ async function refreshTracking(){setBusy(true);setError("");setMessage("");try{await adminRequest(`${path}/shipment/tracking/refresh`,{method:"POST"});await reload();setMessage("Tracking checked. Recent checks may use cached results.");}catch(e){setError(e instanceof Error?e.message:"Cannot refresh tracking.");}finally{setBusy(false);}}
+ const f=data?.fulfilment,next=data?.allowedNext[0];
+ return <section className={styles.panel} aria-label="Order fulfilment"><div className={styles.heading}><h3>Fulfilment & tracking</h3>{f&&<span data-stage={f.stage} className={styles.badge}>{fulfilmentLabels[f.stage]||f.stage}</span>}</div>
+ {error&&<p role="alert" className={styles.error}>{error}</p>}{message&&<div role="status" className={styles.toast}>{message}<button aria-label="Dismiss notification" onClick={()=>setMessage("")}>×</button></div>}
+ {!f?<p>{error?"Fulfilment could not be loaded. Refresh the order to retry.":"Loading fulfilment…"}</p>:<>{f.test&&<p className={styles.notice}>TEST order · preparation stages are simulated. Real courier booking and dispatch are blocked.</p>}{f.onHold&&<p className={styles.notice}>Payment status is {order.status.replaceAll("_"," ")}. Fulfilment updates are blocked.</p>}
+ <ol className={styles.progress}>{fulfilmentSteps.map((stage,index)=><li key={stage} aria-current={stage===f.stage?"step":undefined} className={index<=fulfilmentSteps.indexOf(f.stage)?styles.reached:""}>{fulfilmentLabels[stage]}</li>)}</ol>
+ {next&&<div className={styles.action}><label>Internal note {next==="SHIPPED"?"(required)":"(optional)"}<textarea maxLength={500} value={note} disabled={busy} onChange={e=>setNote(e.target.value)} placeholder={next==="SHIPPED"?"Who collected it and when?":"Any preparation details…"}/></label>{next==="SHIPPED"&&<label className={styles.check}><input type="checkbox" checked={ack} disabled={busy} onChange={e=>setAck(e.target.checked)}/>I confirm the courier has physically collected this parcel.</label>}<button disabled={busy||next==="SHIPPED"&&(!ack||!note.trim())} onClick={()=>advance(next)}>{busy?"Saving…":`${f.test?"Simulate: ":""}Mark as ${fulfilmentLabels[next].toLowerCase()}`}</button></div>}
+ {f.stage==="READY_TO_SHIP"&&<p>Use Shipment booking below to compare couriers and create an AWB. Booking an AWB does not confirm pickup.</p>}
+ {f.awb&&<div className={styles.tracking}><h4>{f.courier}</h4><p>AWB: <strong>{f.awb}</strong></p><p>Courier status: <strong>{f.courierStatus||"Awaiting first courier update"}</strong></p>{f.trackingCheckedAt&&<small>Last checked: {dateLabel(f.trackingCheckedAt)}</small>}{f.trackingFailed&&<p className={styles.notice}>The latest tracking check failed. Previous details are retained.</p>}{f.trackingUrl&&<a href={f.trackingUrl} target="_blank" rel="noopener noreferrer">Open courier tracking ↗</a>}<button disabled={busy} onClick={refreshTracking}>{busy?"Checking…":"Refresh courier tracking"}</button></div>}
+ {!!data.history.length&&<details className={styles.history}><summary>Fulfilment history ({data.history.length})</summary><ol>{data.history.map(event=><li key={event.id}><strong>{fulfilmentLabels[event.stage]||event.stage}</strong><small>{dateLabel(event.occurredAt)} · {event.actor}</small>{event.note&&<p>{event.note}</p>}</li>)}</ol></details>}
+ </>}</section>;
+}

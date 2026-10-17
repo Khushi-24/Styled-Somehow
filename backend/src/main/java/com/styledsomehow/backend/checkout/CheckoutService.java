@@ -11,8 +11,10 @@ import static com.styledsomehow.backend.checkout.CheckoutDtos.*;
 @Service
 @Transactional(isolation=Isolation.READ_COMMITTED)
 public class CheckoutService {
+ private final com.styledsomehow.backend.shipping.ShippingGateway shipping;
+ private final com.styledsomehow.backend.address.PostalLocationService locations;
  private final ProductRepository products;private final StockRepository stocks;private final OrderRepository orders;
- public CheckoutService(ProductRepository products,StockRepository stocks,OrderRepository orders){this.products=products;this.stocks=stocks;this.orders=orders;}
+ public CheckoutService(ProductRepository products,StockRepository stocks,OrderRepository orders,com.styledsomehow.backend.shipping.ShippingGateway shipping,com.styledsomehow.backend.address.PostalLocationService locations){this.locations=locations;this.shipping=shipping;this.products=products;this.stocks=stocks;this.orders=orders;}
  private List<BlankStock> prepare(){var all=stocks.lockedAll();expire(all);return all;}
  private void expire(List<BlankStock> all){for(var order:orders.findByStatus("PENDING_PAYMENT"))if(!order.expiresAt.isAfter(Instant.now()))release(order,all,"EXPIRED");}
  private void release(PendingOrder order,List<BlankStock> all,String status){
@@ -21,6 +23,18 @@ public class CheckoutService {
  }
  public void expireReservations(){prepare();}
  public Quote quote(Cart cart){return calculate(cart.items(),prepare());}
+ public Quote shippingQuote(ShippingCart cart){var rate=shippingRate(cart.items(),cart.pinCode());var quote=quote(new Cart(cart.items()));int charge=quote.subtotal()>=999?0:rate.rupees();return new Quote(quote.items(),quote.subtotal(),charge,Math.addExact(quote.subtotal(),charge),rate.transitDays());}
+ private int shippingCharge(List<Item> items,String pin){
+  var rate=shippingRate(items,pin);
+  int subtotal=0;for(var item:items){var p=products.findBySlug(item.slug()).orElseThrow();subtotal=Math.addExact(subtotal,Math.multiplyExact(p.price,item.quantity()));}
+  return subtotal>=999?0:rate.rupees();
+ }
+ private com.styledsomehow.backend.shipping.ShippingGateway.Rate shippingRate(List<Item> items,String pin){
+  int quantity=items.stream().mapToInt(Item::quantity).sum();
+  int subtotal=0;for(var item:items){var p=products.findBySlug(item.slug()).filter(v->v.status==Product.Status.PUBLISHED).orElseThrow(()->bad("A product is no longer available."));subtotal=Math.addExact(subtotal,Math.multiplyExact(p.price,item.quantity()));}
+  return shipping.rate(pin,quantity,subtotal);
+ }
+ private Quote withShipping(Quote quote,int charge){return new Quote(quote.items(),quote.subtotal(),charge,Math.addExact(quote.subtotal(),charge));}
  private Quote calculate(List<Item> items,List<BlankStock> all){
   Map<String,Item> combined=new LinkedHashMap<>();
   for(var item:items){String key=item.slug()+"|"+item.colour()+"|"+item.size();var old=combined.get(key);int count=item.quantity()+(old==null?0:old.quantity());if(count>20)throw bad("Maximum 20 of one product variant per checkout");combined.put(key,new Item(item.slug(),item.colour(),item.size(),count));}
@@ -36,12 +50,14 @@ public class CheckoutService {
   return new Quote(lines,subtotal,0,subtotal);
  }
  public PendingOrder create(Checkout request,String sessionKey){
-  var all=prepare();String fingerprint=fingerprint(request);
+  locations.validate(request.address());
+  String fingerprint=fingerprint(request);
+  int charge=shippingCharge(request.items(),request.address().pinCode());var all=prepare();
   var previous=orders.findBySessionKeyAndRequestId(sessionKey,request.requestId());
   if(previous.isPresent()){var order=previous.get();if(!order.requestFingerprint.equals(fingerprint))throw new ResponseStatusException(HttpStatus.CONFLICT,"Checkout reference already used for different details");return order;}
   if(orders.existsBySessionKeyAndStatus(sessionKey,"PENDING_PAYMENT"))throw new ResponseStatusException(HttpStatus.CONFLICT,"You already have a pending checkout. Resume or cancel it before starting another.");
-  var quote=calculate(request.items(),all);if(quote.total()!=request.expectedTotal())throw new ResponseStatusException(HttpStatus.CONFLICT,"Prices changed. Refresh your cart and review the updated total.");
-  var order=new PendingOrder();order.id=UUID.randomUUID().toString();order.sessionKey=sessionKey;order.requestId=request.requestId();order.requestFingerprint=fingerprint;order.status="PENDING_PAYMENT";order.createdAt=Instant.now();order.expiresAt=order.createdAt.plusSeconds(900);order.subtotal=quote.subtotal();order.shipping=0;order.total=quote.total();
+  var quote=withShipping(calculate(request.items(),all),charge);if(quote.total()!=request.expectedTotal())throw new ResponseStatusException(HttpStatus.CONFLICT,"Prices or shipping charges changed. Check delivery again and review the updated total.");
+  var order=new PendingOrder();order.id=UUID.randomUUID().toString();order.sessionKey=sessionKey;order.requestId=request.requestId();order.requestFingerprint=fingerprint;order.status="PENDING_PAYMENT";order.createdAt=Instant.now();order.expiresAt=order.createdAt.plusSeconds(900);order.subtotal=quote.subtotal();order.shipping=quote.shipping();order.total=quote.total();
   var a=request.address();order.name=a.name().trim();order.email=a.email().trim();order.phone=a.phone();order.line1=a.line1().trim();order.line2=a.line2()==null?"":a.line2().trim();order.city=a.city().trim();order.state=a.state().trim();order.pinCode=a.pinCode();
   for(var line:quote.items()){
    var stock=all.stream().filter(s->s.colour.equals(line.colour())&&s.size.equals(line.size())).findFirst().orElseThrow();stock.reserved+=line.quantity();

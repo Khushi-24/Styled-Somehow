@@ -4,7 +4,7 @@ import Image from "next/image";
 import {useEffect,useState} from "react";
 import {adminRequest,ApiError} from "../../lib/admin-api";
 import {Product,Media,money} from "../../lib/product";
-const blank=():Product=>({slug:"",name:"",price:599,originalPrice:900,description:"",details:"",composition:"100% Cotton",gsm:240,collections:["women"],colours:["Black"],sizes:["S","M","L","XL"],media:[],newIn:true,sortOrder:100,collectionOrder:100,status:"DRAFT"});
+const blank=():Product=>({slug:"",name:"",price:599,originalPrice:900,description:"",details:"",composition:"100% Cotton",gsm:260,collections:["women"],colours:["Black"],sizes:["S","M","L","XL"],media:[],newIn:true,sortOrder:100,collectionOrder:100,status:"DRAFT"});
 export default function AdminPortal(){
  const [user,setUser]=useState<string|null>(null),[loading,setLoading]=useState(true),[busy,setBusy]=useState(false),[products,setProducts]=useState<Product[]>([]),[draft,setDraft]=useState<Product|null>(null),[error,setError]=useState(""),[notice,setNotice]=useState(""),[query,setQuery]=useState("");
  useEffect(()=>{if(!notice||error)return;const timer=setTimeout(()=>setNotice(""),6000);return()=>clearTimeout(timer);},[notice,error]);
