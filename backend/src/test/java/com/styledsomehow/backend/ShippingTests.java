@@ -35,10 +35,12 @@ class ShippingTests {
   var pin=new JsonMapper().readTree("{\"data\":{\"available_courier_companies\":[{\"courier_company_id\":33,\"courier_name\":\"Xpressbees Air\",\"rate\":49.72}]}}");
   var existing=new JsonMapper().readTree("{\"data\":{\"available_courier_companies\":[{\"courier_company_id\":43,\"courier_name\":\"Delhivery Surface\",\"rate\":66.72,\"blocked\":1}]}}");
   when(api.get(eq("/courier/serviceability/"),anyMap())).thenReturn(pin,existing);
+  when(api.get(eq("/orders/show/4076130954"),eq(Map.of()))).thenReturn(new JsonMapper().readTree("{\"data\":{\"customer_pincode\":\"362720\",\"payment_method\":\"prepaid\",\"customer_email\":\"private@example.com\",\"shipments\":[{\"weight\":0.5,\"length\":27.94,\"breadth\":33.02,\"height\":2.54,\"shipping_address\":\"PRIVATE\"}]}}"));
   var result=new ShiprocketGateway(api,"380015").diagnose("362720",1,1200,new ShippingGateway.Parcel(0.5,27.94,33.02,2.54),4076130954L);
   assertThat(result.pinBased().get(0).rate()).isEqualTo("49.72");assertThat(result.orderBased().get(0).courier()).isEqualTo("Delhivery Surface");assertThat(result.orderBased().get(0).blocked()).isEqualTo(1);
+  assertThat(result.requestDetails()).containsEntry("declared_value","1200");assertThat(result.orderDetails()).containsEntry("customer_pincode","362720").containsEntry("shipments[0].height","2.54").doesNotContainKeys("customer_email","shipments[0].shipping_address");
   verify(api).get(eq("/courier/serviceability/"),eq(Map.of("pickup_postcode","380015","delivery_postcode","362720","order_id",4076130954L)));
-  verify(api,times(2)).get(anyString(),anyMap());verify(api,never()).post(anyString(),anyMap());
+  verify(api).get(eq("/orders/show/4076130954"),eq(Map.of()));verify(api,times(3)).get(anyString(),anyMap());verify(api,never()).post(anyString(),anyMap());
  }
  @Test void allows110ButRejectsAboveLimitAndInvalidRates() throws Exception {
   assertThat(ShiprocketGateway.selectRate(new JsonMapper().readTree("[{\"courier_name\":\"Xpressbees Surface\",\"courier_company_id\":1,\"rate\":110}]" )).rupees()).isEqualTo(110);

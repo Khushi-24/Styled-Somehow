@@ -36,7 +36,21 @@ public class ShiprocketGateway implements ShippingGateway {
   var pinResult=fetch(pin,quantity,subtotal,parcel);
   var orderResult=api.get("/courier/serviceability/",Map.of("pickup_postcode",pickup,"delivery_postcode",pin,"order_id",shiprocketOrderId));
   if(orderResult==null||!orderResult.path("data").path("available_courier_companies").isArray())throw unavailable();
-  return new Diagnostic(shiprocketOrderId,pickup,pin,diagnosticCouriers(pinResult),diagnosticCouriers(orderResult.path("data").path("available_courier_companies")));
+  Map<String,String> request=new LinkedHashMap<>();request.put("pickup_postcode",pickup);request.put("delivery_postcode",pin);request.put("cod","0 (Prepaid)");request.put("declared_value",Integer.toString(subtotal));request.put("weight",Double.toString(parcel.weightKg()));request.put("length",Double.toString(parcel.lengthCm()));request.put("breadth",Double.toString(parcel.breadthCm()));request.put("height",Double.toString(parcel.heightCm()));
+  Map<String,String> saved=Map.of();String notice="";
+  try{var details=api.get("/orders/show/"+shiprocketOrderId,Map.of());if(details==null||!details.path("data").isObject())notice="Shiprocket did not return order details. Courier responses below remain available.";else saved=orderSnapshot(details.path("data"));}
+  catch(ResponseStatusException error){notice="Could not read saved order details. Check the internal Shiprocket order ID and API user's Orders read permission. Courier responses below remain available.";}
+  return new Diagnostic(shiprocketOrderId,pickup,pin,diagnosticCouriers(pinResult),diagnosticCouriers(orderResult.path("data").path("available_courier_companies")),request,saved,notice);
+ }
+ static Map<String,String> orderSnapshot(JsonNode data){
+  Map<String,String> result=new LinkedHashMap<>();
+  snapshotFields(data,"",result);
+  var shipments=data.path("shipments");if(shipments.isArray()){int index=0;for(var shipment:shipments){snapshotFields(shipment,"shipments["+(index++)+"].",result);}}else if(shipments.isObject())snapshotFields(shipments,"shipments.",result);
+  var pickup=data.path("pickup_address");for(String key:List.of("pin_code","pincode","pickup_location")){var value=pickup.path(key);if(value.isValueNode()&&!value.isNull())result.put("pickup_address."+key,value.asText());}
+  return result;
+ }
+ private static void snapshotFields(JsonNode node,String prefix,Map<String,String> result){
+  for(String key:List.of("id","channel_id","pickup_location","pickup_id","pickup_postcode","pickup_pincode","customer_pincode","shipping_pincode","payment_method","payment_status","cod","sub_total","total","order_value","weight","length","breadth","height","is_return","is_document","is_dg","is_dangerous","courier_id","courier_name","status")){var value=node.path(key);if(value.isValueNode()&&!value.isNull())result.put(prefix+key,value.asText());}
  }
  private static List<DiagnosticCourier> diagnosticCouriers(JsonNode rows){
   List<DiagnosticCourier> result=new ArrayList<>();

@@ -26,3 +26,6 @@
 - Makes two serviceability GET calls using the store order's route: one with the current parcel, prepaid flag and stored subtotal; the other with the supplied Shiprocket order ID (without overriding its weight/payment parameters). Confirm the existing order matches the same route and shipment details.
 - Displays allowlisted raw courier/price fields from both responses, including blocked or unsupported couriers, without rounding. No full provider payload, credentials or customer details are exposed.
 - Admin authentication and CSRF are required. No order, AWB or pickup is created; diagnostic results cannot be selected for booking and do not modify the normal comparison.
+
+- Extended diagnostic also GETs /orders/show/{id}. Shows the exact PIN request and a strict allowlist of saved shipment fields (PINs, pickup identifiers, channel, payment codes, values and parcel measurements). Names, emails, phone numbers and street addresses are excluded. Missing values remain unknown. Failure to read details does not discard the two courier result tables.
+- Screenshot confirmed the dashboard adds ₹5 for Smart Order to existing-order API freight. No universal fee is hardcoded into checkout or booking.
