@@ -48,7 +48,7 @@ class ShippingTests {
  }
  @Test void missingDimensionsBlockBookingBeforeExternalCalls(){
   var rates=mock(ShippingGateway.class);var booking=mock(ShipmentGateway.class);
-  var service=new ShipmentService(mock(com.styledsomehow.backend.checkout.OrderRepository.class),mock(ShipmentRepository.class),rates,booking,mock(org.springframework.transaction.PlatformTransactionManager.class),true,"Home",0,0,0);
+  var service=new ShipmentService(mock(com.styledsomehow.backend.fulfilment.FulfilmentService.class),mock(com.styledsomehow.backend.checkout.OrderRepository.class),mock(ShipmentRepository.class),rates,booking,mock(org.springframework.transaction.PlatformTransactionManager.class),true,"Home",0,0,0);
   assertThatThrownBy(()->service.book("fixture",85,1)).isInstanceOf(org.springframework.web.server.ResponseStatusException.class).hasMessageContaining("dimensions");
   verifyNoInteractions(rates,booking);
  }

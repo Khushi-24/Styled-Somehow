@@ -24,7 +24,7 @@ class ShipmentIntegrationTests {
  private final List<String> fixtures=new ArrayList<>();
  @BeforeEach void configure(){when(rates.rate(anyString(),anyInt(),anyInt())).thenReturn(new ShippingGateway.Rate(42,"Delhivery Surface",85));when(rates.options(anyString(),anyInt(),anyInt(),any())).thenReturn(List.of(new ShippingGateway.Rate(42,"Delhivery Surface",85)));when(gateway.create(anyMap())).thenReturn(new ShipmentGateway.Created(101,202));when(gateway.assign(202,42)).thenReturn(new ShipmentGateway.Assigned("AWBFIXTURE202","Delhivery Surface"));}
  @AfterEach void clean(){for(String id:fixtures){shipments.deleteById(id);orders.deleteById(id);}}
- PendingOrder order(String mode,String status){var o=new PendingOrder();o.id=UUID.randomUUID().toString();o.status=status;o.paymentMode=mode;o.paymentId="pay_fixture";o.paidAt=Instant.now();o.createdAt=o.paidAt;o.expiresAt=o.createdAt;o.subtotal=599;o.shipping=85;o.total=684;o.name="Shipping fixture";o.email="fixture@gmail.com";o.phone="9999999999";o.line1="Fixture address";o.city="Ahmedabad";o.state="Gujarat";o.pinCode="380015";var line=new PendingOrder.OrderLine();line.slug="fixture-tee";line.name="Fixture tee";line.colour="White";line.size="S";line.quantity=1;line.unitPrice=599;o.items.add(line);fixtures.add(o.id);return orders.saveAndFlush(o);}
+ PendingOrder order(String mode,String status){var o=new PendingOrder();o.id=UUID.randomUUID().toString();o.status=status;o.fulfilmentStage="READY_TO_SHIP";o.paymentMode=mode;o.paymentId="pay_fixture";o.paidAt=Instant.now();o.createdAt=o.paidAt;o.expiresAt=o.createdAt;o.subtotal=599;o.shipping=85;o.total=684;o.name="Shipping fixture";o.email="fixture@gmail.com";o.phone="9999999999";o.line1="Fixture address";o.city="Ahmedabad";o.state="Gujarat";o.pinCode="380015";var line=new PendingOrder.OrderLine();line.slug="fixture-tee";line.name="Fixture tee";line.colour="White";line.size="S";line.quantity=1;line.unitPrice=599;o.items.add(line);fixtures.add(o.id);return orders.saveAndFlush(o);}
  @Test void blocksTestUnpaidAndRefundOrdersBeforeAnyExternalCall(){for(var pair:List.of(List.of("TEST","PAID"),List.of("LIVE","PENDING_PAYMENT"),List.of("LIVE","REFUNDED"),List.of("LIVE","PAYMENT_REVIEW"))){var o=order(pair.get(0),pair.get(1));assertThatThrownBy(()->service.book(o.id,85,42)).isInstanceOf(org.springframework.web.server.ResponseStatusException.class);}verifyNoInteractions(rates,gateway);}
  @Test void bookingIsIdempotentAndKeepsShippingPaymentSeparate(){var o=order("LIVE","PAID");assertThat(service.preview(o.id).quotedCost()).isEqualTo(85);var b=service.book(o.id,85,42);assertThat(b.status).isEqualTo("BOOKED");assertThat(b.awb).isEqualTo("AWBFIXTURE202");assertThat(service.book(o.id,85,42).awb).isEqualTo(b.awb);verify(gateway,times(1)).create(anyMap());verify(gateway,times(1)).assign(202,42);assertThat(orders.findById(o.id).orElseThrow().status).isEqualTo("PAID");}
  @Test void letsAdminSelectNonCheapestCourierAndUsesConfirmedParcel(){
@@ -69,4 +69,13 @@ class ShipmentIntegrationTests {
   assertThat(shipments.existsById(o.id)).isFalse();verifyNoInteractions(gateway);
  }
  @Test void payloadUsesStoredAmountsAndMeasuredParcel(){var o=order("LIVE","PAID");var body=ShipmentService.payload(o,1,"Home");assertThat(body).containsEntry("sub_total",599).containsEntry("shipping_charges",85).containsEntry("payment_method","Prepaid").containsEntry("weight",0.5).doesNotContainKeys("length","breadth","height");assertThat(ShipmentService.payload(o,2,"Home")).containsEntry("weight",0.5).doesNotContainKeys("length","breadth","height");assertThatThrownBy(()->ShipmentService.payload(o,3,"Home")).isInstanceOf(org.springframework.web.server.ResponseStatusException.class);}
+ @Test void bookingRequiresReadyToShipAndThenRecordsCourierBooked(){
+  var o=order("LIVE","PAID");o.fulfilmentStage="PACKED";orders.saveAndFlush(o);
+  assertThatThrownBy(()->service.book(o.id,85,42)).isInstanceOf(org.springframework.web.server.ResponseStatusException.class).hasMessageContaining("Ready to ship");
+  verifyNoInteractions(gateway);
+  o.fulfilmentStage="READY_TO_SHIP";orders.saveAndFlush(o);
+  assertThat(service.book(o.id,85,42).status).isEqualTo("BOOKED");
+  assertThat(orders.findById(o.id).orElseThrow().fulfilmentStage).isEqualTo("COURIER_BOOKED");
+ }
+
 }

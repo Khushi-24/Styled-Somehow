@@ -1,0 +1,4 @@
+export const fulfilmentLabels:Record<string,string>={UNFULFILLED:"Awaiting payment",PAID:"Paid",PRINTING:"Printing",PACKED:"Packed",READY_TO_SHIP:"Ready to ship",COURIER_BOOKED:"Courier booked",SHIPPED:"Shipped",DELIVERED:"Delivered",DELIVERY_ISSUE:"Delivery issue",RETURNED_TO_ORIGIN:"Returned to sender"};
+export const fulfilmentSteps=["PAID","PRINTING","PACKED","READY_TO_SHIP","COURIER_BOOKED","SHIPPED","DELIVERED"];
+export type Fulfilment={orderId:string;stage:string;test:boolean;onHold:boolean;courier:string|null;awb:string|null;courierStatus:string|null;trackingUrl:string|null;trackingCheckedAt:string|null;trackingFailed:boolean;timeline:{stage:string;occurredAt:string}[]};
+export type AdminFulfilment={fulfilment:Fulfilment;allowedNext:string[];history:{id:string;stage:string;actor:string;note:string;occurredAt:string}[]};

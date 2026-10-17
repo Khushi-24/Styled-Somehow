@@ -10,6 +10,7 @@ public class PendingOrder {
  @JsonIgnore @Column(length=36) public String requestId;
  @JsonIgnore @Column(length=64) public String requestFingerprint;
  public String status;
+ @Column(length=30) public String fulfilmentStage="UNFULFILLED";
  @JsonIgnore @Column(length=100,unique=true) public String gatewayOrderId;
  @Column(length=100) public String paymentId;
  public String paymentMode;

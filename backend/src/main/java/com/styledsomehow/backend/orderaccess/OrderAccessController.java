@@ -10,6 +10,7 @@ import java.time.Instant;
 import java.util.*;
 @RestController @RequestMapping("/api/order-access")
 public class OrderAccessController {
+ @org.springframework.beans.factory.annotation.Autowired private com.styledsomehow.backend.fulfilment.FulfilmentService fulfilment;
  private final OrderLinkService links;private final CheckoutService checkout;private final OrderRepository orders;
  public OrderAccessController(OrderLinkService links,CheckoutService checkout,OrderRepository orders){this.links=links;this.checkout=checkout;this.orders=orders;}
  public record LinkRequest(@NotBlank @Size(max=160) String token){}
@@ -27,6 +28,7 @@ public class OrderAccessController {
   Object until=session.getAttribute("verified-order-until");if(!id.equals(session.getAttribute("verified-order-id"))||!(until instanceof Instant time)||!time.isAfter(Instant.now()))throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
   checkout.expireReservations();return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(orders.findById(id).orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND)));
  }
+ @GetMapping("/order/{id}/fulfilment") public ResponseEntity<com.styledsomehow.backend.fulfilment.FulfilmentService.View> tracking(@PathVariable String id,HttpSession session){order(id,session);return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(fulfilment.customer(id));}
  @GetMapping("/current") public ResponseEntity<PendingOrder> current(HttpSession session){var id=session.getAttribute("verified-order-id");if(!(id instanceof String value))throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);return order(value,session);}
  @PostMapping("/close") @ResponseStatus(HttpStatus.NO_CONTENT) public void close(HttpSession session){session.removeAttribute("verified-order-id");session.removeAttribute("verified-order-until");}
 }

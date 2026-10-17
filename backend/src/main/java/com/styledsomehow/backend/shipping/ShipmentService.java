@@ -13,10 +13,11 @@ import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class ShipmentService {
+ private final com.styledsomehow.backend.fulfilment.FulfilmentService fulfilment;
  private final OrderRepository orders;private final ShipmentRepository shipments;private final ShippingGateway rates;private final ShipmentGateway gateway;
  private final double parcelLength,parcelBreadth,parcelHeight;
  private final TransactionTemplate tx;private final boolean enabled;private final String pickup;
- public ShipmentService(OrderRepository orders,ShipmentRepository shipments,ShippingGateway rates,ShipmentGateway gateway,PlatformTransactionManager manager,@Value("${shiprocket.booking-enabled:false}") boolean enabled,@Value("${shiprocket.pickup-location:Home}") String pickup,@Value("${shiprocket.parcel-length-cm:0}") double parcelLength,@Value("${shiprocket.parcel-breadth-cm:0}") double parcelBreadth,@Value("${shiprocket.parcel-height-cm:0}") double parcelHeight){this.parcelLength=parcelLength;this.parcelBreadth=parcelBreadth;this.parcelHeight=parcelHeight;this.orders=orders;this.shipments=shipments;this.rates=rates;this.gateway=gateway;this.tx=new TransactionTemplate(manager);this.enabled=enabled;this.pickup=pickup;}
+ public ShipmentService(com.styledsomehow.backend.fulfilment.FulfilmentService fulfilment,OrderRepository orders,ShipmentRepository shipments,ShippingGateway rates,ShipmentGateway gateway,PlatformTransactionManager manager,@Value("${shiprocket.booking-enabled:false}") boolean enabled,@Value("${shiprocket.pickup-location:Home}") String pickup,@Value("${shiprocket.parcel-length-cm:0}") double parcelLength,@Value("${shiprocket.parcel-breadth-cm:0}") double parcelBreadth,@Value("${shiprocket.parcel-height-cm:0}") double parcelHeight){this.fulfilment=fulfilment;this.parcelLength=parcelLength;this.parcelBreadth=parcelBreadth;this.parcelHeight=parcelHeight;this.orders=orders;this.shipments=shipments;this.rates=rates;this.gateway=gateway;this.tx=new TransactionTemplate(manager);this.enabled=enabled;this.pickup=pickup;}
  public record Preview(int courierId,String courier,int quotedCost,int customerShipping,int quantity,String weight,String dimensions,String pickupLocation){}
  public record Status(boolean bookingEnabled,ShipmentBooking booking){}
  private record Work(Map<String,Object> payload,ShippingGateway.Rate rate){}
@@ -46,7 +47,7 @@ public class ShipmentService {
  }
  public ShipmentBooking book(String id,int expectedCost,int expectedCourier,ShippingGateway.Parcel parcel){
   enabled();validateParcel(parcel);
-  Work work=tx.execute(status->{var o=order(id);eligible(o);if(shipments.existsById(id))return null;
+  Work work=tx.execute(status->{var o=order(id);eligible(o);if(shipments.existsById(id))return null;fulfilment.requireReady(o);
    int quantity=o.items.stream().mapToInt(i->i.quantity).sum();var rate=rates.options(o.pinCode,quantity,o.subtotal,parcel).stream().filter(option->option.courierId()==expectedCourier).findFirst().orElseThrow(()->new ResponseStatusException(HttpStatus.CONFLICT,"Selected courier is no longer available. Compare couriers again."));
    if(rate.rupees()!=expectedCost||rate.courierId()!=expectedCourier)throw new ResponseStatusException(HttpStatus.CONFLICT,"Courier or price changed. Refresh the shipping quote before confirming.");
    var payload=payload(o,quantity,pickup);payload.put("weight",parcel.weightKg());payload.put("length",parcel.lengthCm());payload.put("breadth",parcel.breadthCm());payload.put("height",parcel.heightCm());var b=new ShipmentBooking();b.orderId=id;b.status="CREATING";b.courierId=rate.courierId();b.courier=rate.courier();b.quotedCost=rate.rupees();b.createdAt=Instant.now();b.updatedAt=b.createdAt;b.message="Creation started. Do not book again while processing.";shipments.saveAndFlush(b);return new Work(payload,rate);
@@ -57,7 +58,7 @@ public class ShipmentService {
    tx.executeWithoutResult(status->{order(id);var b=shipments.findById(id).orElseThrow();b.providerOrderId=created.orderId();b.providerShipmentId=created.shipmentId();b.status="ORDER_CREATED";b.updatedAt=Instant.now();shipments.saveAndFlush(b);});
    tx.executeWithoutResult(status->{var o=order(id);eligible(o);var b=shipments.findById(id).orElseThrow();b.status="ASSIGNING";b.updatedAt=Instant.now();shipments.saveAndFlush(b);});
    var assigned=gateway.assign(created.shipmentId(),work.rate().courierId());
-   tx.executeWithoutResult(status->{order(id);var b=shipments.findById(id).orElseThrow();b.awb=assigned.awb();b.courier=assigned.courier();b.status="BOOKED";b.message="Tracking number assigned. Pickup has not been scheduled.";b.updatedAt=Instant.now();shipments.saveAndFlush(b);});
+   tx.executeWithoutResult(status->{var o=order(id);var b=shipments.findById(id).orElseThrow();b.awb=assigned.awb();b.courier=assigned.courier();b.status="BOOKED";b.message="Tracking number assigned. Pickup has not been scheduled.";b.updatedAt=Instant.now();shipments.saveAndFlush(b);fulfilment.courierBooked(o);});
   }catch(RuntimeException error){
    tx.executeWithoutResult(status->{order(id);var b=shipments.findById(id).orElseThrow();b.status="REVIEW_REQUIRED";b.message="Check Shiprocket using this store order reference before taking further action. The request may have succeeded; automatic retries are blocked.";b.updatedAt=Instant.now();shipments.saveAndFlush(b);});
   }

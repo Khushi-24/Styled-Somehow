@@ -5,6 +5,11 @@ import java.time.Instant;
 public class ShipmentBooking {
  @Id @Column(length=36) public String orderId;
  @Column(nullable=false,length=30) public String status;
+ @Column(length=150) public String courierStatus;
+ @Column(length=1000) public String trackingUrl;
+ @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.TIMESTAMP) public Instant trackingCheckedAt;
+ public boolean trackingFailed;
+ public boolean trackingTerminal;
  public int courierId;
  @Column(nullable=false,length=150) public String courier;
  public int quotedCost;
