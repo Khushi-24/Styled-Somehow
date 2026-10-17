@@ -1,10 +1,8 @@
-# Hostinger order email setup
+# Hostinger order emails and private order links
 
-The backend supports Hostinger SMTP for OTPs, forgotten-order reference recovery and automatic paid-order confirmation emails. The existing Brevo provider remains available.
+Add these entries to the ignored backend/.env file (not frontend/.env):
 
-Add these entries to your ignored backend/.env file (not frontend/.env):
-
-```dotenv
+```properties
 EMAIL_PROVIDER=smtp
 SMTP_HOST=smtp.hostinger.com
 SMTP_PORT=465
@@ -14,31 +12,39 @@ ORDER_CONFIRMATION_EMAIL_ENABLED=true
 STORE_URL=http://localhost:3000
 ```
 
-Keep your existing ORDER_ACCESS_SECRET (at least 32 characters). The password is the mailbox password used in the Gmail app, not the Hostinger account password. Never commit this file. This project imports backend/.env as a properties file; enter the literal value without shell quotes, and escape any backslashes as required by Java properties. Use the public HTTPS storefront URL for STORE_URL when deployed. EMAIL_SENDER and BREVO_API_KEY are not needed for SMTP.
+Keep the existing ORDER_ACCESS_SECRET, at least 32 characters. It signs private order links. Changing it invalidates links already emailed. Set STORE_URL to the public HTTPS storefront origin on deployment, not localhost. No new credentials or configuration entries are required for the private-link update.
 
-SMTP uses SSL on port 465 with hostname verification; other ports use required STARTTLS. Connection and read/write timeouts are set. No credentials are logged.
+The project imports backend/.env as a Java properties file. Enter literal values without shell quotes; escape backslashes if present. Never commit passwords. The password is the mailbox password used in Gmail, not the Hostinger account password.
 
-Restart the backend after changing these values. Flyway V9 adds confirmation delivery state. It skips historical terminal orders; only newly paid orders, and existing still-pending orders that later become paid, are eligible. No schema changes to existing migrations.
+SMTP uses SSL on 465 (required STARTTLS on other ports), hostname verification and finite connection/read/write timeouts. Confirmations use HTML plus plain text with the existing logo embedded inline. TEST orders are labelled in the subject and message and never promised dispatch.
 
-The dispatcher checks every 30 seconds, up to 10 orders at a time. It only sends PAID orders, after the payment transaction has committed. Attempts are row-locked to prevent simultaneous workers sending the same order. A failure retains PAID status and schedules a retry with increasing delay. Sent orders are skipped. SMTP delivery is at-least-once: an ambiguous network failure after the provider accepted an email, or a crash before its sent marker commits, can cause a duplicate. SMTP acceptance does not guarantee inbox placement.
+## Order access
+The email View order button contains a signed, read-only link bound to the specific order, payment identity and checkout email. It expires 90 days after payment and can be reopened during that period. Possession of the link grants access: customers must keep it private. It cannot modify orders or access other orders.
 
-TEST confirmation subjects start with [TEST] and the body says no real money was charged and the order will not dispatch. Emails include full reference, product/size/colour/quantity, subtotal/shipping/total, address and the order-access link. No OTP or password is placed in that URL. Order details still require OTP verification.
+The capability is in the URL fragment (#access), which is not sent in the initial page HTTP request. The client strips it from the address bar and exchanges it using a CSRF-protected POST for a server-side, 30-minute, order-specific session. It is not stored in browser localStorage or sessionStorage and is never serialized into order JSON. Responses have no-store caching and the order page uses no-referrer/noindex metadata. Email providers still see the link because it is in the email; disable third-party click tracking for these private links.
 
-Recovery: on /orders choose Forgot your order reference, enter the exact checkout email, and receive up to 20 recent paid/refund references plus a code for the newest order. Existing OTP budgets, expiry, browser binding and attempt limits apply.
+The confirmation-page View order button can also grant access from the original checkout session, without a token or extra email. A reference alone on a different browser does not grant access. Refreshing the order page can resume its existing verified session.
 
-## Local verification
-1. Run backend tests: gradlew.bat test --tests "*OrderConfirmationTests" --tests "*OrderAccessIntegrationTests".
-2. Restart backend and frontend.
-3. Complete a Razorpay TEST order. Within roughly 30 seconds plus mail delivery time, check Gmail and spam for [TEST] confirmation.
-4. Confirm full reference and amounts match. Open View order from the email and complete the OTP.
-5. Refresh the confirmation page and ensure the reference remains. A fresh cart must start a new checkout.
-6. Test forgotten-reference recovery using the same Gmail address.
-7. A duplicate payment webhook/reconciliation must not produce another confirmation after one has been recorded as sent.
+Public email-code and recovery forms have been removed. POST /api/order-access/request and /verify now return 410 without sending email. Lost/expired email links direct the customer to contact@styledsomehow.in. Verify ownership before providing private order information. Existing old emails do not automatically gain secure tokens; test with a newly paid TEST order. No bulk resend is triggered.
 
-Automated tests were added for sent-order suppression, failed-send retry, non-paid/config-disabled behavior and confirmation content. This environment could not download Gradle; backend compilation/tests and actual SMTP delivery must be verified locally. Frontend recovery lint/build passed in the preceding change.
+## Confirmation dispatch
+A durable database queue checks every 30 seconds. Only PAID orders after commit are sent. Row locking suppresses simultaneous duplicate sends; failures preserve payment status and retry with increasing delay. SMTP delivery is at-least-once: a crash or ambiguous network acceptance may cause a duplicate. Recorded sending means provider acceptance, not inbox delivery. Flyway V9 skips historical terminal orders.
 
+## Verification
+Frontend lint and production build pass. Backend tests cannot run here because Gradle download is blocked; no backend compilation or email-client visual verification is claimed.
 
-## Confirmation design update
-The paid page uses the approved bordered minimal layout: confirmation, copyable reference, email status and two actions. It resets scroll to the top when payment is confirmed, including after the payment UI releases its busy state. It polls a session-owned, no-store confirmation-email status endpoint for up to two minutes. SENT means the provider accepted the email and the database recorded it; it does not claim the message reached the inbox. Unknown/disabled delivery uses reference-based guidance instead.
+Local backend check:
+```powershell
+.\gradlew.bat test --tests "*OrderLinkServiceTests" --tests "*OrderAccessIntegrationTests" --tests "*OrderConfirmationTests"
+```
 
-SMTP confirmation messages now contain multipart HTML and plain text. The HTML uses an embedded PNG version of the existing storefront logo, an order-access button, escaped product and address text, totals and an explicit TEST notice. Existing emails are not resent when a template changes. Verification requires a new TEST order. Backend execution remains unverified here because the Gradle download is unavailable; no browser or email-client render verification is claimed.
+1. Restart backend and frontend after pulling.
+2. Place a new Razorpay TEST order and verify confirmation starts at the top.
+3. Open View order on the confirmation page: it must show that order without requesting email.
+4. Open the email link in a different browser/incognito: it must show only that order with no OTP.
+5. Refresh; close order access; refresh again and ensure details are hidden. Reopen the original email link.
+6. A changed signature, expired link or reference alone from another session must fail.
+7. The retired request/verify endpoints must not send email.
+8. Admin TEST courier review remains read-only; no real booking is enabled by this work.
+
+Tests cover signature tampering, expiry, key rotation, identity changes, session scope, CSRF, closing access, retired email endpoints, failed-send retries and escaped HTML.

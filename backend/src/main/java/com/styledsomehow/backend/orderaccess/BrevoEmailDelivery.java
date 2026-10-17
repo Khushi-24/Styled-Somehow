@@ -10,18 +10,19 @@ import java.util.*;
 @org.springframework.boot.autoconfigure.condition.ConditionalOnProperty(name="email.provider",havingValue="brevo",matchIfMissing=true)
 public class BrevoEmailDelivery implements EmailDelivery {
  private final String key,sender;
+ private final OrderLinkService links;
  @Value("${email.store-url:http://localhost:3000}") private String storeUrl;
  private final RestClient client;
- public BrevoEmailDelivery(@Value("${email.brevo-api-key:}") String key,@Value("${email.sender:}") String sender){
-  this.key=key;this.sender=sender;
+ public BrevoEmailDelivery(@Value("${email.brevo-api-key:}") String key,@Value("${email.sender:}") String sender,OrderLinkService links){
+  this.links=links;this.key=key;this.sender=sender;
   var factory=new JdkClientHttpRequestFactory(HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build());factory.setReadTimeout(Duration.ofSeconds(10));
   client=RestClient.builder().requestFactory(factory).baseUrl("https://api.brevo.com/v3").build();
  }
  public boolean ready(){return !key.isBlank()&&sender.contains("@");}
  public void sendConfirmation(com.styledsomehow.backend.checkout.PendingOrder order){
-  String url=storeUrl.replaceAll("/+$","");
+  String url=storeUrl.replaceAll("/+$","");String orderLink=links.link(order,url);
   client.post().uri("/smtp/email").header("api-key",key).contentType(org.springframework.http.MediaType.APPLICATION_JSON)
-   .body(Map.of("sender",Map.of("email",sender,"name","Styled Somehow"),"to",List.of(Map.of("email",order.email)),"subject",("TEST".equals(order.paymentMode)?"[TEST] ":"")+"Your Styled Somehow order is confirmed","textContent",SmtpEmailDelivery.confirmationText(order,url),"htmlContent",OrderEmailTemplate.html(order,url,url+"/images/styled-somehow-logo.webp")))
+   .body(Map.of("sender",Map.of("email",sender,"name","Styled Somehow"),"to",List.of(Map.of("email",order.email)),"subject",("TEST".equals(order.paymentMode)?"[TEST] ":"")+"Your Styled Somehow order is confirmed","textContent",SmtpEmailDelivery.confirmationText(order,orderLink),"htmlContent",OrderEmailTemplate.html(order,orderLink,url+"/images/styled-somehow-logo.webp")))
    .retrieve().toBodilessEntity();
  }
  public void sendRecovery(String email,String code,List<String> references){

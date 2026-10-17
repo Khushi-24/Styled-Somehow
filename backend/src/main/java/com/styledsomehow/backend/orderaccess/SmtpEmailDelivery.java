@@ -13,11 +13,12 @@ import java.util.Locale;
 @ConditionalOnProperty(name="email.provider",havingValue="smtp")
 public class SmtpEmailDelivery implements EmailDelivery {
  private final JavaMailSenderImpl client;
+ private final OrderLinkService links;
  private final String username,password,storeUrl;
  public SmtpEmailDelivery(@Value("${email.smtp.host:smtp.hostinger.com}") String host,
    @Value("${email.smtp.port:465}") int port,@Value("${email.smtp.username:}") String username,
-   @Value("${email.smtp.password:}") String password,@Value("${email.store-url:http://localhost:3000}") String storeUrl){
-  this.username=username;this.password=password;this.storeUrl=storeUrl.replaceAll("/+$","");
+   @Value("${email.smtp.password:}") String password,@Value("${email.store-url:http://localhost:3000}") String storeUrl,OrderLinkService links){
+  this.links=links;this.username=username;this.password=password;this.storeUrl=storeUrl.replaceAll("/+$","");
   client=new JavaMailSenderImpl();client.setHost(host);client.setPort(port);client.setUsername(username);client.setPassword(password);client.setDefaultEncoding("UTF-8");
   var p=client.getJavaMailProperties();
   p.setProperty("mail.smtp.auth","true");
@@ -38,11 +39,12 @@ public class SmtpEmailDelivery implements EmailDelivery {
  }
  public void sendConfirmation(PendingOrder order){
   if(!ready())throw new IllegalStateException("SMTP is not configured");
+  String orderLink=links.link(order,storeUrl);
   try{
    var message=client.createMimeMessage();var helper=new org.springframework.mail.javamail.MimeMessageHelper(message,true,"UTF-8");
    helper.setFrom(new jakarta.mail.internet.InternetAddress(username,"Styled Somehow","UTF-8"));helper.setReplyTo(username);helper.setTo(order.email);
    helper.setSubject(("TEST".equals(order.paymentMode)?"[TEST] ":"")+"Your Styled Somehow order is confirmed");
-   helper.setText(confirmationText(order,storeUrl),OrderEmailTemplate.html(order,storeUrl,"cid:styled-somehow-logo"));
+   helper.setText(confirmationText(order,orderLink),OrderEmailTemplate.html(order,orderLink,"cid:styled-somehow-logo"));
    helper.addInline("styled-somehow-logo",new org.springframework.core.io.ClassPathResource("email/logo.png"),"image/png");
    client.send(message);
   }catch(jakarta.mail.MessagingException|java.io.UnsupportedEncodingException failure){throw new IllegalStateException("Could not prepare confirmation email",failure);}
@@ -56,7 +58,7 @@ public class SmtpEmailDelivery implements EmailDelivery {
   text.append("\n\nDeliver to:\n").append(o.name).append("\n").append(o.line1);
   if(o.line2!=null&&!o.line2.isBlank())text.append("\n").append(o.line2);
   text.append("\n").append(o.city).append(", ").append(o.state).append(" ").append(o.pinCode);
-  text.append("\n\nView your order: ").append(url).append("/orders?reference=").append(o.id).append("\nUse your checkout email and a one-time code to access order details. Keep this email for your reference.\n\nNeed help? Reply to this email.");
+  text.append("\n\nView your order: ").append(url).append("\nThis private link opens your order without a code. Keep this email and do not share the link. It expires 90 days after payment.\n\nNeed help? Email contact@styledsomehow.in.");
   return text.toString();
  }
  private static String rupees(int amount){return String.format(Locale.ROOT,"INR %,d",amount);}

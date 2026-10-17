@@ -6,8 +6,8 @@ public final class OrderEmailTemplate {
  private OrderEmailTemplate(){}
  static String escape(String value){return value==null?"":value.replace("&","&amp;").replace("<","&lt;").replace(">","&gt;").replace("\"","&quot;").replace("'","&#39;");}
  private static String money(int amount){return String.format(Locale.ROOT,"&#8377;%,d",amount);}
- public static String html(PendingOrder o,String storeUrl,String logoUrl){
-  String link=escape(storeUrl.replaceAll("/+$","")+"/orders?reference="+o.id);
+ public static String html(PendingOrder o,String orderLink,String logoUrl){
+  String link=escape(orderLink);
   String greeting=o.name==null||o.name.isBlank()?"Thank you!":"Thank you, "+escape(o.name.trim().split("\\s+")[0])+"!";
   var rows=new StringBuilder();
   for(var line:o.items)rows.append("<tr><td style='padding:14px 0;border-bottom:1px solid #eee'><strong>").append(escape(line.name)).append("</strong><br><span style='font-size:12px;color:#666'>").append(escape(line.colour)).append(" &middot; ").append(escape(line.size)).append(" &middot; Qty ").append(line.quantity).append("</span></td><td align='right' style='padding:14px 0;border-bottom:1px solid #eee;white-space:nowrap'>").append(money(line.unitPrice*line.quantity)).append("</td></tr>");
@@ -24,8 +24,8 @@ public final class OrderEmailTemplate {
    +"<tr><td style='padding:8px 0;color:#666'>Shipping</td><td align='right'>"+(o.shipping==0?"Free":money(o.shipping))+"</td></tr>"
    +"<tr><td style='padding:14px 0;border-top:1px solid #ddd;font-size:17px'><strong>Total paid</strong></td><td align='right' style='padding:14px 0;border-top:1px solid #ddd;font-size:17px'><strong>"+money(o.total)+"</strong></td></tr></table>"
    +"<table role='presentation' width='100%' cellspacing='0' cellpadding='0' style='margin-top:16px'><tr><td align='center' bgcolor='#161616' style='border-radius:5px'><a href='"+link+"' style='display:block;padding:15px 24px;color:#fff;text-decoration:none;font-size:14px;font-weight:bold'>View order</a></td></tr></table>"
-   +"<p style='font-size:12px;color:#777;line-height:1.7;text-align:center;margin:12px 0 0'>Use your checkout email and a one-time code to view your order status.</p>"
-   +"</td></tr><tr><td style='padding:20px 24px;border-top:1px solid #eee;font-size:12px;color:#777;line-height:1.7'>Need help? Reply to this email.</td></tr></table>"
+   +"<p style='font-size:12px;color:#777;line-height:1.7;text-align:center;margin:12px 0 0'>This private link opens your order without a code. Keep it safe and don’t share it.</p>"
+   +"</td></tr><tr><td style='padding:20px 24px;border-top:1px solid #eee;font-size:12px;color:#777;line-height:1.7'>Need help? Email <a href='mailto:contact@styledsomehow.in' style='color:#555'>contact@styledsomehow.in</a>.</td></tr></table>"
    +"<p style='font-size:11px;color:#888'>If the button doesn’t work, open this link:<br><a href='"+link+"' style='color:#666;word-break:break-all'>"+link+"</a></p></td></tr></table></body></html>";
  }
 }

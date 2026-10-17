@@ -27,13 +27,13 @@ class OrderConfirmationTests {
   when(mail.ready()).thenReturn(false);new OrderConfirmationWorker(orders,mail).deliver(o.id);verify(mail,never()).sendConfirmation(any());
  }
  @Test void messageIncludesRecoveryLinkTotalsAndTestWarning(){
-  var text=SmtpEmailDelivery.confirmationText(order(),"https://styledsomehow.in");
-  assertThat(text).contains("fixture-reference","INR 657","INR 58","Fixture tee","White","S","Qty 1","No real money was charged","will not be dispatched","https://styledsomehow.in/orders?reference=fixture-reference").doesNotContain("null");
+  var text=SmtpEmailDelivery.confirmationText(order(),"https://styledsomehow.in/orders#access=fixture-token");
+  assertThat(text).contains("fixture-reference","INR 657","INR 58","Fixture tee","White","S","Qty 1","No real money was charged","will not be dispatched","https://styledsomehow.in/orders#access=fixture-token").doesNotContain("null");
  }
  @Test void htmlEscapesCustomerTextAndIncludesSafeOrderAccessLink(){
   var o=order();o.name="<script>alert(1)</script>";o.items.get(0).name="A & B <tee>";
-  String html=OrderEmailTemplate.html(o,"https://styledsomehow.in","cid:styled-somehow-logo");
-  assertThat(html).contains("&lt;script&gt;","A &amp; B &lt;tee&gt;","cid:styled-somehow-logo","https://styledsomehow.in/orders?reference=fixture-reference","TEST ORDER","View order").doesNotContain("<script>","A & B <tee>");
+  String html=OrderEmailTemplate.html(o,"https://styledsomehow.in/orders#access=fixture-token","cid:styled-somehow-logo");
+  assertThat(html).contains("&lt;script&gt;","A &amp; B &lt;tee&gt;","cid:styled-somehow-logo","https://styledsomehow.in/orders#access=fixture-token","TEST ORDER","View order").doesNotContain("<script>","A & B <tee>");
  }
 
 }
