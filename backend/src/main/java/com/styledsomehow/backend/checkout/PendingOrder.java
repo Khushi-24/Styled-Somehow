@@ -17,6 +17,9 @@ public class PendingOrder {
  @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.TIMESTAMP) public Instant paidAt;
  @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.TIMESTAMP) public Instant createdAt;
  @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.TIMESTAMP) public Instant expiresAt;
+ @JsonIgnore @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.TIMESTAMP) public Instant confirmationSentAt;
+ @JsonIgnore @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.TIMESTAMP) public Instant confirmationNextAttemptAt;
+ @JsonIgnore public int confirmationAttempts;
  public int subtotal;
  public int shipping;
  public int total;

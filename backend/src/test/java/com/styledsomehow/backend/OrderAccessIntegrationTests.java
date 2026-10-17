@@ -18,6 +18,7 @@ class OrderAccessIntegrationTests {
  @org.springframework.test.context.bean.override.mockito.MockitoBean com.styledsomehow.backend.shipping.ShippingGateway shipping;
  @org.junit.jupiter.api.BeforeEach void stubShipping(){org.mockito.Mockito.when(shipping.rate(org.mockito.ArgumentMatchers.anyString(),org.mockito.ArgumentMatchers.anyInt(),org.mockito.ArgumentMatchers.anyInt())).thenReturn(new com.styledsomehow.backend.shipping.ShippingGateway.Rate(1,"Delhivery",0));}
 
+ @Autowired OrderRepository orders;
  @Autowired OrderAccessService access;@Autowired EmailBlockRepository blocks;@Autowired CheckoutService checkout;@Autowired ChallengeRepository challenges;
  @MockitoBean EmailDelivery mail;
  @Autowired org.springframework.test.web.servlet.MockMvc mvc;
@@ -70,4 +71,28 @@ class OrderAccessIntegrationTests {
   mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post("/api/checkout").with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf()).contentType("application/json").content(json.writeValueAsString(payload))).andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isBadRequest()).andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$.message").value(org.hamcrest.Matchers.containsString("Only @gmail.com")));
  }
  @Test void resendIsLimitedAndFailedDeliveryDoesNotUndoLimits(){var o=order();doThrow(new IllegalStateException("fixture provider failure")).when(mail).sendCode(anyString(),anyString());var r=access.request(o.id,o.email,"browser","127.0.0.1");assertThat(challenges.findById(r.challengeId()).orElseThrow().orderId).isNull();assertThatThrownBy(()->access.request(o.id,o.email,"new-browser","127.0.0.2")).isInstanceOf(org.springframework.web.server.ResponseStatusException.class);}
+ @Test void recoveryEmailsOnlyMatchingPaidReferencesAndCodeIsStillBrowserBound(){
+  var paid=order();paid.status="PAID";orders.saveAndFlush(paid);
+  var pending=order();
+  doAnswer(call->{sent=call.getArgument(1);return null;}).when(mail).sendRecovery(anyString(),anyString(),anyList());
+  var r=access.request("","FIXTURE@gmail.com","browser","ip");
+  verify(mail).sendRecovery(eq(paid.email),anyString(),eq(List.of(paid.id)));
+  assertThat(r.message()).doesNotContain(paid.id).doesNotContain(pending.id);
+  assertThat(access.verify(r.challengeId(),sent,"other")).isEmpty();
+  assertThat(access.verify(r.challengeId(),sent,"browser")).contains(paid.id);
+ }
+ @Test void recoveryDoesNotRevealMissingEmailAndSharesResendLimit(){
+  var r=access.request("","missing@gmail.com","browser","ip");
+  verify(mail,never()).sendRecovery(anyString(),anyString(),anyList());
+  assertThat(r.message()).startsWith("If paid orders match");
+  assertThat(challenges.findById(r.challengeId()).orElseThrow().orderId).isNull();
+  assertThatThrownBy(()->access.request("","missing@gmail.com","other","other")).isInstanceOf(org.springframework.web.server.ResponseStatusException.class);
+ }
+ @Test void failedRecoveryEmailCannotGrantOrderAccess(){
+  var paid=order();paid.status="PAID";orders.saveAndFlush(paid);
+  doThrow(new IllegalStateException("mail unavailable")).when(mail).sendRecovery(anyString(),anyString(),anyList());
+  var r=access.request("",paid.email,"browser","ip");
+  assertThat(challenges.findById(r.challengeId()).orElseThrow().orderId).isNull();
+ }
+
 }

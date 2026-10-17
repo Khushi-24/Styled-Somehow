@@ -42,3 +42,11 @@
 
 - Customer delivery messages use `Estimated delivery in X days`, with two preparation days added once to the courier's positive transit estimate. Admin courier estimates remain raw. Missing estimates do not get invented dates.
 - Finished checkout pointers (PAID, CANCELLED, EXPIRED, REFUNDED) are cleared. A completed-order pointer discovered while a new cart exists no longer restores the old confirmation or subtracts products from the new cart. Pending and payment-review states still resume for safe payment recovery. The redundant always-visible pending-checkout link is removed from the bag.
+
+
+## Order reference recovery
+Paid confirmation references are retained in tab session storage, separately from active checkout. Reload restores the confirmation, including when other cart items remain; normal navigation with a fresh cart starts checkout as before. Session-bound checkout APIs still require the original session.
+
+On /orders, “Forgot your order reference?” sends up to 20 recent paid/refund order references and a code for the newest order to the exact checkout email (case insensitive). An older reference can be entered separately for a new code. No references are exposed in the request response. Existing OTP request budgets, cooldown, browser binding, attempts, expiry, and email block apply to recovery too. Delivery failures cannot grant access. Recovery uses existing email.brevo-api-key, email.sender and order-access.secret configuration; no automatic purchase-confirmation email is claimed or sent by this change.
+
+Manual checks: pay a TEST order; refresh the confirmation; start a fresh cart; use recovery with its checkout email; verify code in the same browser; request an older reference separately; ensure a non-matching email receives a generic response and no mail. Backend integration tests cover recovery ownership, browser binding, failed email delivery, and shared cooldown, but require a working Gradle/Java environment.
