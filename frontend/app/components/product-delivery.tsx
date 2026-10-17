@@ -1,6 +1,7 @@
 "use client";
 import {useEffect,useId,useRef,useState} from "react";
 import {adminRequest,ApiError} from "../../lib/admin-api";
+import {deliveryEstimate} from "../../lib/delivery-estimate";
 import {Quote} from "../../lib/cart";
 import styles from "./product-delivery.module.css";
 
@@ -15,7 +16,7 @@ export default function ProductDelivery({slug,colour,size}:{slug:string;colour:s
   try{
    const quote=await adminRequest<Quote>("/api/checkout/shipping-quote",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({items:[{slug,colour,size,quantity:1}],pinCode:pin})});
    if(request!==attempt.current)return;
-   setResult({ok:true,text:quote.deliveryDays?`Delivery available. Estimated delivery in ${quote.deliveryDays} ${quote.deliveryDays===1?"day":"days"} after dispatch.`:"Delivery available. We’ll confirm the delivery estimate when your order is dispatched."});
+   setResult({ok:true,text:deliveryEstimate(quote.deliveryDays)??"Delivery available. We’ll confirm the delivery estimate when your order is dispatched."});
    try{localStorage.setItem(DELIVERY_PIN_KEY,pin);}catch{}
   }catch(error){if(request!==attempt.current)return;setResult({ok:false,text:error instanceof ApiError&&error.status===422?error.message:error instanceof Error?error.message:"Could not check delivery. Please try again."});}
   finally{if(request===attempt.current)setBusy(false);}

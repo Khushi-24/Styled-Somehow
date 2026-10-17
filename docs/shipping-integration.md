@@ -39,3 +39,6 @@
 - Pay securely prepares an idempotent checkout and opens Razorpay without a separate pending-checkout action. A pending checkout is recovered after refresh; editing its delivery cancels the prior reservation first. Payment status can still be checked when its payment window has expired.
 - Test mode remains explicit. Price and shipping recalculation, CSRF, payment verification, reservation expiry, late payments and stock protections remain server-controlled. No real payments or shipments are initiated by tests here.
 - Verify 362720 using real provider data: city/state options must belong to that PIN, and a forged Ahmedabad city must be rejected. Repeat after changing PIN and for lookup/shipping failures.
+
+- Customer delivery messages use `Estimated delivery in X days`, with two preparation days added once to the courier's positive transit estimate. Admin courier estimates remain raw. Missing estimates do not get invented dates.
+- Finished checkout pointers (PAID, CANCELLED, EXPIRED, REFUNDED) are cleared. A completed-order pointer discovered while a new cart exists no longer restores the old confirmation or subtracts products from the new cart. Pending and payment-review states still resume for safe payment recovery. The redundant always-visible pending-checkout link is removed from the bag.
