@@ -60,5 +60,13 @@ class ShipmentIntegrationTests {
   mvc.perform(post(path).with(user("admin").roles("ADMIN")).with(csrf()).contentType("application/json").content(parcel)).andExpect(status().isOk()).andExpect(jsonPath("$.options[0].courierId").value(42));
   verifyNoInteractions(gateway);
  }
+ @Test void diagnosticEndpointIsReadOnlyAndAdminCsrfProtected() throws Exception {
+  var o=order("TEST","PAID");String path="/api/admin/orders/"+o.id+"/shipment/diagnostic";
+  when(rates.diagnose(anyString(),anyInt(),anyInt(),any(),eq(4076130954L))).thenReturn(new ShippingGateway.Diagnostic(4076130954L,"380015",o.pinCode,List.of(),List.of()));
+  String body="{\"shiprocketOrderId\":4076130954,\"parcel\":{\"weightKg\":0.5,\"lengthCm\":27.94,\"breadthCm\":33.02,\"heightCm\":2.54}}";
+  mvc.perform(post(path).with(user("admin").roles("ADMIN")).contentType("application/json").content(body)).andExpect(status().isForbidden());
+  mvc.perform(post(path).with(user("admin").roles("ADMIN")).with(csrf()).contentType("application/json").content(body)).andExpect(status().isOk()).andExpect(jsonPath("$.shiprocketOrderId").value(4076130954L));
+  assertThat(shipments.existsById(o.id)).isFalse();verifyNoInteractions(gateway);
+ }
  @Test void payloadUsesStoredAmountsAndMeasuredParcel(){var o=order("LIVE","PAID");var body=ShipmentService.payload(o,1,"Home");assertThat(body).containsEntry("sub_total",599).containsEntry("shipping_charges",85).containsEntry("payment_method","Prepaid").containsEntry("weight",0.5).doesNotContainKeys("length","breadth","height");assertThat(ShipmentService.payload(o,2,"Home")).containsEntry("weight",0.5).doesNotContainKeys("length","breadth","height");assertThatThrownBy(()->ShipmentService.payload(o,3,"Home")).isInstanceOf(org.springframework.web.server.ResponseStatusException.class);}
 }

@@ -11,4 +11,7 @@ public interface ShippingGateway {
  }
  Rate rate(String pin,int quantity,int subtotal);
  default List<Rate> options(String pin,int quantity,int subtotal,Parcel parcel){return List.of(rate(pin,quantity,subtotal));}
+ record DiagnosticCourier(int courierId,String courier,String rate,String freightCharge,String codCharges,String coverageCharges,String chargeWeight,String rating,int blocked){}
+ record Diagnostic(long shiprocketOrderId,String pickupPin,String deliveryPin,List<DiagnosticCourier> pinBased,List<DiagnosticCourier> orderBased){}
+ default Diagnostic diagnose(String pin,int quantity,int subtotal,Parcel parcel,long shiprocketOrderId){throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.SERVICE_UNAVAILABLE,"Diagnostics unavailable for this shipping provider.");}
 }

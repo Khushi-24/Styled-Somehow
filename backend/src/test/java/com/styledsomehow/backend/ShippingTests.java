@@ -30,6 +30,16 @@ class ShippingTests {
   new ShiprocketGateway(api,"380015").options("560001",2,1198,new ShippingGateway.Parcel(0.48,30,25,4));
   verify(api).get(eq("/courier/serviceability/"),eq(Map.of("pickup_postcode","380015","delivery_postcode","560001","cod",0,"weight","0.48","declared_value",1198,"length",30.0,"breadth",25.0,"height",4.0)));
  }
+ @Test void diagnosticsCompareRawResponsesWithoutBookingOrFiltering() throws Exception {
+  var api=mock(ShiprocketClient.class);
+  var pin=new JsonMapper().readTree("{\"data\":{\"available_courier_companies\":[{\"courier_company_id\":33,\"courier_name\":\"Xpressbees Air\",\"rate\":49.72}]}}");
+  var existing=new JsonMapper().readTree("{\"data\":{\"available_courier_companies\":[{\"courier_company_id\":43,\"courier_name\":\"Delhivery Surface\",\"rate\":66.72,\"blocked\":1}]}}");
+  when(api.get(eq("/courier/serviceability/"),anyMap())).thenReturn(pin,existing);
+  var result=new ShiprocketGateway(api,"380015").diagnose("362720",1,1200,new ShippingGateway.Parcel(0.5,27.94,33.02,2.54),4076130954L);
+  assertThat(result.pinBased().get(0).rate()).isEqualTo("49.72");assertThat(result.orderBased().get(0).courier()).isEqualTo("Delhivery Surface");assertThat(result.orderBased().get(0).blocked()).isEqualTo(1);
+  verify(api).get(eq("/courier/serviceability/"),eq(Map.of("pickup_postcode","380015","delivery_postcode","362720","order_id",4076130954L)));
+  verify(api,times(2)).get(anyString(),anyMap());verify(api,never()).post(anyString(),anyMap());
+ }
  @Test void allows110ButRejectsAboveLimitAndInvalidRates() throws Exception {
   assertThat(ShiprocketGateway.selectRate(new JsonMapper().readTree("[{\"courier_name\":\"Xpressbees Surface\",\"courier_company_id\":1,\"rate\":110}]" )).rupees()).isEqualTo(110);
   for(String json:new String[]{"[]","[{\"courier_name\":\"Delhivery\",\"courier_company_id\":1}]","[{\"courier_name\":\"DTDC\",\"courier_company_id\":1,\"rate\":110.01}]"})assertThatThrownBy(()->ShiprocketGateway.selectRate(new JsonMapper().readTree(json))).isInstanceOf(org.springframework.web.server.ResponseStatusException.class);

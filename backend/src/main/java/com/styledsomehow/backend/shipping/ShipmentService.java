@@ -34,6 +34,10 @@ public class ShipmentService {
   validateParcel(parcel);
   return tx.execute(status->{var o=order(id);if(!"PAID".equals(o.status)||!("LIVE".equals(o.paymentMode)||"TEST".equals(o.paymentMode)))throw new ResponseStatusException(HttpStatus.CONFLICT,"Only paid orders can compare couriers.");if(shipments.existsById(id))throw new ResponseStatusException(HttpStatus.CONFLICT,"A booking already exists. Refresh shipment status.");int quantity=o.items.stream().mapToInt(i->i.quantity).sum();return new Comparison(rates.options(o.pinCode,quantity,o.subtotal,parcel),o.shipping,quantity,pickup,o.pinCode,parcel);});
  }
+ public ShippingGateway.Diagnostic diagnose(String id,ShippingGateway.Parcel parcel,long shiprocketOrderId){
+  validateParcel(parcel);if(shiprocketOrderId<=0)throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Enter a valid Shiprocket order ID.");
+  return tx.execute(status->{var o=order(id);if(!"PAID".equals(o.status))throw new ResponseStatusException(HttpStatus.CONFLICT,"Select a paid order for diagnostics.");return rates.diagnose(o.pinCode,o.items.stream().mapToInt(item->item.quantity).sum(),o.subtotal,parcel,shiprocketOrderId);});
+ }
  private static void validateParcel(ShippingGateway.Parcel parcel){if(parcel==null||!parcel.valid())throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Enter actual packed weight and dimensions before comparing or booking.");}
  private boolean dimensionsReady(){return parcelLength>0&&parcelBreadth>0&&parcelHeight>0&&Double.isFinite(parcelLength)&&Double.isFinite(parcelBreadth)&&Double.isFinite(parcelHeight);}
  public ShipmentBooking book(String id,int expectedCost,int expectedCourier){

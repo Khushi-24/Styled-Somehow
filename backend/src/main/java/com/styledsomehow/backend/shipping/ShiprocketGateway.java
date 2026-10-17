@@ -31,6 +31,18 @@ public class ShiprocketGateway implements ShippingGateway {
   if(result==null||!result.path("data").path("available_courier_companies").isArray())throw unavailable();
   return result.path("data").path("available_courier_companies");
  }
+ @Override public Diagnostic diagnose(String pin,int quantity,int subtotal,Parcel parcel,long shiprocketOrderId){
+  if(shiprocketOrderId<=0||parcel==null||!parcel.valid())throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Enter a valid Shiprocket order ID and parcel measurements.");
+  var pinResult=fetch(pin,quantity,subtotal,parcel);
+  var orderResult=api.get("/courier/serviceability/",Map.of("pickup_postcode",pickup,"delivery_postcode",pin,"order_id",shiprocketOrderId));
+  if(orderResult==null||!orderResult.path("data").path("available_courier_companies").isArray())throw unavailable();
+  return new Diagnostic(shiprocketOrderId,pickup,pin,diagnosticCouriers(pinResult),diagnosticCouriers(orderResult.path("data").path("available_courier_companies")));
+ }
+ private static List<DiagnosticCourier> diagnosticCouriers(JsonNode rows){
+  List<DiagnosticCourier> result=new ArrayList<>();
+  for(var c:rows)result.add(new DiagnosticCourier(c.path("courier_company_id").asInt(0),c.path("courier_name").asText(),c.path("rate").asText(),c.path("freight_charge").asText(),c.path("cod_charges").asText(),c.path("coverage_charges").asText(),c.path("charge_weight").asText(),c.path("rating").asText(),c.path("blocked").asInt(0)));
+  return result;
+ }
  public static boolean supportedCourier(String name){String n=name.toLowerCase(Locale.ROOT).replaceAll("[^a-z]","");return n.startsWith("delhivery")||n.startsWith("dtdc")||n.startsWith("xpressbees")||n.startsWith("bluedart");}
  public static Rate selectRate(JsonNode couriers){
   var options=parseRates(couriers);

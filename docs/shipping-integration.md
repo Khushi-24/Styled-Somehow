@@ -20,3 +20,9 @@
 - Real booking remains disabled by default and requires a paid LIVE order. Duplicate protection and ambiguous-result review remain in place. Labels and pickup stay in Shiprocket.
 - Legacy /preview and service overloads remain for compatibility; the admin UI uses /compare and supplies per-order measurements, without relying on global parcel dimensions.
 - API quotes may differ from dashboard or final billing. No unexplained ₹5 adjustment is added. Confirm the rate discrepancy with Shiprocket before enabling live bookings.
+
+## Read-only rate diagnostics
+- In the admin shipment panel, expand Diagnose Shiprocket dashboard / API differences. Enter an existing numeric Shiprocket order ID and compare.
+- Makes two serviceability GET calls using the store order's route: one with the current parcel, prepaid flag and stored subtotal; the other with the supplied Shiprocket order ID (without overriding its weight/payment parameters). Confirm the existing order matches the same route and shipment details.
+- Displays allowlisted raw courier/price fields from both responses, including blocked or unsupported couriers, without rounding. No full provider payload, credentials or customer details are exposed.
+- Admin authentication and CSRF are required. No order, AWB or pickup is created; diagnostic results cannot be selected for booking and do not modify the normal comparison.
