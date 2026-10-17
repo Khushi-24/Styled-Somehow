@@ -46,6 +46,18 @@ export default function CheckoutView(){
  const total=order?order.total:checked?quote?.total:quote?.subtotal;
  const stage=order?2:step;
  function field(key:keyof Address,value:string){setAddress(a=>({...a,[key]:value}));}
+ if(paid&&order)return <main className={`shopping-page ${styles.page}`}><StoreHeader backHref="/" backLabel="Continue shopping"/>
+ <section className={styles.confirmation} aria-labelledby="confirmation-title">
+ <header className={styles.confirmationHeader}><span className={styles.confirmationCheck} aria-hidden="true">✓</span><div><p className={styles.eyebrow}>ORDER CONFIRMED</p><h1 id="confirmation-title">Thank you for your order.</h1><p>{order.paymentMode==="TEST"?"Test payment successful":"Payment received"} · {money(order.total)}</p></div></header>
+ {order.paymentMode==="TEST"&&<p className={styles.confirmationTest}>TEST ORDER · No real money charged. This order will not be dispatched.</p>}
+ <div className={styles.confirmationGrid}>
+ <div className={styles.confirmationDetails}><div className={styles.compactReference}><h2>Order reference</h2><strong>{order.id}</strong><button type="button" onClick={copyReference}>Copy reference</button>{copyMessage&&<p role="status">{copyMessage}</p>}</div>
+ <div className={styles.confirmationAddress}><h2>Deliver to</h2><strong>{order.name}</strong><p>{order.line1}{order.line2&&<>, {order.line2}</>}<br/>{order.city}, {order.state} — {order.pinCode}</p></div>
+ <div className={styles.confirmationContact}><h2>Contact</h2><p>{order.email}<br/>+91 {order.phone}</p></div></div>
+ <div className={styles.confirmationSummary}><h2>Your order <span>({order.items.reduce((n,line)=>n+line.quantity,0)})</span></h2><div>{order.items.map((line,index)=><div className={styles.confirmationProduct} key={index}><Image src={line.image} alt={line.name} width={56} height={72}/><div><h3>{line.name}</h3><p>{line.colour} · {line.size} · Qty {line.quantity}</p><strong>{money(line.unitPrice*line.quantity)}</strong></div></div>)}</div>
+ <dl className={styles.confirmationTotals}><div><dt>Subtotal</dt><dd>{money(order.subtotal)}</dd></div><div><dt>Shipping</dt><dd>{order.shipping===0?"Free":money(order.shipping)}</dd></div><div><dt>Total paid</dt><dd>{money(order.total)}</dd></div></dl></div></div>
+ <footer className={styles.confirmationFooter}><p>View your order using your reference and checkout email.</p><div><Link href="/" className={styles.secondaryAction}>Continue shopping</Link><Link href={`/orders?reference=${encodeURIComponent(order.id)}`} className={styles.primaryAction}>View order →</Link></div></footer>
+ </section></main>;
  return <main className={`shopping-page ${styles.page}`}><StoreHeader backHref={paid?"/":"/cart"} backLabel={paid?"Continue shopping":"Back to cart"}/><header className={styles.intro}><div><p className={styles.eyebrow}>STYLED SOMEHOW</p><h1>{paid?"Order confirmation":"Checkout"}</h1><p>{paid?"Thanks for choosing Styled Somehow.":"No account needed. Just your details and your next favourite tee."}</p></div><Link href="/orders">Track an existing order ↗</Link></header>
  {!paid&&<ol className={styles.steps} aria-label="Checkout progress">{["Contact","Delivery","Review & pay"].map((label,index)=><li key={label} aria-current={stage===index?"step":undefined} className={stage===index?styles.active:stage>index?styles.complete:""}><span>{stage>index?"✓":index+1}</span>{label}</li>)}</ol>}
  {error&&<p className="shopping-error" role="alert">{error}</p>}
