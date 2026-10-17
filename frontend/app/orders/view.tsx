@@ -5,9 +5,9 @@ import {adminRequest} from "../../lib/admin-api";
 import {PendingOrder} from "../../lib/cart";
 import {GMAIL_PATTERN,GMAIL_HINT,isGmail} from "../../lib/email";
 import {money} from "../../lib/product";
-export default function OrderAccessView(){
+export default function OrderAccessView({initialReference=""}:{initialReference?:string}){
  const [challenge,setChallenge]=useState(""),[message,setMessage]=useState(""),[error,setError]=useState(""),[busy,setBusy]=useState(false),[order,setOrder]=useState<PendingOrder|null>(null);
- const [reference,setReference]=useState(""),[email,setEmail]=useState(""),[code,setCode]=useState("");
+ const [reference,setReference]=useState(initialReference),[email,setEmail]=useState(""),[code,setCode]=useState("");
  async function request(e:React.FormEvent<HTMLFormElement>){e.preventDefault();if(!isGmail(email)){setError(GMAIL_HINT);return;}setBusy(true);setError("");setMessage("");try{const result=await adminRequest<{challengeId:string;message:string}>("/api/order-access/request",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({orderId:reference.trim(),email:email.trim()})});setChallenge(result.challengeId);setCode("");setMessage(result.message);}catch(e){setError(e instanceof Error?e.message:"Could not request a code");}finally{setBusy(false);}}
  async function verify(e:React.FormEvent<HTMLFormElement>){e.preventDefault();setBusy(true);setError("");try{const result=await adminRequest<{orderId:string}>("/api/order-access/verify",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({challengeId:challenge,code})});const found=await adminRequest<PendingOrder>(`/api/order-access/order/${encodeURIComponent(result.orderId)}`);setOrder(found);setMessage("");}catch(e){setError(e instanceof Error?e.message:"Invalid or expired code");}finally{setBusy(false);}}
  async function close(){setBusy(true);setError("");try{await adminRequest<void>("/api/order-access/close",{method:"POST"});setOrder(null);setChallenge("");setCode("");}catch(e){setError(e instanceof Error?e.message:"Could not close order access");}finally{setBusy(false);}}
