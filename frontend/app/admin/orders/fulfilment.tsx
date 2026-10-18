@@ -2,7 +2,7 @@
 import {useEffect,useState} from "react";
 import {PendingOrder} from "../../../lib/cart";
 import {adminRequest} from "../../../lib/admin-api";
-import {AdminFulfilment,fulfilmentLabels,fulfilmentSteps} from "../../../lib/fulfilment";
+import {AdminFulfilment,fulfilmentLabels,fulfilmentSteps,displayStage,fulfilmentDescriptions} from "../../../lib/fulfilment";
 import {dateLabel} from "./badges";
 import styles from "./fulfilment.module.css";
 export default function FulfilmentPanel({order,refreshKey,onStageChange}:{order:PendingOrder;refreshKey:number;onStageChange:(stage:string)=>void}){
@@ -16,7 +16,7 @@ export default function FulfilmentPanel({order,refreshKey,onStageChange}:{order:
  return <section className={styles.panel} aria-label="Order fulfilment"><div className={styles.heading}><h3>Fulfilment & tracking</h3>{f&&<span data-stage={f.stage} className={styles.badge}>{fulfilmentLabels[f.stage]||f.stage}</span>}</div>
  {error&&<p role="alert" className={styles.error}>{error}</p>}{message&&<div role="status" className={styles.toast}>{message}<button aria-label="Dismiss notification" onClick={()=>setMessage("")}>×</button></div>}
  {!f?<p>{error?"Fulfilment could not be loaded. Refresh the order to retry.":"Loading fulfilment…"}</p>:<>{f.test&&<p className={styles.notice}>TEST order · preparation stages are simulated. Real courier booking and dispatch are blocked.</p>}{f.onHold&&<p className={styles.notice}>Payment status is {order.status.replaceAll("_"," ")}. Fulfilment updates are blocked.</p>}
- <ol className={styles.progress}>{fulfilmentSteps.map((stage,index)=><li key={stage} aria-current={stage===f.stage?"step":undefined} className={index<=fulfilmentSteps.indexOf(f.stage)?styles.reached:""}>{fulfilmentLabels[stage]}</li>)}</ol>
+ <ol className={styles.progress}>{fulfilmentSteps.map((stage,index)=><li key={stage} aria-current={stage===displayStage(f.stage)?"step":undefined} className={index<=fulfilmentSteps.indexOf(displayStage(f.stage))?styles.reached:""}><strong>{fulfilmentLabels[stage]}</strong><small>{fulfilmentDescriptions[stage]}</small></li>)}</ol>
  {next&&<div className={styles.action}><label>Internal note {next==="SHIPPED"?"(required)":"(optional)"}<textarea maxLength={500} value={note} disabled={busy} onChange={e=>setNote(e.target.value)} placeholder={next==="SHIPPED"?"Who collected it and when?":"Any preparation details…"}/></label>{next==="SHIPPED"&&<label className={styles.check}><input type="checkbox" checked={ack} disabled={busy} onChange={e=>setAck(e.target.checked)}/>I confirm the courier has physically collected this parcel.</label>}<button disabled={busy||next==="SHIPPED"&&(!ack||!note.trim())} onClick={()=>advance(next)}>{busy?"Saving…":`${f.test?"Simulate: ":""}Mark as ${fulfilmentLabels[next].toLowerCase()}`}</button></div>}
  {f.stage==="READY_TO_SHIP"&&<p>Use Shipment booking below to compare couriers and create an AWB. Booking an AWB does not confirm pickup.</p>}
  {f.awb&&<div className={styles.tracking}><h4>{f.courier}</h4><p>AWB: <strong>{f.awb}</strong></p><p>Courier status: <strong>{f.courierStatus||"Awaiting first courier update"}</strong></p>{f.trackingCheckedAt&&<small>Last checked: {dateLabel(f.trackingCheckedAt)}</small>}{f.trackingFailed&&<p className={styles.notice}>The latest tracking check failed. Previous details are retained.</p>}{f.trackingUrl&&<a href={f.trackingUrl} target="_blank" rel="noopener noreferrer">Open courier tracking ↗</a>}<button disabled={busy} onClick={refreshTracking}>{busy?"Checking…":"Refresh courier tracking"}</button></div>}

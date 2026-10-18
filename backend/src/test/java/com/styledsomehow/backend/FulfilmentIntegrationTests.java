@@ -28,27 +28,27 @@ class FulfilmentIntegrationTests {
  @AfterEach void clean(){shipments.deleteById(id);events.deleteAll(events.findByOrderIdOrderByOccurredAtAsc(id));orders.deleteById(id);}
  private void booked(){var o=orders.findById(id).orElseThrow();o.fulfilmentStage="COURIER_BOOKED";orders.saveAndFlush(o);var b=new ShipmentBooking();b.orderId=id;b.status="BOOKED";b.awb="AWBFIXTURE";b.courier="Delhivery Surface";b.createdAt=Instant.now();b.updatedAt=b.createdAt;shipments.saveAndFlush(b);}
  @Test void adminTransitionsRequireAuthCsrfAndFreshStage()throws Exception{
-  String path="/api/admin/orders/"+id+"/fulfilment",body="{\"expectedStage\":\"PAID\",\"stage\":\"PRINTING\",\"note\":\"private note\"}";
+  String path="/api/admin/orders/"+id+"/fulfilment",body="{\"expectedStage\":\"PAID\",\"stage\":\"PACKING\",\"note\":\"private note\"}";
   mvc.perform(get(path)).andExpect(status().isUnauthorized());
   mvc.perform(post(path).with(user("admin").roles("ADMIN")).contentType("application/json").content(body)).andExpect(status().isForbidden());
-  mvc.perform(post(path).with(user("admin").roles("ADMIN")).with(csrf()).contentType("application/json").content(body)).andExpect(status().isOk()).andExpect(jsonPath("$.fulfilment.stage").value("PRINTING"));
+  mvc.perform(post(path).with(user("admin").roles("ADMIN")).with(csrf()).contentType("application/json").content(body)).andExpect(status().isOk()).andExpect(jsonPath("$.fulfilment.stage").value("PACKING"));
   mvc.perform(post(path).with(user("admin").roles("ADMIN")).with(csrf()).contentType("application/json").content(body)).andExpect(status().isConflict());
   assertThat(events.findByOrderIdOrderByOccurredAtAsc(id)).hasSize(1);
  }
  @Test void customerTrackingIsScopedAndHidesAdminNotes()throws Exception{
-  fulfilment.advance(id,"PAID","PRINTING","private note","owner");
+  fulfilment.advance(id,"PAID","PACKING","private note","owner");
   String path="/api/order-access/order/"+id+"/fulfilment";mvc.perform(get(path)).andExpect(status().isUnauthorized());
   var session=new MockHttpSession();session.setAttribute("verified-order-id",id);session.setAttribute("verified-order-until",Instant.now().plusSeconds(600));
-  String body=mvc.perform(get(path).session(session)).andExpect(status().isOk()).andExpect(jsonPath("$.stage").value("PRINTING")).andReturn().getResponse().getContentAsString();
+  String body=mvc.perform(get(path).session(session)).andExpect(status().isOk()).andExpect(jsonPath("$.stage").value("PACKING")).andReturn().getResponse().getContentAsString();
   assertThat(body).doesNotContain("private note","owner","quotedCost");
   mvc.perform(get("/api/order-access/order/"+UUID.randomUUID()+"/fulfilment").session(session)).andExpect(status().isUnauthorized());
  }
  @Test void trackingAdvancesAndFailurePreservesLastKnownState(){
-  booked();when(courier.track("AWBFIXTURE")).thenReturn(new TrackingGateway.Snapshot("IN TRANSIT","https://shiprocket.co/tracking/AWBFIXTURE","SHIPPED",false));
-  assertThat(tracking.refresh(id).stage()).isEqualTo("SHIPPED");
+  booked();when(courier.track("AWBFIXTURE")).thenReturn(new TrackingGateway.Snapshot("IN TRANSIT","https://shiprocket.co/tracking/AWBFIXTURE","IN_TRANSIT",false));
+  assertThat(tracking.refresh(id).stage()).isEqualTo("IN_TRANSIT");
   var b=shipments.findById(id).orElseThrow();b.trackingCheckedAt=Instant.now().minusSeconds(61);shipments.saveAndFlush(b);
   when(courier.track("AWBFIXTURE")).thenThrow(new IllegalStateException("fixture unavailable"));
-  var result=tracking.refresh(id);assertThat(result.trackingFailed()).isTrue();assertThat(result.courierStatus()).isEqualTo("IN TRANSIT");assertThat(result.stage()).isEqualTo("SHIPPED");
+  var result=tracking.refresh(id);assertThat(result.trackingFailed()).isTrue();assertThat(result.courierStatus()).isEqualTo("IN TRANSIT");assertThat(result.stage()).isEqualTo("IN_TRANSIT");
  }
  @Test void deliveredIsTerminalAndTestNeverCallsTracking(){
   booked();when(courier.track("AWBFIXTURE")).thenReturn(new TrackingGateway.Snapshot("DELIVERED",null,"DELIVERED",true));

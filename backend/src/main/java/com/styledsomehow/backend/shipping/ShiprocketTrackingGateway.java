@@ -17,7 +17,8 @@ public class ShiprocketTrackingGateway implements TrackingGateway {
   String label=track.path("current_status").asText("").trim();if(label.isBlank()||label.length()>150)throw new IllegalStateException("Missing courier status");
   String status=label.toUpperCase(Locale.ROOT).replace('_',' ').replaceAll("\\s+"," ");
   String stage=switch(status){
-   case "PICKED UP","IN TRANSIT","OUT FOR DELIVERY" -> "SHIPPED";
+   case "PICKED UP" -> "SHIPPED";
+   case "IN TRANSIT","OUT FOR DELIVERY" -> "IN_TRANSIT";
    case "DELIVERED" -> "DELIVERED";
    case "UNDELIVERED","NDR","RTO INITIATED","RTO IN TRANSIT" -> "DELIVERY_ISSUE";
    case "RTO DELIVERED" -> "RETURNED_TO_ORIGIN";

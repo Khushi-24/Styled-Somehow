@@ -13,10 +13,10 @@ class FulfilmentTests {
  private final FulfilmentService service=new FulfilmentService(orders,shipments,events);
  private PendingOrder order(String mode){var o=new PendingOrder();o.id="fixture";o.status="PAID";o.fulfilmentStage="PAID";o.paymentMode=mode;o.paidAt=Instant.now();o.paymentId="pay_fixture";when(orders.lockForShipping(o.id)).thenReturn(Optional.of(o));when(orders.findById(o.id)).thenReturn(Optional.of(o));when(shipments.findById(o.id)).thenReturn(Optional.empty());when(events.findByOrderIdOrderByOccurredAtAsc(o.id)).thenReturn(List.of());return o;}
  @Test void preparationUsesOrderedTransitionsAndRejectsStaleUpdates(){
-  var o=order("TEST");assertThat(service.advance(o.id,"PAID","PRINTING","","admin").fulfilment().stage()).isEqualTo("PRINTING");
-  assertThatThrownBy(()->service.advance(o.id,"PAID","PRINTING","","admin")).hasMessageContaining("changed");
-  assertThatThrownBy(()->service.advance(o.id,"PRINTING","READY_TO_SHIP","","admin")).hasMessageContaining("not available");
-  service.advance(o.id,"PRINTING","PACKED","","admin");service.advance(o.id,"PACKED","READY_TO_SHIP","","admin");assertThat(o.status).isEqualTo("PAID");
+  var o=order("TEST");assertThat(service.advance(o.id,"PAID","PACKING","","admin").fulfilment().stage()).isEqualTo("PACKING");
+  assertThatThrownBy(()->service.advance(o.id,"PAID","PACKING","","admin")).hasMessageContaining("changed");
+  assertThatThrownBy(()->service.advance(o.id,"PACKING","DELIVERED","","admin")).hasMessageContaining("not available");
+  service.advance(o.id,"PACKING","READY_TO_SHIP","","admin");assertThat(o.status).isEqualTo("PAID");
  }
  @Test void testAndHeldOrdersCannotBeDispatched(){
   var o=order("TEST");o.fulfilmentStage="COURIER_BOOKED";
@@ -33,11 +33,11 @@ class FulfilmentTests {
  }
  @Test void repeatedCourierUpdatesAreIdempotentAndCannotUndoDelivery(){
   var o=order("LIVE");o.fulfilmentStage="COURIER_BOOKED";service.courierProgress(o,"SHIPPED");service.courierProgress(o,"SHIPPED");
-  verify(events,times(1)).save(any());service.courierProgress(o,"DELIVERED");service.courierProgress(o,"SHIPPED");assertThat(o.fulfilmentStage).isEqualTo("DELIVERED");verify(events,times(2)).save(any());
+  verify(events,times(1)).save(any());service.courierProgress(o,"IN_TRANSIT");service.courierProgress(o,"SHIPPED");assertThat(o.fulfilmentStage).isEqualTo("IN_TRANSIT");service.courierProgress(o,"DELIVERED");service.courierProgress(o,"SHIPPED");assertThat(o.fulfilmentStage).isEqualTo("DELIVERED");verify(events,times(3)).save(any());
  }
  @Test void customerViewDoesNotExposeCostsOrInternalNotes()throws Exception{
-  var o=order("LIVE");var event=new FulfilmentEvent();event.stage="PRINTING";event.actor="owner";event.note="private production note";event.occurredAt=Instant.now();when(events.findByOrderIdOrderByOccurredAtAsc(o.id)).thenReturn(List.of(event));
+  var o=order("LIVE");var event=new FulfilmentEvent();event.stage="PACKING";event.actor="owner";event.note="private production note";event.occurredAt=Instant.now();when(events.findByOrderIdOrderByOccurredAtAsc(o.id)).thenReturn(List.of(event));
   String json=new tools.jackson.databind.ObjectMapper().writeValueAsString(service.customer(o.id));
-  assertThat(json).contains("PRINTING").doesNotContain("private production note","owner","quotedCost");
+  assertThat(json).contains("PACKING").doesNotContain("private production note","owner","quotedCost");
  }
 }

@@ -30,9 +30,8 @@ public class FulfilmentService {
  private List<String> allowed(PendingOrder o){
   if(!editable(o))return List.of();
   return switch(stage(o)){
-   case "PAID" -> List.of("PRINTING");
-   case "PRINTING" -> List.of("PACKED");
-   case "PACKED" -> List.of("READY_TO_SHIP");
+   case "PAID" -> List.of("PACKING");
+   case "PACKING","PRINTING","PACKED" -> List.of("READY_TO_SHIP");
    case "COURIER_BOOKED" -> "LIVE".equals(o.paymentMode)&&shipments.findById(o.id).filter(b->"BOOKED".equals(b.status)&&b.awb!=null).isPresent()?List.of("SHIPPED"):List.of();
    default -> List.of();
   };
@@ -50,8 +49,9 @@ public class FulfilmentService {
   if(!editable(o)||!"LIVE".equals(o.paymentMode))return;
   String current=stage(o);
   if(List.of("DELIVERED","RETURNED_TO_ORIGIN").contains(current))return;
-  if(!List.of("COURIER_BOOKED","SHIPPED","DELIVERY_ISSUE").contains(current))return;
-  if(!current.equals(next)&&List.of("SHIPPED","DELIVERED","DELIVERY_ISSUE","RETURNED_TO_ORIGIN").contains(next))change(o,next,"Shiprocket","Updated from courier tracking.");
+  if(!List.of("COURIER_BOOKED","SHIPPED","IN_TRANSIT","DELIVERY_ISSUE").contains(current))return;
+  if("IN_TRANSIT".equals(current)&&"SHIPPED".equals(next))return;
+  if(!current.equals(next)&&List.of("SHIPPED","IN_TRANSIT","DELIVERED","DELIVERY_ISSUE","RETURNED_TO_ORIGIN").contains(next))change(o,next,"Shiprocket","Updated from courier tracking.");
  }
  private void change(PendingOrder o,String next,String actor,String note){
   o.fulfilmentStage=next;var e=new FulfilmentEvent();e.id=UUID.randomUUID().toString();e.orderId=o.id;e.stage=next;e.actor=actor.length()>100?actor.substring(0,100):actor;e.note=note.length()>500?note.substring(0,500):note;e.occurredAt=Instant.now();events.save(e);orders.save(o);
