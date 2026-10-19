@@ -70,7 +70,7 @@ export default function StorefrontHero() {
         <Link href="/collections/men" onClick={() => { rememberHome(); setMenuOpen(false); }}>Men</Link>
         <Link href="/collections/women" onClick={() => { rememberHome(); setMenuOpen(false); }}>Women</Link>
         <Link href="/collections/couple-tshirts" onClick={() => setMenuOpen(false)}>Couple T-shirts</Link>
-        <div className="mobile-secondary-links"><Link href="/orders">View your order</Link><button type="button">Search</button></div>
+        <div className="mobile-secondary-links"><Link href="/orders">My orders</Link><button type="button">Search</button></div>
       </div>
 
       <div className="slides">

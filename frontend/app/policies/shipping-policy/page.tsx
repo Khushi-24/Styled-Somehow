@@ -20,8 +20,8 @@ export default function ShippingPolicy() {
         </section>
         <section aria-labelledby="order-tracking">
           <h2 id="order-tracking">Where can I track my shipment?</h2>
-          <p>Tracking becomes available after your parcel is dispatched. We’ll share a tracking link by email and SMS so you can follow its journey.</p>
-          <p>You can also open Orders on our website, find your order using the email address used at checkout, and select Track Order to view shipment updates.</p>
+          <p>Tracking becomes available after your parcel is dispatched. We’ll share a tracking link by email.</p>
+          <p>You can also open My orders, log in with your checkout email or Google account, and select your order to view shipment updates.</p>
         </section>
         <section aria-labelledby="undelivered-orders">
           <h2 id="undelivered-orders">What happens if delivery is unsuccessful?</h2>
