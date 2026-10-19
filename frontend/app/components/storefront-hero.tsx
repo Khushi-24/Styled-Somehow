@@ -32,14 +32,12 @@ export default function StorefrontHero() {
   }
   const [activeSlide, setActiveSlide] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [paused, setPaused] = useState(false);
-  const [interacting,setInteracting]=useState(false);
 
   useEffect(() => {
-    if (paused || interacting || menuOpen || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (menuOpen || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const timer = window.setInterval(() => setActiveSlide((current) => (current + 1) % slides.length), 2500);
     return () => window.clearInterval(timer);
-  }, [paused, interacting, menuOpen]);
+  }, [menuOpen]);
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -54,10 +52,9 @@ export default function StorefrontHero() {
     document.addEventListener("keydown", escape);
     return () => {document.removeEventListener("keydown", escape);document.body.style.overflow=previous;};
   }, [menuOpen]);
-  const moveSlide = (direction: number) => setActiveSlide((current) => (current + direction + slides.length) % slides.length);
 
   return (
-    <section className="storefront storefront--campaign" aria-label="Styled Somehow featured collections" onMouseEnter={()=>setInteracting(true)} onMouseLeave={()=>setInteracting(false)} onFocusCapture={()=>setInteracting(true)} onBlurCapture={event=>{if(!event.currentTarget.contains(event.relatedTarget))setInteracting(false);}}>
+    <section className="storefront storefront--campaign" aria-label="Styled Somehow featured collections">
       <header className={`site-header ${activeSlide === 0 ? "header-on-dark" : "header-on-light"} ${menuOpen ? "menu-is-open" : ""}`}>
         <Link className="brand-logo" href="/" aria-label="Styled Somehow home">
           <span>STYLED</span>
@@ -97,13 +94,7 @@ export default function StorefrontHero() {
         })}
       </div>
 
-      <div className="carousel-controls"><button type="button" onClick={() => setPaused(value => !value)} aria-label={paused ? "Play slideshow" : "Pause slideshow"}>{paused ? "▶" : "Ⅱ"}</button>
-        <button type="button" onClick={() => moveSlide(-1)} aria-label="Previous slide">←</button>
-        <div className="carousel-dots" role="group" aria-label="Choose a slide">
-          {slides.map((slide, index) => <button key={slide.image} className={index === activeSlide ? "is-active" : ""} type="button" aria-label={`Show slide ${index + 1}`} aria-current={index === activeSlide ? "true" : undefined} onClick={() => setActiveSlide(index)} />)}
-        </div>
-        <button type="button" onClick={() => moveSlide(1)} aria-label="Next slide">→</button>
-      </div>
+
     </section>
   );
 }
