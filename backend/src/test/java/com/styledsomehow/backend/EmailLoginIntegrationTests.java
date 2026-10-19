@@ -52,11 +52,13 @@ class EmailLoginIntegrationTests {
  }
  @Test void historyNeedsVerifiedSessionAndIsNewestFirstAndScoped()throws Exception{
   var old=paid("fixture@gmail.com",Instant.now().minusSeconds(500));var recent=paid("FIXTURE@gmail.com",Instant.now().minusSeconds(10));var other=paid("other@gmail.com",Instant.now());
+  var line=new PendingOrder.OrderLine();line.slug="fixture-tee";line.name="Fixture tee";line.quantity=2;line.image="";recent.items.add(line);
+  var second=new PendingOrder.OrderLine();second.slug="second-tee";second.name="Second tee";second.quantity=1;second.image="/images/fixture.webp";recent.items.add(second);orders.saveAndFlush(recent);
   mvc.perform(get("/api/order-access/login/orders")).andExpect(status().isUnauthorized());
   var session=new MockHttpSession();String original=session.getId();String body=mvc.perform(post("/api/order-access/login/code").session(session).with(csrf()).contentType("application/json").content("{\"email\":\"fixture@gmail.com\"}")).andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
   String challenge=new tools.jackson.databind.ObjectMapper().readTree(body).path("challengeId").asText();
   mvc.perform(post("/api/order-access/login/verify").session(session).with(csrf()).contentType("application/json").content("{\"challengeId\":\""+challenge+"\",\"code\":\""+code+"\"}")).andExpect(status().isOk());assertThat(session.getId()).isNotEqualTo(original);
-  mvc.perform(get("/api/order-access/login/orders").session(session)).andExpect(status().isOk()).andExpect(jsonPath("$.orders[0].id").value(recent.id)).andExpect(jsonPath("$.orders[1].id").value(old.id)).andExpect(jsonPath("$.orders.length()").value(2));
+  mvc.perform(get("/api/order-access/login/orders").session(session)).andExpect(status().isOk()).andExpect(jsonPath("$.orders[0].id").value(recent.id)).andExpect(jsonPath("$.orders[1].id").value(old.id)).andExpect(jsonPath("$.orders.length()").value(2)).andExpect(jsonPath("$.orders[0].image").value("/images/fixture.webp")).andExpect(jsonPath("$.orders[0].itemName").value("Second tee")).andExpect(jsonPath("$.orders[0].lineCount").value(2)).andExpect(jsonPath("$.orders[0].quantity").value(3));
   mvc.perform(get("/api/order-access/order/"+recent.id).session(session)).andExpect(status().isOk());mvc.perform(get("/api/order-access/order/"+other.id).session(session)).andExpect(status().isUnauthorized());
   mvc.perform(get("/api/order-access/order/"+other.id+"/fulfilment").session(session)).andExpect(status().isUnauthorized());
   session.setAttribute("customer-until",Instant.now().minusSeconds(1));mvc.perform(get("/api/order-access/login/orders").session(session)).andExpect(status().isUnauthorized());

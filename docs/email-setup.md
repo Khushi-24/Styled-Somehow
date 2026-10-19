@@ -104,3 +104,9 @@ Run additional tests locally:
 Google OAuth cannot be exercised here without your client credentials and a local browser callback. Tests and backend compilation are also blocked here by the Gradle distribution download.
 
 Official implementation references: [Google OpenID Connect](https://developers.google.com/identity/openid-connect/openid-connect), [Google OAuth client setup](https://developers.google.com/identity/gsi/web/guides/get-google-api-clientid), [Spring Security OAuth2 login](https://docs.spring.io/spring-security/reference/servlet/oauth2/login/advanced.html), [Spring Security context persistence](https://docs.spring.io/spring-security/reference/servlet/authentication/persistence.html).
+
+
+## Order-page presentation
+History cards now include one saved order-item image (first nonblank snapshot), item quantity, line count, date, status and total. The summary endpoint remains verified-email scoped and does not add addresses or other customers’ data to list responses. Opening a card reveals every ordered item with its saved thumbnail and a product link. Long references are available in order details instead of dominating cards. Missing images fall back to a neutral T-shirt outline.
+
+The customer pages use a full-width storefront header, white background, black text and restrained red accents. Details have tracking/items alongside an order summary on desktop and stacked content on mobile. Opening an order scrolls to the heading; returning to the order list preserves its scroll position after loading. Product links use a reference URL to let browser Back reopen the authorized order. Confirming a reference still requires the existing session/link authorization.
