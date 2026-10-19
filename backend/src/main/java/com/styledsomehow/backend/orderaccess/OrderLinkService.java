@@ -26,7 +26,7 @@ public class OrderLinkService {
  }
  public String link(PendingOrder o,String storeUrl){
   configured();if(o.paidAt==null||o.paymentId==null||o.email==null)throw new IllegalStateException("Only confirmed purchases can receive an order link");
-  long expires=o.paidAt.getEpochSecond()+LIFETIME;String payload=o.id+"."+expires;
+  long expires=clock.instant().getEpochSecond()+LIFETIME;String payload=o.id+"."+expires;
   return storeUrl.replaceAll("/+$","")+"/orders#access="+payload+"."+Base64.getUrlEncoder().withoutPadding().encodeToString(signature(o,payload));
  }
  public String verify(String token){
@@ -36,7 +36,7 @@ public class OrderLinkService {
    String[] parts=token.split("\\.");long expires=Long.parseLong(parts[1]);long now=clock.instant().getEpochSecond();
    if(expires<=now||expires>now+LIFETIME)throw invalid();
    var o=orders.findById(parts[0]).orElseThrow(OrderLinkService::invalid);
-   if(o.paidAt==null||o.paymentId==null||o.email==null||expires!=o.paidAt.getEpochSecond()+LIFETIME)throw invalid();
+   if(o.paidAt==null||o.paymentId==null||o.email==null)throw invalid();
    if(!MessageDigest.isEqual(signature(o,parts[0]+"."+parts[1]),Base64.getUrlDecoder().decode(parts[2])))throw invalid();
    return o.id;
   }catch(IllegalArgumentException failure){throw invalid();}

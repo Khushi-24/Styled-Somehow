@@ -13,6 +13,9 @@ class OrderLinkServiceTests {
  @Test void linkIsReadOnlyReusableAndBoundToOneOrder(){
   var repo=mock(OrderRepository.class);var o=order();when(repo.findById(o.id)).thenReturn(Optional.of(o));var service=new OrderLinkService(repo,SECRET,clock);
   String value=token(service,o);assertThat(value).doesNotContain(o.email,o.paymentId);
+  // Legacy links expired at paidAt + 90 days; retain their signed payload format.
+  String legacy=token(new OrderLinkService(repo,SECRET,Clock.fixed(o.paidAt,ZoneOffset.UTC)),o);
+  assertThat(service.verify(legacy)).isEqualTo(o.id);
   assertThat(service.verify(value)).isEqualTo(o.id);assertThat(service.verify(value)).isEqualTo(o.id);
   assertThat(service.link(o,"https://styledsomehow.in")).startsWith("https://styledsomehow.in/orders#access=");
  }
@@ -32,4 +35,12 @@ class OrderLinkServiceTests {
   var repo=mock(OrderRepository.class);var o=order();assertThatThrownBy(()->new OrderLinkService(repo,"",clock).link(o,"https://styledsomehow.in")).isInstanceOf(org.springframework.web.server.ResponseStatusException.class);
   o.paidAt=null;assertThatThrownBy(()->new OrderLinkService(repo,SECRET,clock).link(o,"https://styledsomehow.in")).isInstanceOf(IllegalStateException.class);
  }
+ @Test void oldPurchaseGetsFreshLinkAndPreviouslyIssuedLinksRemainValid(){
+  var repo=mock(OrderRepository.class);var o=order();o.paidAt=clock.instant().minus(Duration.ofDays(120));when(repo.findById(o.id)).thenReturn(Optional.of(o));
+  var service=new OrderLinkService(repo,SECRET,clock);String fresh=token(service,o);assertThat(service.verify(fresh)).isEqualTo(o.id);
+  var earlier=new OrderLinkService(repo,SECRET,Clock.offset(clock,Duration.ofDays(-10)));String existing=token(earlier,o);
+  assertThat(service.verify(existing)).isEqualTo(o.id);
+  assertThatThrownBy(()->new OrderLinkService(repo,SECRET,Clock.offset(clock,Duration.ofDays(91))).verify(fresh)).isInstanceOf(org.springframework.web.server.ResponseStatusException.class);
+ }
+
 }

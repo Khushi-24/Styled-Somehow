@@ -15,6 +15,8 @@ public class OrderStatusEmailWorker {
   var read=events.findById(id);if(read.isEmpty())return;var order=orders.lockForShipping(read.get().orderId);if(order.isEmpty())return;
   var found=events.lockMail(id);if(found.isEmpty())return;var e=found.get();var o=order.get();var now=Instant.now();
   if(!e.notificationEligible||e.notificationSentAt!=null||(e.notificationNextAttemptAt!=null&&e.notificationNextAttemptAt.isAfter(now))||!"PAID".equals(o.status)||o.confirmationSentAt==null)return;
+  // Recheck under the order lock: later emails must not overtake a failed update.
+  if(events.pendingPredecessors(o.id,e.occurredAt,e.id)>0)return;
   // V9 marked historic confirmations complete without recording send attempts.
   // Newly eligible events for those orders must still be sent.
   e.notificationAttempts++;

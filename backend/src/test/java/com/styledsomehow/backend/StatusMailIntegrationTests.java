@@ -19,7 +19,14 @@ class StatusMailIntegrationTests {
   o.confirmationSentAt=Instant.now();o.confirmationAttempts=1;orders.saveAndFlush(o);
   fulfilment.courierBooked(o);fulfilment.courierProgress(o,"SHIPPED");fulfilment.courierProgress(o,"IN_TRANSIT");fulfilment.courierProgress(o,"DELIVERY_ISSUE");fulfilment.courierProgress(o,"IN_TRANSIT");orders.flush();events.flush();
   var history=events.findByOrderIdOrderByOccurredAtAsc(o.id);assertThat(history.stream().filter(e->e.notificationEligible).map(e->e.stage)).containsExactly("PACKING","READY_TO_SHIP","SHIPPED","IN_TRANSIT");
-  assertThat(events.notificationQueue(Instant.now(),PageRequest.of(0,100))).hasSize(4);
+  // A delayed Packing email blocks later stages, even when those are due.
+  var packing=history.stream().filter(e->"PACKING".equals(e.stage)).findFirst().orElseThrow();
+  assertThat(events.notificationQueue(Instant.now(),PageRequest.of(0,100))).containsExactly(packing.id);
+  packing.notificationNextAttemptAt=Instant.now().plusSeconds(3600);events.saveAndFlush(packing);
+  assertThat(events.notificationQueue(Instant.now(),PageRequest.of(0,100))).isEmpty();
+  packing.notificationSentAt=Instant.now();events.saveAndFlush(packing);
+  var ready=history.stream().filter(e->"READY_TO_SHIP".equals(e.stage)).findFirst().orElseThrow();
+  assertThat(events.notificationQueue(Instant.now(),PageRequest.of(0,100))).containsExactly(ready.id);
   o.status="REFUNDED";orders.saveAndFlush(o);assertThat(events.notificationQueue(Instant.now(),PageRequest.of(0,100))).isEmpty();
  }
  @Test void historicOrderQueuesNewUpdatesWithoutReplayingOldEvents(){

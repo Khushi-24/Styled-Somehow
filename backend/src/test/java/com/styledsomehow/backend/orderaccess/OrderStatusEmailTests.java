@@ -25,4 +25,14 @@ class OrderStatusEmailTests {
   verify(mail,times(1)).sendStatus(o,e);assertThat(e.notificationSentAt).isNotNull();assertThat(o.confirmationAttempts).isZero();
  }
 
+ @Test void laterUpdateWaitsUntilEarlierEmailHasBeenSent(){
+  var orders=mock(OrderRepository.class);var events=mock(FulfilmentEventRepository.class);var mail=mock(EmailDelivery.class);when(mail.ready()).thenReturn(true);
+  var o=new PendingOrder();o.id="order";o.status="PAID";o.confirmationSentAt=Instant.now();
+  var e=new FulfilmentEvent();e.id="ready";e.orderId=o.id;e.stage="READY_TO_SHIP";e.occurredAt=Instant.now();e.notificationEligible=true;
+  when(events.findById(e.id)).thenReturn(Optional.of(e));when(events.lockMail(e.id)).thenReturn(Optional.of(e));when(orders.lockForShipping(o.id)).thenReturn(Optional.of(o));
+  when(events.pendingPredecessors(o.id,e.occurredAt,e.id)).thenReturn(1L,0L);
+  var worker=new OrderStatusEmailWorker(orders,events,mail);worker.deliver(e.id);verify(mail,never()).sendStatus(any(),any());assertThat(e.notificationAttempts).isZero();
+  worker.deliver(e.id);verify(mail).sendStatus(o,e);
+ }
+
 }

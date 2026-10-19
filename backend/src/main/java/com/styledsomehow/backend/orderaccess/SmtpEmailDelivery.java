@@ -64,7 +64,7 @@ public class SmtpEmailDelivery implements EmailDelivery {
   text.append("\n\nDeliver to:\n").append(o.name).append("\n").append(o.line1);
   if(o.line2!=null&&!o.line2.isBlank())text.append("\n").append(o.line2);
   text.append("\n").append(o.city).append(", ").append(o.state).append(" ").append(o.pinCode);
-  text.append("\n\nView your order: ").append(url).append("\nThis private link opens your order without a code. Keep this email and do not share the link. It expires 90 days after payment.\n\n").append(OrderEmailTemplate.noReplyText());
+  text.append("\n\nView your order: ").append(url).append("\nThis private link opens your order without a code. Keep this email and do not share the link. It expires 90 days after this email was prepared.\n\n").append(OrderEmailTemplate.noReplyText());
   return text.toString();
  }
  private static String rupees(int amount){return String.format(Locale.ROOT,"INR %,d",amount);}
