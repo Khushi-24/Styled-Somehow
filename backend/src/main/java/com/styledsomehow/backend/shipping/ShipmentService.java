@@ -28,7 +28,7 @@ public class ShipmentService {
  private void enabled(){if(!enabled)throw new ResponseStatusException(HttpStatus.CONFLICT,"Shipment booking is disabled. Complete Shiprocket KYC and live-payment setup before enabling it.");}
  private PendingOrder order(String id){return orders.lockForShipping(id).orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND));}
  public Preview preview(String id){
-  enabled();return tx.execute(status->{var o=order(id);eligible(o);if(shipments.existsById(id))throw new ResponseStatusException(HttpStatus.CONFLICT,"A booking already exists. Refresh its status; do not create another.");int quantity=o.items.stream().mapToInt(i->i.quantity).sum();var rate=rates.rate(o.pinCode,quantity,o.subtotal);return new Preview(rate.courierId(),rate.courier(),rate.rupees(),o.shipping,quantity,"Up to 0.5 kg",dimensionsReady()?parcelLength+" × "+parcelBreadth+" × "+parcelHeight+" cm":"Not configured",pickup);});
+  enabled();return tx.execute(status->{var o=order(id);eligible(o);if(shipments.existsById(id))throw new ResponseStatusException(HttpStatus.CONFLICT,"A booking already exists. Refresh its status; do not create another.");int quantity=o.items.stream().mapToInt(i->i.quantity).sum();var rate=rates.rate(o.pinCode,quantity,o.subtotal);return new Preview(rate.courierId(),rate.courier(),rate.rupees(),o.shipping,quantity,new ParcelRules().parcel(quantity).weightKg()+" kg",dimensionsReady()?parcelLength+" × "+parcelBreadth+" × "+parcelHeight+" cm":"Not configured",pickup);});
  }
  public record Comparison(List<ShippingGateway.Rate> options,int customerShipping,int quantity,String pickupLocation,String deliveryPin,ShippingGateway.Parcel parcel){}
  public Comparison compare(String id,ShippingGateway.Parcel parcel){
@@ -64,11 +64,22 @@ public class ShipmentService {
   }
   return shipments.findById(id).orElseThrow();
  }
+ public ShipmentBooking reconcile(String id,long providerOrderId){
+  if(providerOrderId<=0)throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Enter the internal Shiprocket order ID.");
+  tx.executeWithoutResult(status->{var o=order(id);eligible(o);var b=shipments.findById(id).orElseThrow(()->new ResponseStatusException(HttpStatus.CONFLICT,"No local booking to reconcile."));if(b.providerOrderId!=null&&b.providerOrderId!=providerOrderId)throw new ResponseStatusException(HttpStatus.CONFLICT,"Provider order ID differs from this booking.");if(List.of("CREATING","ASSIGNING").contains(b.status)&&b.updatedAt.isAfter(Instant.now().minusSeconds(300)))throw new ResponseStatusException(HttpStatus.CONFLICT,"Booking may still be running. Wait five minutes before reconciliation.");});
+  var remote=gateway.lookup(providerOrderId,id);
+  return tx.execute(status->{var o=order(id);eligible(o);var b=shipments.findById(id).orElseThrow();if(b.providerOrderId!=null&&b.providerOrderId!=remote.orderId())throw new ResponseStatusException(HttpStatus.CONFLICT,"Booking changed. Refresh first.");if(b.awb!=null&&!b.awb.equals(remote.awb()))throw new ResponseStatusException(HttpStatus.CONFLICT,"AWB differs. Review manually before changing tracking.");b.providerOrderId=remote.orderId();b.providerShipmentId=remote.shipmentId();b.updatedAt=Instant.now();
+   if(remote.cancelled()){b.status="CANCELLED";b.trackingTerminal=true;b.message="Cancellation verified with Shiprocket. No automatic rebooking was attempted.";}
+   else if(!remote.awb().isBlank()){b.awb=remote.awb();b.courier=remote.courier();b.courierId=remote.courierId();b.status="BOOKED";b.message="Existing AWB verified and linked. Pickup remains managed in Shiprocket.";fulfilment.courierBooked(o);}
+   else{b.status="ORDER_CREATED";b.message="Existing provider order verified; no AWB assigned. Complete courier assignment in Shiprocket, then reconcile again.";}
+   return shipments.saveAndFlush(b);
+  });
+ }
  public static Map<String,Object> payload(PendingOrder o,int quantity,String pickup){
-  if(quantity<1||quantity>2)throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,"Parcel measurements are required for more than two T-shirts.");
+  new ParcelRules().parcel(quantity);
   var body=new LinkedHashMap<String,Object>();body.put("order_id",o.id);body.put("order_date",DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm").withZone(ZoneId.of("Asia/Kolkata")).format(o.createdAt));body.put("pickup_location",pickup);
   body.put("billing_customer_name",o.name);body.put("billing_last_name","");body.put("billing_address",o.line1);body.put("billing_address_2",o.line2==null?"":o.line2);body.put("billing_city",o.city);body.put("billing_pincode",o.pinCode);body.put("billing_state",o.state);body.put("billing_country","India");body.put("billing_email",o.email);body.put("billing_phone",o.phone);body.put("shipping_is_billing",true);
   body.put("order_items",o.items.stream().map(i->Map.of("name",i.name+" · "+i.colour+" · "+i.size,"sku",i.stockId+"-"+i.slug+"-"+i.colour+"-"+i.size,"units",i.quantity,"selling_price",i.unitPrice)).toList());
-  body.put("payment_method","Prepaid");body.put("sub_total",o.subtotal);body.put("shipping_charges",o.shipping);body.put("weight",0.5);return body;
+  body.put("payment_method","Prepaid");body.put("sub_total",o.subtotal);body.put("shipping_charges",o.shipping);body.put("weight",new ParcelRules().parcel(quantity).weightKg());return body;
  }
 }

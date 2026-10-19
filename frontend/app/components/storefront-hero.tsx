@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import {getImageProps} from "next/image";
 import PolicyActions from "./policy-actions";
 import { useEffect, useState } from "react";
 
@@ -10,9 +11,7 @@ const slides = [
 ] as const;
 
 const collectionLinks = [
-  ["New Drop", "/collections/new-drop"], ["Graphic Tees", "/collections/graphic-tees"],
-  ["Plain Tees", "/collections/plain-tees"], ["Joggers", "/collections/joggers"],
-  ["Best Sellers", "/collections/best-sellers"],
+  ["New In", "/#new-in"], ["Women", "/collections/women"], ["Men", "/collections/men"],
 ] as const;
 
 function Icon({ name }: { name: "home" | "search" | "user" | "bag" | "menu" | "close" }) {
@@ -33,16 +32,32 @@ export default function StorefrontHero() {
   }
   const [activeSlide, setActiveSlide] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [paused, setPaused] = useState(false);
+  const [interacting,setInteracting]=useState(false);
 
   useEffect(() => {
+    if (paused || interacting || menuOpen || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const timer = window.setInterval(() => setActiveSlide((current) => (current + 1) % slides.length), 2500);
     return () => window.clearInterval(timer);
-  }, []);
+  }, [paused, interacting, menuOpen]);
 
+  useEffect(() => {
+    if (!menuOpen) return;
+    const toggle=document.querySelector<HTMLButtonElement>(".menu-button");
+    const panel=document.querySelector<HTMLDivElement>(".mobile-panel");
+    panel?.querySelector<HTMLAnchorElement>("a")?.focus();
+    const previous=document.body.style.overflow;document.body.style.overflow="hidden";
+    const escape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") { setMenuOpen(false); toggle?.focus(); }
+      if(event.key==="Tab"&&panel){const controls=[toggle,...panel.querySelectorAll<HTMLElement>("a,button")].filter((node):node is HTMLElement=>!!node);const index=controls.indexOf(document.activeElement as HTMLElement);if(event.shiftKey&&index<=0){event.preventDefault();controls.at(-1)?.focus();}else if(!event.shiftKey&&(index===controls.length-1||index<0)){event.preventDefault();controls[0]?.focus();}}
+    };
+    document.addEventListener("keydown", escape);
+    return () => {document.removeEventListener("keydown", escape);document.body.style.overflow=previous;};
+  }, [menuOpen]);
   const moveSlide = (direction: number) => setActiveSlide((current) => (current + direction + slides.length) % slides.length);
 
   return (
-    <section className="storefront storefront--campaign" aria-label="Styled Somehow featured collections">
+    <section className="storefront storefront--campaign" aria-label="Styled Somehow featured collections" onMouseEnter={()=>setInteracting(true)} onMouseLeave={()=>setInteracting(false)} onFocusCapture={()=>setInteracting(true)} onBlurCapture={event=>{if(!event.currentTarget.contains(event.relatedTarget))setInteracting(false);}}>
       <header className={`site-header ${activeSlide === 0 ? "header-on-dark" : "header-on-light"} ${menuOpen ? "menu-is-open" : ""}`}>
         <Link className="brand-logo" href="/" aria-label="Styled Somehow home">
           <span>STYLED</span>
@@ -55,28 +70,25 @@ export default function StorefrontHero() {
           </div>
           <Link className="nav-link" href="/collections/men" onClick={rememberHome}>MEN</Link>
           <Link className="nav-link" href="/collections/women" onClick={rememberHome}>WOMEN</Link>
-          <Link className="nav-link" href="/collections/couple-tshirts">COUPLE T-SHIRTS</Link>
+
         </nav>
         <div className="header-actions"><PolicyActions dark={activeSlide===0||menuOpen}/>          <button className="icon-button menu-button" type="button" aria-label={menuOpen ? "Close menu" : "Open menu"} aria-expanded={menuOpen} onClick={() => setMenuOpen((open) => !open)}><Icon name={menuOpen ? "close" : "menu"} /></button>
         </div>
       </header>
 
-      <div className={`mobile-panel ${menuOpen ? "is-open" : ""}`} aria-hidden={!menuOpen}>
+      <div className={`mobile-panel ${menuOpen ? "is-open" : ""}`} aria-hidden={!menuOpen} role="dialog" aria-modal={menuOpen?true:undefined} aria-label="Shop menu">
         <p className="mobile-menu-label">SHOP</p>
-        <Link href="/collections/new-drop" onClick={() => setMenuOpen(false)}>New Drop</Link>
-        <Link href="/collections/graphic-tees" onClick={() => setMenuOpen(false)}>Graphic Tees</Link>
-        <Link href="/collections/plain-tees" onClick={() => setMenuOpen(false)}>Plain Tees</Link>
-        <Link href="/collections/joggers" onClick={() => setMenuOpen(false)}>Joggers</Link>
+        <Link href="/#new-in" onClick={() => setMenuOpen(false)}>New In</Link>
         <Link href="/collections/men" onClick={() => { rememberHome(); setMenuOpen(false); }}>Men</Link>
         <Link href="/collections/women" onClick={() => { rememberHome(); setMenuOpen(false); }}>Women</Link>
-        <Link href="/collections/couple-tshirts" onClick={() => setMenuOpen(false)}>Couple T-shirts</Link>
-        <div className="mobile-secondary-links"><Link href="/orders">My orders</Link><button type="button">Search</button></div>
+
+        <div className="mobile-secondary-links"><Link href="/orders">My orders</Link></div>
       </div>
 
       <div className="slides">
         {slides.map((slide, index) => {
-          const desktop={src:slide.image,alt:slide.alt,width:index===0?1672:2048,height:index===0?941:1024};
-          const mobile={srcSet:slide.mobileImage,sizes:"100vw"};
+          const {props:desktop}=getImageProps({src:slide.image,alt:slide.alt,width:index===0?1672:2048,height:index===0?941:1024,sizes:"100vw",quality:95});
+          const {props:mobile}=getImageProps({src:slide.mobileImage,alt:slide.alt,width:1122,height:1402,sizes:"100vw",quality:95});
           return <Link key={slide.image} href={slide.href} className={`hero-slide ${index === activeSlide ? "is-active" : ""}`} aria-hidden={index !== activeSlide} tabIndex={index === activeSlide ? 0 : -1}>
             <picture><source media="(max-width: 620px)" srcSet={mobile.srcSet} sizes={mobile.sizes}/>{/* Art-directed sources share one responsive image element. */}
             <img {...desktop} alt={slide.alt} loading={index===0?"eager":"lazy"} fetchPriority={index===0?"high":"auto"} style={{objectPosition:slide.position}}/></picture>
@@ -85,7 +97,7 @@ export default function StorefrontHero() {
         })}
       </div>
 
-      <div className="carousel-controls">
+      <div className="carousel-controls"><button type="button" onClick={() => setPaused(value => !value)} aria-label={paused ? "Play slideshow" : "Pause slideshow"}>{paused ? "▶" : "Ⅱ"}</button>
         <button type="button" onClick={() => moveSlide(-1)} aria-label="Previous slide">←</button>
         <div className="carousel-dots" role="group" aria-label="Choose a slide">
           {slides.map((slide, index) => <button key={slide.image} className={index === activeSlide ? "is-active" : ""} type="button" aria-label={`Show slide ${index + 1}`} aria-current={index === activeSlide ? "true" : undefined} onClick={() => setActiveSlide(index)} />)}

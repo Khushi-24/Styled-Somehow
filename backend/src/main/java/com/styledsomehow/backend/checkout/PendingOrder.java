@@ -13,6 +13,7 @@ public class PendingOrder {
  @Column(length=30) public String fulfilmentStage="UNFULFILLED";
  @JsonIgnore @Column(length=100,unique=true) public String gatewayOrderId;
  @Column(length=100) public String paymentId;
+ @JsonIgnore @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.TIMESTAMP) public Instant gatewayStartUntil;
  public String paymentMode;
  @JsonIgnore @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.TIMESTAMP) public Instant paymentCheckedAt;
  @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.TIMESTAMP) public Instant paidAt;

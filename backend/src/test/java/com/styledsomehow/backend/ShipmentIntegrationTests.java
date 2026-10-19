@@ -68,7 +68,7 @@ class ShipmentIntegrationTests {
   mvc.perform(post(path).with(user("admin").roles("ADMIN")).with(csrf()).contentType("application/json").content(body)).andExpect(status().isOk()).andExpect(jsonPath("$.shiprocketOrderId").value(4076130954L));
   assertThat(shipments.existsById(o.id)).isFalse();verifyNoInteractions(gateway);
  }
- @Test void payloadUsesStoredAmountsAndMeasuredParcel(){var o=order("LIVE","PAID");var body=ShipmentService.payload(o,1,"Home");assertThat(body).containsEntry("sub_total",599).containsEntry("shipping_charges",85).containsEntry("payment_method","Prepaid").containsEntry("weight",0.5).doesNotContainKeys("length","breadth","height");assertThat(ShipmentService.payload(o,2,"Home")).containsEntry("weight",0.5).doesNotContainKeys("length","breadth","height");assertThatThrownBy(()->ShipmentService.payload(o,3,"Home")).isInstanceOf(org.springframework.web.server.ResponseStatusException.class);}
+ @Test void payloadUsesStoredAmountsAndMeasuredParcel(){var o=order("LIVE","PAID");var body=ShipmentService.payload(o,1,"Home");assertThat(body).containsEntry("sub_total",599).containsEntry("shipping_charges",85).containsEntry("payment_method","Prepaid").containsEntry("weight",0.5).doesNotContainKeys("length","breadth","height");assertThat(ShipmentService.payload(o,2,"Home")).containsEntry("weight",0.5).doesNotContainKeys("length","breadth","height");assertThat(ShipmentService.payload(o,3,"Home")).containsEntry("sub_total",599);assertThatThrownBy(()->ShipmentService.payload(o,21,"Home")).isInstanceOf(org.springframework.web.server.ResponseStatusException.class);}
  @Test void bookingRequiresReadyToShipAndThenRecordsCourierBooked(){
   var o=order("LIVE","PAID");o.fulfilmentStage="PACKED";orders.saveAndFlush(o);
   assertThatThrownBy(()->service.book(o.id,85,42)).isInstanceOf(org.springframework.web.server.ResponseStatusException.class).hasMessageContaining("Ready to ship");
@@ -76,6 +76,12 @@ class ShipmentIntegrationTests {
   o.fulfilmentStage="READY_TO_SHIP";orders.saveAndFlush(o);
   assertThat(service.book(o.id,85,42).status).isEqualTo("BOOKED");
   assertThat(orders.findById(o.id).orElseThrow().fulfilmentStage).isEqualTo("COURIER_BOOKED");
+ }
+
+ @Test void reconcileLinksVerifiedExistingShipmentWithoutCreatingOrAssigning(){
+  var o=order("LIVE","PAID");when(gateway.create(anyMap())).thenThrow(new IllegalStateException("ambiguous"));service.book(o.id,85,42);
+  when(gateway.lookup(101,o.id)).thenReturn(new ShipmentGateway.Existing(101,202,"RECOVEREDAWB","Delhivery Surface",42,false));
+  var recovered=service.reconcile(o.id,101);assertThat(recovered.status).isEqualTo("BOOKED");assertThat(recovered.awb).isEqualTo("RECOVEREDAWB");verify(gateway,times(1)).create(anyMap());verify(gateway,never()).assign(anyLong(),anyInt());
  }
 
 }

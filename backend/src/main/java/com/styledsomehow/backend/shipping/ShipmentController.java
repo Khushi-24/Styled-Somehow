@@ -10,6 +10,8 @@ public class ShipmentController {
  public ShipmentController(ShipmentService service){this.service=service;}
  public record Confirm(@Min(1) int expectedCost,@Min(1) int courierId,@NotNull @Valid ShippingGateway.Parcel parcel){}
  public record DiagnosticRequest(@Min(1) long shiprocketOrderId,@NotNull @Valid ShippingGateway.Parcel parcel){}
+ public record Reconcile(@Min(1) long providerOrderId){}
+ @PostMapping("/reconcile") public ShipmentBooking reconcile(@PathVariable String id,@Valid @RequestBody Reconcile request){return service.reconcile(id,request.providerOrderId());}
  @PostMapping("/diagnostic") public ShippingGateway.Diagnostic diagnose(@PathVariable String id,@Valid @RequestBody DiagnosticRequest request){return service.diagnose(id,request.parcel(),request.shiprocketOrderId());}
  @PostMapping("/tracking/refresh") public com.styledsomehow.backend.fulfilment.FulfilmentService.View tracking(@PathVariable String id){return tracking.refresh(id);}
  @GetMapping public ShipmentService.Status status(@PathVariable String id){return service.status(id);}

@@ -360,3 +360,7 @@ input,select,textarea{font-family:inherit}
 .women-banner-carousel :focus-visible{outline:2px solid #090909;outline-offset:-3px}
 @media(max-width:620px){.women-banner-carousel__controls{bottom:6px}.women-banner-carousel__controls button{width:28px;height:28px}}
 @media(prefers-reduced-motion:reduce){.women-banner-carousel__slide{transition:none}}
+
+/* Keep the slideshow pause control available on narrow screens. */
+@media(max-width:620px){.carousel-controls>button[aria-label$="slideshow"]{display:grid;place-items:center;min-width:32px;min-height:32px}}
+.cart-total{background:#fff;border:1px solid #e4e1dd;border-radius:6px}

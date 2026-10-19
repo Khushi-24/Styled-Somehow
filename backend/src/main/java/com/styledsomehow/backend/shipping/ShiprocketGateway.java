@@ -15,8 +15,8 @@ public class ShiprocketGateway implements ShippingGateway {
  public ShiprocketGateway(ShiprocketClient api,@Value("${shiprocket.pickup-postcode:380015}") String pickup){this.api=api;this.pickup=pickup;}
  public Rate rate(String pin,int quantity,int subtotal){
   if(!pin.matches("[1-9][0-9]{5}"))throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Enter a valid 6-digit delivery PIN code.");
-  if(quantity<1||quantity>2)throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,"For orders above 2 T-shirts, contact support to confirm packaging and delivery.");
-  return selectRate(fetch(pin,quantity,subtotal,null));
+  
+  return selectRate(fetch(pin,quantity,subtotal,new ParcelRules().parcel(quantity)));
  }
  @Override public List<Rate> options(String pin,int quantity,int subtotal,Parcel parcel){
   if(parcel==null||!parcel.valid())throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Enter valid packed weight and dimensions.");
@@ -24,7 +24,7 @@ public class ShiprocketGateway implements ShippingGateway {
  }
  private JsonNode fetch(String pin,int quantity,int subtotal,Parcel parcel){
   if(!pin.matches("[1-9][0-9]{5}"))throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Enter a valid delivery PIN.");
-  if(quantity<1||quantity>2)throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,"Automatic shipping currently supports up to two T-shirts.");
+  new ParcelRules().parcel(quantity);
   Map<String,Object> params=new LinkedHashMap<>(Map.of("pickup_postcode",pickup,"delivery_postcode",pin,"cod",0,"weight",parcel==null?"0.5":Double.toString(parcel.weightKg()),"declared_value",subtotal));
   if(parcel!=null){params.put("length",parcel.lengthCm());params.put("breadth",parcel.breadthCm());params.put("height",parcel.heightCm());}
   var result=api.get("/courier/serviceability/",params);

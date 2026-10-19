@@ -57,7 +57,7 @@ export default function InteractiveProductRack({ products }: { products: Product
             aria-label={`View ${p.name}`}
             onPointerEnter={e=>{if(e.pointerType==="mouse")choose(i);}} onFocus={()=>choose(i)}>
             <svg className="ss-rack-hook" viewBox="0 0 110 45" aria-hidden="true"><path d="M55 21c-10-1-10-17 0-17 12 0 13 13 2 18L11 42h88L57 22" fill="none" stroke="#8f8b83" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-            <span className="ss-rack-photo"><Image src={media.url} alt={media.alt || p.name} fill sizes="(max-width:680px) 165px, 220px" unoptimized={media.url.startsWith("/api/")} style={{objectFit:media.contain?"contain":"cover"}} /></span>
+            <span className="ss-rack-photo"><Image src={media.url} alt={media.alt || p.name} fill sizes="(max-width:680px) 165px, 220px" style={{objectFit:media.contain?"contain":"cover"}} /></span>
           </Link>;
         })}
       </div>
@@ -70,7 +70,7 @@ export default function InteractiveProductRack({ products }: { products: Product
       .ss-rack{background:#f5f3ef;color:#191919;overflow:hidden;padding:48px 0 32px;isolation:isolate}
       .ss-rack-intro{text-align:center;padding:0 18px}
       .ss-rack-intro>span{font-size:10px;letter-spacing:.28em;color:#777}
-      .ss-rack-intro h2{font:900 clamp(36px,6vw,76px)/1 Arial,Helvetica,sans-serif;letter-spacing:-.065em;margin:12px 0}
+      .ss-rack-intro h2{font:900 clamp(36px,6vw,76px)/1 var(--font-geist-sans),Arial,sans-serif;letter-spacing:-.065em;margin:12px 0}
       .ss-rack-intro p{color:#777;font-size:14px;margin:0}
       .ss-rack-stage{position:relative;height:clamp(340px,43vw,535px);max-width:1350px;margin:12px auto 0}
       .ss-rack-rail{position:absolute;left:6%;right:6%;top:38px;height:9px;background:linear-gradient(#777,#eee 31%,#aaa 67%,#777);border-radius:10px;box-shadow:0 4px 5px #0002}

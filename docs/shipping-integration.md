@@ -1,3 +1,5 @@
+> Current audit fixes and operational limits: see [AUDIT_FIX_STATUS.md](AUDIT_FIX_STATUS.md). Historical details below may be superseded, including the old dimension-free/two-item shipping rule.
+
 # Shipping rules
 
 - Pickup: Home, PIN 380015. API credentials remain in backend/.env.

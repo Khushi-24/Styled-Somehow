@@ -1,3 +1,5 @@
+> Current audit fixes and operational limits: see [AUDIT_FIX_STATUS.md](AUDIT_FIX_STATUS.md). Historical details below may be superseded, including the old dimension-free/two-item shipping rule.
+
 # Hostinger email login and order updates
 
 Put these entries in ignored backend/.env, never frontend/.env or a committed file:

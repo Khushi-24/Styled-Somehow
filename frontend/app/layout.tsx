@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import {siteUrl} from "../lib/site";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import StoreFooter from "./components/store-footer";
@@ -15,6 +16,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase:new URL(siteUrl),
+  openGraph:{title:"Styled Somehow",description:"Oversized graphic T-shirts with comfort and personality.",images:["/images/red-streetwear-hero.webp"]},
   title: "styled_somehow | Effortless everyday style",
   description: "Graphic tees, everyday basics and relaxed fits—styled somehow.",
 };

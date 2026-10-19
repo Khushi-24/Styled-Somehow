@@ -11,11 +11,13 @@ import static com.styledsomehow.backend.checkout.CheckoutDtos.*;
 @Service
 @Transactional(isolation=Isolation.READ_COMMITTED)
 public class CheckoutService {
+ @org.springframework.beans.factory.annotation.Autowired private com.styledsomehow.backend.operations.CommerceGuard guard;
  private final com.styledsomehow.backend.shipping.ShippingGateway shipping;
  private final com.styledsomehow.backend.address.PostalLocationService locations;
  private final ProductRepository products;private final StockRepository stocks;private final OrderRepository orders;
  public CheckoutService(ProductRepository products,StockRepository stocks,OrderRepository orders,com.styledsomehow.backend.shipping.ShippingGateway shipping,com.styledsomehow.backend.address.PostalLocationService locations){this.locations=locations;this.shipping=shipping;this.products=products;this.stocks=stocks;this.orders=orders;}
- private List<BlankStock> prepare(){var all=stocks.lockedAll();expire(all);return all;}
+ @jakarta.persistence.PersistenceContext private jakarta.persistence.EntityManager entities;
+ private List<BlankStock> prepare(){var all=stocks.lockedAll();for(var stock:all)entities.refresh(stock,jakarta.persistence.LockModeType.PESSIMISTIC_WRITE);expire(all);return all;}
  private void expire(List<BlankStock> all){for(var order:orders.findByStatus("PENDING_PAYMENT"))if(!order.expiresAt.isAfter(Instant.now()))release(order,all,"EXPIRED");}
  private void release(PendingOrder order,List<BlankStock> all,String status){
   for(var line:order.items){var stock=all.stream().filter(s->s.id.equals(line.stockId)).findFirst().orElseThrow();if(stock.reserved<line.quantity)throw new IllegalStateException("Reservation balance is inconsistent");stock.reserved-=line.quantity;}
@@ -50,11 +52,13 @@ public class CheckoutService {
   return new Quote(lines,subtotal,0,subtotal);
  }
  public PendingOrder create(Checkout request,String sessionKey){
+  guard.requireOpen();
   locations.validate(request.address());
   String fingerprint=fingerprint(request);
   int charge=shippingCharge(request.items(),request.address().pinCode());var all=prepare();
   var previous=orders.findBySessionKeyAndRequestId(sessionKey,request.requestId());
   if(previous.isPresent()){var order=previous.get();if(!order.requestFingerprint.equals(fingerprint))throw new ResponseStatusException(HttpStatus.CONFLICT,"Checkout reference already used for different details");return order;}
+  if(orders.countByEmailIgnoreCaseAndStatus(request.address().email().trim(),"PENDING_PAYMENT")>=2)throw new ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS,"You already have pending checkouts. Complete or cancel them before creating another.");
   if(orders.existsBySessionKeyAndStatus(sessionKey,"PENDING_PAYMENT"))throw new ResponseStatusException(HttpStatus.CONFLICT,"You already have a pending checkout. Resume or cancel it before starting another.");
   var quote=withShipping(calculate(request.items(),all),charge);if(quote.total()!=request.expectedTotal())throw new ResponseStatusException(HttpStatus.CONFLICT,"Prices or shipping charges changed. Check delivery again and review the updated total.");
   var order=new PendingOrder();order.id=UUID.randomUUID().toString();order.sessionKey=sessionKey;order.requestId=request.requestId();order.requestFingerprint=fingerprint;order.status="PENDING_PAYMENT";order.createdAt=Instant.now();order.expiresAt=order.createdAt.plusSeconds(900);order.subtotal=quote.subtotal();order.shipping=quote.shipping();order.total=quote.total();

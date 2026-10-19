@@ -52,12 +52,11 @@ class ShippingTests {
   assertThatThrownBy(()->service.book("fixture",85,1)).isInstanceOf(org.springframework.web.server.ResponseStatusException.class).hasMessageContaining("dimensions");
   verifyNoInteractions(rates,booking);
  }
- @Test void upToTwoShirtsUseHalfKgAndNoDimensions() throws Exception {
+ @Test void checkoutUsesSameParcelDefaultsAsAdminAndSupportsLargerCarts() throws Exception {
   var api=mock(ShiprocketClient.class);
   when(api.get(anyString(),anyMap())).thenReturn(new JsonMapper().readTree("{\"data\":{\"available_courier_companies\":[{\"courier_name\":\"DTDC\",\"courier_company_id\":1,\"rate\":70}]}}"));
   var gateway=new ShiprocketGateway(api,"380015");
-  for(int quantity:new int[]{1,2})gateway.rate("380015",quantity,599);
-  verify(api,times(2)).get(eq("/courier/serviceability/"),eq(Map.of("pickup_postcode","380015","delivery_postcode","380015","cod",0,"weight","0.5","declared_value",599)));
-  assertThatThrownBy(()->gateway.rate("380015",3,1797)).isInstanceOf(org.springframework.web.server.ResponseStatusException.class);
+  for(int quantity:new int[]{1,2,3}){gateway.rate("380015",quantity,599);var parcel=new ParcelRules().parcel(quantity);verify(api).get(eq("/courier/serviceability/"),eq(Map.of("pickup_postcode","380015","delivery_postcode","380015","cod",0,"weight",Double.toString(parcel.weightKg()),"declared_value",599,"length",parcel.lengthCm(),"breadth",parcel.breadthCm(),"height",parcel.heightCm())));}
+  assertThatThrownBy(()->gateway.rate("380015",21,599)).isInstanceOf(org.springframework.web.server.ResponseStatusException.class);
  }
 }

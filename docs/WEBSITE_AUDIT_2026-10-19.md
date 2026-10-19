@@ -1,3 +1,5 @@
+> Remediation status: [AUDIT_FIX_STATUS.md](AUDIT_FIX_STATUS.md). This audit is a dated baseline, not the current unresolved-bug list. F05 has been corrected because scheduled tracking already existed.
+
 # Styled Somehow website audit — 19 October 2026
 
 ## Verdict and scope
@@ -57,13 +59,9 @@ Evidence: `ShiprocketGateway.rate()/fetch()`, `ShipmentService.book()`, `fronten
 
 Action: use one approved parcel rule for checkout and booking, or explicitly accept merchant-paid differences. Verify using the same account, PINs, declared value, payment mode, weight and dimensions. Do not silently charge the customer again after payment.
 
-### F05 — Courier tracking is not refreshed automatically [Confirmed / High]
+### F05 — Correction: scheduled courier polling already exists [Corrected finding]
 
-Only the admin shipment tracking-refresh endpoint invokes `TrackingService.refresh()`. Customer polling reads saved fulfilment state. There is no scheduled tracking reconciliation or courier webhook handler. Without an admin action, In transit/Delivered status and their email events can remain stale indefinitely.
-
-Evidence: `ShipmentController`, `TrackingService`, `OrderAccessController.tracking()`, `frontend/app/orders/view.tsx`; scheduled jobs cover expiry, payments and mail, not courier tracking.
-
-Action: add bounded scheduled refresh of nonterminal LIVE shipments and/or verified courier callbacks with periodic reconciliation. Retain cache, terminal-state and deduplication protections.
+The original audit incorrectly said tracking was manual-only. `TrackingPoller` already runs every minute and selects up to ten nonterminal shipments whose tracking is at least ten minutes old. This finding is withdrawn. Provider/API verification and tracking failure monitoring remain relevant; there is no reason to add a duplicate poller.
 
 ### F06 — Refreshing a new checkout can restore an old paid order [Confirmed by source / High]
 
@@ -142,7 +140,7 @@ Action: implement read-only provider reconciliation first, then audited recovery
 
 1. Fix F06 repeat checkout and F11 broken navigation first; small, directly visible regressions.
 2. Add F02 abuse controls and shorten F03 stock transactions before opening checkout publicly.
-3. Resolve F04 parcel/quote consistency and F10 quantity support; finish F05 tracking and F09 booking recovery.
+3. Resolve F04 parcel/quote consistency and F10 quantity support; verify existing tracking and finish F09 booking recovery.
 4. Build validated LIVE mode (F01) in isolated staging, then perform controlled payment/refund/shipping verification.
 5. Finish operator controls: paid cancellation/refunds, pause ordering, older-order lookup and failed-job visibility.
 6. Complete production persistence/backups/HTTPS, policies and CI/MySQL checks.
