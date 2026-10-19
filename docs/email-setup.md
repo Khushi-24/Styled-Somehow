@@ -1,4 +1,4 @@
-> Current audit fixes and operational limits: see [AUDIT_FIX_STATUS.md](AUDIT_FIX_STATUS.md). Historical details below may be superseded, including the old dimension-free/two-item shipping rule.
+> Current audit fixes, tested email queues and remaining provider verification: see [AUDIT_FIX_STATUS.md](AUDIT_FIX_STATUS.md). Historical recovery/login implementation notes below may be superseded.
 
 # Hostinger email login and order updates
 

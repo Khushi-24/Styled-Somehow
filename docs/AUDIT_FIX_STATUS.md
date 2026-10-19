@@ -1,6 +1,8 @@
 # Audit remediation status — 19 October 2026
 
-This is the current implementation record. It supersedes old checklist implementation claims. Backend source has NOT been compiled/tested in this workspace: the Gradle distribution download fails with Network unreachable. New integration tests and MySQL CI are supplied, not claimed passing. Keep real payments/booking disabled until verification.
+This is the current implementation record. It supersedes old checklist implementation claims. Local Gradle execution remains blocked by network access, but GitHub CI compiled the backend and passed the complete H2 and MySQL suites, plus frontend lint/regression tests/build, for application commit `4bd1fc8`. Keep real payments/booking disabled until account and deployment verification.
+
+CI evidence: https://github.com/Khushi-24/Styled-Somehow/actions/runs/39256733030
 
 ## Implemented changes
 
@@ -8,7 +10,7 @@ This is the current implementation record. It supersedes old checklist implement
 | --- | --- |
 | F01 LIVE payments | Matching TEST/LIVE order/UI/ledger mode, explicit RAZORPAY_LIVE_ENABLED switch default false, mode-mismatch protection. No paid provider action performed. |
 | F02 reservation abuse | Durable hourly IP/browser/email/global creation limits, cart quote/PIN/shipping/customer payment limits and maximum two outstanding checkouts per email. Trusted-proxy/edge deployment remains required. Distributed botnets are not fully prevented by application quotas. |
-| F03 network/stock locking | Gateway order preparation and refund workers use durable leases; provider HTTP occurs outside inventory transactions. Fetched payment state applies in a short stock-locked transaction. Stock/order state refreshes under locks. Global stock locking remains conservative for the small shared-blank pool; real MySQL concurrency still needs verification. |
+| F03 network/stock locking | Gateway order preparation and refund workers use durable leases; provider HTTP occurs outside inventory transactions. Fetched payment state applies in a short stock-locked transaction. Stock/order state refreshes under locks. Global stock locking remains conservative for the small shared-blank pool; MySQL CI passed; real-account load and deployment verification still remain. |
 | F04 / F10 parcels | Checkout and admin defaults now agree: 11 x 13 inches, height +1 inch per tee, 0.5 kg per started pair, maximum 20 tees. Shipping request includes dimensions. Actual pack verification is required; admin can override actual measurements. Quote differences are merchant-side, never silently charged to an already paid customer. |
 | F05 tracking | Original audit corrected: TrackingPoller already existed. Added safe failure logging; retained its ten-minute per-shipment refresh eligibility. |
 | F06 old confirmation recovery | A nonempty new cart does not restore the previous confirmation on reload. Shared policy function has passing Node regression tests. |
@@ -26,7 +28,7 @@ This is the current implementation record. It supersedes old checklist implement
 | F19 SEO | Robots, dynamic catalogue sitemap, product canonical/social metadata and escaped JSON-LD offers/availability. Archived products are noindex. |
 | F20 accessibility | Homepage reduced-motion timer check, pause control and hover/focus suspension; menu Escape, focus cycling and body scroll lock. Men/Women banners now have explicit pause controls. Full browser/screen-reader audit remains outstanding. |
 | F21 archived links | Archived products remain readable from historical orders and cannot be purchased. Drafts stay private and archived products stay out of listings. |
-| F22 CI | Active/main branch triggers, frontend regression tests, backend and separate real MySQL suite configured. Workflow execution is not assumed successful. |
+| F22 CI | Active/main branch triggers, frontend regression tests, backend and separate real MySQL suite configured. Frontend, H2/backend and MySQL jobs passed in the linked final run. |
 | F23 policies | Added factual privacy/shopping terms and footer/checkout links. Seller legal identity/address, invoice/tax details and final policy approval require owner input. No personal details invented. |
 | F24 performance | Responsive optimized hero sources and optimized collection/product images; original source assets preserved. Measured 750px mobile lineup response 152,187 bytes vs 1,364,050-byte original in local test. Actual mobile LCP/CLS not measured. |
 | F25 temporary failures | Order refresh retains last known authorized details on network/5xx failure; clears only for access failures. |
@@ -43,11 +45,11 @@ This is the current implementation record. It supersedes old checklist implement
 - Product JSON-LD escapes angle brackets and parses back to the original fixture value.
 - Responsive Next image endpoint: 750px mobile lineup returned 200 and 152,187 bytes. Original file preserved.
 - Backup shell syntax: passed `bash -n`. No backup/provider call executed.
-- Backend suite attempted: blocked before compilation by Gradle distribution network access.
+- Backend suites: GitHub CI compiled application/test code and passed H2 and MySQL jobs. This includes an integration test asserting provider order creation, payment fetch and refund HTTP mocks run outside DB transactions. The first run exposed stale test fixtures, an intentional archived-page expectation change, and MySQL timestamp precision; these were corrected before the final passing run.
 
 ## Still required outside this workspace
 
-1. Pull the branch, run Java 21 `bash gradlew test` (PowerShell: `.\gradlew.bat test`), and apply Flyway V13–V15 to the local MySQL database by restarting the backend. Back up first; do not modify old migration checksums.
+1. Back up the local database, pull the branch, optionally repeat Java 21 `bash gradlew test` (PowerShell: `.\gradlew.bat test`) against your setup, and apply Flyway V13–V16 to the local MySQL database by restarting the backend. Back up first; do not modify old migration checksums.
 2. Verify pause/resume, quotas, new colour creation, paginated searches, OTP send/failure/retry, refund review and shipment reconciliation with the real local backend. Do not use live credentials for routine tests.
 3. Confirm actual parcels, prices/availability for representative PINs and quantities, and legal seller/invoice/policy details.
 4. Configure hosting, HTTPS/private backend/database, secure cookies, trusted-proxy/edge limits, persistent media, alerting, encrypted backup schedule and a successful isolated restore drill.
