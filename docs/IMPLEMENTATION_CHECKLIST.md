@@ -108,3 +108,7 @@ See fulfilment-tracking.md. Earlier OTP checklist entries are superseded by secu
 - [x] Optional Google OIDC login shares the email OTP customer session and private history.
 - [x] Verified Gmail-only claim, separate OAuth security chain, state/nonce validation, fixed storefront callback and discarded access tokens.
 - [ ] Configure Google Cloud OAuth web client and test callback, consent cancellation, logout/expiry and admin isolation locally.
+
+
+## Verification — 19 October 2026
+Khushi confirmed Google login, email OTP verification, newest-first order history and logout work locally. OTP and status-email visual templates were then refined; verify newly sent messages in desktop/mobile email clients. Existing delivered emails do not change. Backend tests still require local Java 21 execution.
