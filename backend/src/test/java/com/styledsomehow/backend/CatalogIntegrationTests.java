@@ -60,7 +60,7 @@ class CatalogIntegrationTests {
    mvc.perform(put("/api/admin/products/"+p.id).with(user("owner").roles("ADMIN")).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(p))).andExpect(status().isConflict());
    published.status=Product.Status.ARCHIVED;
    mvc.perform(put("/api/admin/products/"+p.id).with(user("owner").roles("ADMIN")).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(published))).andExpect(status().isOk());
-   mvc.perform(get("/api/products/"+p.slug)).andExpect(status().isNotFound());
+   mvc.perform(get("/api/products/"+p.slug)).andExpect(status().isOk()).andExpect(jsonPath("$.status").value("ARCHIVED")).andExpect(jsonPath("$.availability").isEmpty());
   }finally{repository.deleteById(p.id);}
  }
  @Test void rejectsInvalidPricingAndUnsupportedSize()throws Exception{
