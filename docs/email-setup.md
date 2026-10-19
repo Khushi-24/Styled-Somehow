@@ -3,7 +3,6 @@
 Add these entries to the ignored backend/.env file (not frontend/.env):
 
 ```properties
-EMAIL_PROVIDER=smtp
 SMTP_HOST=smtp.hostinger.com
 SMTP_PORT=465
 SMTP_USERNAME=contact@styledsomehow.in
@@ -52,6 +51,6 @@ Tests cover signature tampering, expiry, key rotation, identity changes, session
 ## Diagnosing missing confirmations
 Recent fulfilment changes did not change SMTP settings. Only new paid orders trigger confirmations; preparation/tracking changes do not send emails. A sent confirmation is not sent again on page refresh or a stage update.
 
-On startup check `Order confirmation email readiness` warnings: confirmations enabled, provider configured and order-link configured must all be true. For Hostinger use EMAIL_PROVIDER=smtp, ORDER_CONFIRMATION_EMAIL_ENABLED=true, SMTP_HOST=smtp.hostinger.com, SMTP_PORT=465, SMTP_USERNAME and SMTP_PASSWORD, and an ORDER_ACCESS_SECRET of at least 32 characters. Keep an existing valid signing secret unchanged. The backend loads .env relative to its working directory; start from backend when using backend/.env. Never post the password or signing secret.
+On startup check `Order confirmation email readiness` warnings: confirmations enabled, provider configured and order-link configured must all be true. SMTP is the only email implementation. For Hostinger use ORDER_CONFIRMATION_EMAIL_ENABLED=true, SMTP_HOST=smtp.hostinger.com, SMTP_PORT=465, SMTP_USERNAME and SMTP_PASSWORD, and an ORDER_ACCESS_SECRET of at least 32 characters. Keep an existing valid signing secret unchanged. The backend loads .env relative to its working directory; start from backend when using backend/.env. Never post the password or signing secret.
 
 For a new PAID order, the worker scans every 30 seconds. It logs provider acceptance or a failure with exception types and a scheduled retry, without recipient addresses, raw SMTP responses, tokens or credentials. Authentication errors suggest checking mailbox credentials; socket/connection errors suggest connectivity; ResponseStatusException can indicate missing order-link configuration. These are diagnostic clues, not proof of the cause. Backoff may delay subsequent attempts for hours. Payment status is never changed by email delivery. SMTP acceptance is not proof of inbox delivery: check Spam and the mailbox provider if acceptance was logged.

@@ -63,9 +63,9 @@ Khushi confirmed inventory adjustments/history/persistence tests completed. Cart
 
 
 ## Guest email access
-- [x] Implement read-only cross-browser order access via short-lived email OTP and Brevo delivery adapter.
+- [x] Implement read-only cross-browser order access via short-lived email OTP (historical; public endpoints now disabled).
 - [x] Browser-bound single-use codes, attempt/resend/global limits, hashed storage and session expiry.
-- [ ] Configure private Brevo API key, verified sender/domain and order access secret.
+- [ ] Verify Hostinger SMTP credentials and order access secret; see email-setup.md.
 - [ ] Verify real delivery, MySQL V4 migration, proxy IP handling, desktop/mobile flow and abuse limits.
 - [ ] Optional customer accounts, saved addresses and order history.
 - [ ] Send order confirmations only after verified successful payment.

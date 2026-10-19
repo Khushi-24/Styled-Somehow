@@ -10,7 +10,7 @@ public class EmailConfigurationStatus {
  private final EmailDelivery mail;private final boolean enabled,linkReady;
  public EmailConfigurationStatus(EmailDelivery mail,@Value("${email.confirmations.enabled:false}") boolean enabled,@Value("${order-access.secret:}") String secret){this.mail=mail;this.enabled=enabled;this.linkReady=secret.length()>=32;}
  @EventListener(ApplicationReadyEvent.class) public void report(){
-  if(!enabled||!mail.ready()||!linkReady)log.warn("Order confirmation email readiness: enabled={}, providerConfigured={}, orderLinkConfigured={}. Check ORDER_CONFIRMATION_EMAIL_ENABLED, EMAIL_PROVIDER, provider credentials and ORDER_ACCESS_SECRET in the backend environment.",enabled,mail.ready(),linkReady);
+  if(!enabled||!mail.ready()||!linkReady)log.warn("Order confirmation email readiness: enabled={}, providerConfigured={}, orderLinkConfigured={}. Check ORDER_CONFIRMATION_EMAIL_ENABLED, SMTP_USERNAME, SMTP_PASSWORD and ORDER_ACCESS_SECRET in the backend environment.",enabled,mail.ready(),linkReady);
   else log.info("Order confirmation email configuration is present; provider connectivity is verified when sending a new paid-order confirmation.");
  }
 }

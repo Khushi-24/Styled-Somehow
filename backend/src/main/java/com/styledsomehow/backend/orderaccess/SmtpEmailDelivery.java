@@ -2,7 +2,6 @@ package com.styledsomehow.backend.orderaccess;
 
 import com.styledsomehow.backend.checkout.PendingOrder;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.stereotype.Component;
@@ -10,7 +9,6 @@ import java.util.List;
 import java.util.Locale;
 
 @Component
-@ConditionalOnProperty(name="email.provider",havingValue="smtp")
 public class SmtpEmailDelivery implements EmailDelivery {
  private final JavaMailSenderImpl client;
  private final OrderLinkService links;
