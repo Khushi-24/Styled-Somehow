@@ -8,10 +8,11 @@ import java.time.Instant;
 @Component
 @ConditionalOnProperty(name="email.confirmations.enabled",havingValue="true")
 public class OrderConfirmationDispatch {
+ private static final org.slf4j.Logger log=org.slf4j.LoggerFactory.getLogger(OrderConfirmationDispatch.class);
  private final OrderRepository orders;private final OrderConfirmationWorker worker;private final EmailDelivery mail;
  public OrderConfirmationDispatch(OrderRepository orders,OrderConfirmationWorker worker,EmailDelivery mail){this.orders=orders;this.worker=worker;this.mail=mail;}
  @Scheduled(fixedDelay=30000,initialDelay=30000) public void run(){
   if(!mail.ready())return;
-  for(String id:orders.confirmationQueue(Instant.now(),PageRequest.of(0,10)))try{worker.deliver(id);}catch(RuntimeException unavailable){/* Queue remains durable. Never log credentials or customer data. */}
+  for(String id:orders.confirmationQueue(Instant.now(),PageRequest.of(0,10)))try{worker.deliver(id);}catch(RuntimeException unavailable){log.warn("Confirmation email queue could not process order {}; errorType={}. Will retry on a later scan.",id,unavailable.getClass().getSimpleName());}
  }
 }
