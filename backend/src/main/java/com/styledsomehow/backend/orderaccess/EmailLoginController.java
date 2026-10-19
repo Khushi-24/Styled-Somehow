@@ -23,7 +23,7 @@ public class EmailLoginController {
  @PostMapping("/code") public ResponseEntity<EmailLoginService.CodeRequest> request(@Valid @RequestBody EmailRequest body,HttpServletRequest request){return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(login.request(body.email(),CheckoutController.key(request.getSession()),request.getRemoteAddr()));}
  @PostMapping("/verify") public ResponseEntity<Session> verify(@Valid @RequestBody VerifyRequest body,HttpServletRequest request){
   String email=login.verify(body.challengeId(),body.code(),CheckoutController.key(request.getSession())).orElseThrow(()->new ResponseStatusException(HttpStatus.UNAUTHORIZED,"Code is incorrect, expired or has too many attempts. Request a new code if needed."));
-  var session=request.getSession();synchronized(session){request.changeSessionId();session.removeAttribute("verified-order-id");session.removeAttribute("verified-order-until");session.setAttribute("customer-email",email);session.setAttribute("customer-until",Instant.now().plusSeconds(1800));}
+  CustomerLoginSession.grant(email,request);
   return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(new Session(email));
  }
  static String email(HttpSession session){Object until=session.getAttribute("customer-until"),email=session.getAttribute("customer-email");if(!(until instanceof Instant time)||!time.isAfter(Instant.now())||!(email instanceof String value))throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,"Log in to see your orders.");return value;}

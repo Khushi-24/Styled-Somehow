@@ -102,3 +102,9 @@ See fulfilment-tracking.md. Earlier OTP checklist entries are superseded by secu
 - [x] Durable stage email retries, per-stage notification suppression and per-order threading headers.
 - [ ] Run new Java 21 integration tests locally and verify Hostinger OTP/threading/delivery on real inboxes.
 - [ ] Verify trusted proxy IP configuration and mobile login/history rendering before launch.
+
+
+## Google or email login
+- [x] Optional Google OIDC login shares the email OTP customer session and private history.
+- [x] Verified Gmail-only claim, separate OAuth security chain, state/nonce validation, fixed storefront callback and discarded access tokens.
+- [ ] Configure Google Cloud OAuth web client and test callback, consent cancellation, logout/expiry and admin isolation locally.
