@@ -39,14 +39,27 @@ public class SmtpEmailDelivery implements EmailDelivery {
   if(!ready())throw new IllegalStateException("SMTP is not configured");
   String orderLink=links.link(order,storeUrl);
   try{
-   var message=client.createMimeMessage();var helper=new org.springframework.mail.javamail.MimeMessageHelper(message,true,"UTF-8");
+   var message=OrderEmailThread.message(client.getSession(),order.id,null);var helper=new org.springframework.mail.javamail.MimeMessageHelper(message,true,"UTF-8");
    helper.setFrom(new jakarta.mail.internet.InternetAddress(username,"Styled Somehow","UTF-8"));helper.setReplyTo(username);helper.setTo(order.email);
-   helper.setSubject(("TEST".equals(order.paymentMode)?"[TEST] ":"")+"Your Styled Somehow order is confirmed");
+   helper.setSubject(OrderEmailThread.subject(order));
    helper.setText(confirmationText(order,orderLink),OrderEmailTemplate.html(order,orderLink,"cid:styled-somehow-logo"));
    helper.addInline("styled-somehow-logo",new org.springframework.core.io.ClassPathResource("email/logo.png"),"image/png");
    client.send(message);
   }catch(jakarta.mail.MessagingException|java.io.UnsupportedEncodingException failure){throw new IllegalStateException("Could not prepare confirmation email",failure);}
  }
+ public void sendStatus(PendingOrder order,com.styledsomehow.backend.fulfilment.FulfilmentEvent event){
+  if(!ready())throw new IllegalStateException("SMTP is not configured");
+  String label=statusLabel(event.stage),link=links.link(order,storeUrl);
+  try{
+   var message=OrderEmailThread.message(client.getSession(),order.id,event.id);var helper=new org.springframework.mail.javamail.MimeMessageHelper(message,true,"UTF-8");
+   helper.setFrom(new jakarta.mail.internet.InternetAddress(username,"Styled Somehow","UTF-8"));helper.setReplyTo(username);helper.setTo(order.email);helper.setSubject(OrderEmailThread.subject(order));
+   String text=("TEST".equals(order.paymentMode)?"TEST ORDER — this order will not be dispatched.\n\n":"")+label+"\n"+statusDescription(event.stage)+"\n\nOrder: "+order.id+"\nView order: "+link+"\nKeep this private link safe. Need help? contact@styledsomehow.in";
+   String html="<!doctype html><html lang='en'><body style='margin:0;background:#f5f4f2;font-family:Arial,sans-serif;color:#161616'><table role='presentation' width='100%'><tr><td align='center' style='padding:24px 12px'><table role='presentation' width='600' style='width:100%;max-width:600px;background:white;border:1px solid #e4e1dd;border-radius:10px'><tr><td style='padding:28px 24px'><img src='cid:styled-somehow-logo' width='130' alt='Styled Somehow'><h1 style='font-size:24px;color:#287140'>"+OrderEmailTemplate.escape(label)+"</h1><p style='font-size:14px;line-height:1.7'>"+OrderEmailTemplate.escape(statusDescription(event.stage))+"</p>"+("TEST".equals(order.paymentMode)?"<p style='color:#705018'>TEST ORDER · This order will not be dispatched.</p>":"")+"<p style='font-size:12px;word-break:break-all'>Order "+OrderEmailTemplate.escape(order.id)+"</p><a href='"+OrderEmailTemplate.escape(link)+"' style='display:block;text-align:center;background:#161616;color:white;padding:15px;text-decoration:none;border-radius:5px'>View order</a><p style='font-size:12px;color:#777;line-height:1.7'>Keep this private link safe. Need help? Email contact@styledsomehow.in.</p></td></tr></table></td></tr></table></body></html>";
+   helper.setText(text,html);helper.addInline("styled-somehow-logo",new org.springframework.core.io.ClassPathResource("email/logo.png"),"image/png");client.send(message);
+  }catch(jakarta.mail.MessagingException|java.io.UnsupportedEncodingException failure){throw new IllegalStateException("Could not prepare order update",failure);}
+ }
+ static String statusLabel(String stage){return switch(stage){case "PACKING"->"Packing";case "READY_TO_SHIP"->"Ready to ship";case "SHIPPED"->"Shipped";case "IN_TRANSIT"->"In transit";case "DELIVERED"->"Delivered";default->throw new IllegalArgumentException("Unsupported email stage");};}
+ static String statusDescription(String stage){return switch(stage){case "PACKING"->"Getting your tee ready for you.";case "READY_TO_SHIP"->"All packed and waiting for pickup.";case "SHIPPED"->"Your parcel is with the courier.";case "IN_TRANSIT"->"Making its way to your doorstep.";case "DELIVERED"->"Let the outfit plans begin.";default->throw new IllegalArgumentException("Unsupported email stage");};}
  static String confirmationText(PendingOrder o,String url){
   var text=new StringBuilder("Thank you for choosing Styled Somehow!\n\n");
   if("TEST".equals(o.paymentMode))text.append("TEST ORDER: No real money was charged. This order will not be dispatched.\n\n");

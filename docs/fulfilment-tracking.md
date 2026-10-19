@@ -32,3 +32,7 @@ Remaining shipping work: public webhook setup (polling currently handles updates
 
 ## Simplified tracking stages
 Customer and admin progress use Order confirmed → Packing → Ready to ship → Shipped → In transit → Delivered, with smaller explanatory text. Printing and Packed are merged into Packing; V11 migrates existing orders, retaining original audit events. Courier booking remains an internal transition displayed as Ready to ship until collection. Picked up maps to Shipped; In transit and Out for delivery map to In transit. Late pickup updates cannot regress In transit. Delivery exceptions remain visible as alerts rather than ordinary progress steps.
+
+
+## Email updates
+New Packing, Ready to ship, Shipped, In transit and Delivered events are eligible for durable status emails after confirmation sending. Courier booked stays internal and sends no duplicate Ready to ship message. See email-setup.md for threading, retries, legacy-event handling and local tests. Email failures preserve stage changes.

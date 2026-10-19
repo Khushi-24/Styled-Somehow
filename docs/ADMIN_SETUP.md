@@ -107,7 +107,7 @@ Frontend lint/build checks run locally. Java integration and concurrency tests h
 
 Hostinger SMTP is the only email provider. Configure SMTP_HOST, SMTP_PORT, SMTP_USERNAME, SMTP_PASSWORD, ORDER_CONFIRMATION_EMAIL_ENABLED, STORE_URL and ORDER_ACCESS_SECRET in the local backend/.env. See [email setup](email-setup.md) for placeholders and diagnostics. Never commit filled credentials or the signing secret.
 
-Current order access uses the private View order link in a paid-order confirmation email, with a thirty-minute read-only browser session. Public OTP request endpoints are disabled. An email-first OTP order-history flow has been requested but is not implemented yet. The older OTP limits below describe the dormant implementation, not the current public flow.
+Current /orders supports email OTP login and a private, newest-first purchase history. Private email links also remain supported. See email-setup.md for the current three-per-hour email limit, IP/browser limits, verification rules and status emails. The older OTP limits below describe the dormant legacy implementation, not the current login flow.
 
 ### Gmail-only and daily request blocks
 

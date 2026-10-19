@@ -1,6 +1,7 @@
 "use client";
+import OrderLogin from "./login";
 import StoreHeader from "../components/store-header";
-import {useEffect,useRef,useState} from "react";
+import {useCallback,useEffect,useRef,useState} from "react";
 import {adminRequest,ApiError} from "../../lib/admin-api";
 import {PendingOrder} from "../../lib/cart";
 import {Fulfilment,fulfilmentLabels,fulfilmentSteps,displayStage,fulfilmentDescriptions} from "../../lib/fulfilment";
@@ -9,6 +10,9 @@ import styles from "./orders.module.css";
 export default function OrderAccessView({initialReference=""}:{initialReference?:string}){
  const [order,setOrder]=useState<PendingOrder|null>(null),[loading,setLoading]=useState(true),[error,setError]=useState(""),[busy,setBusy]=useState(false);
  const linkToken=useRef("");
+ const [signedIn,setSignedIn]=useState(false);
+ const sessionChanged=useCallback((value:boolean)=>{setSignedIn(value);if(value)setError("");},[]);
+ async function selectOrder(id:string){setLoading(true);setError("");try{setOrder(await adminRequest<PendingOrder>(`/api/order-access/order/${encodeURIComponent(id)}`));setTracking(null);}catch(e){setError(e instanceof Error?e.message:"Could not open order.");}finally{setLoading(false);}}
  const [tracking,setTracking]=useState<Fulfilment|null>(null),[trackingError,setTrackingError]=useState(""),[refreshing,setRefreshing]=useState(false);
  useEffect(()=>{
   let live=true;
@@ -19,13 +23,14 @@ export default function OrderAccessView({initialReference=""}:{initialReference?
     if(linkToken.current){
      const result=await adminRequest<{orderId:string}>("/api/order-access/link",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({token:linkToken.current})});
      const data=await adminRequest<PendingOrder>(`/api/order-access/order/${encodeURIComponent(result.orderId)}`);
-     if(live)setOrder(data);
+     if(live){setOrder(data);window.history.replaceState(window.history.state,"",`/orders?reference=${encodeURIComponent(result.orderId)}`);}
     }else if(initialReference){
-     const result=await adminRequest<{orderId:string}>("/api/order-access/checkout",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({orderId:initialReference})});
-     const data=await adminRequest<PendingOrder>(`/api/order-access/order/${encodeURIComponent(result.orderId)}`);
-     if(live)setOrder(data);
+     try{const data=await adminRequest<PendingOrder>(`/api/order-access/order/${encodeURIComponent(initialReference)}`);if(live)setOrder(data);}catch{
+      const result=await adminRequest<{orderId:string}>("/api/order-access/checkout",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({orderId:initialReference})});
+      const data=await adminRequest<PendingOrder>(`/api/order-access/order/${encodeURIComponent(result.orderId)}`);if(live)setOrder(data);
+     }
     }else{
-     const data=await adminRequest<PendingOrder>("/api/order-access/current");if(live)setOrder(data);
+     if(live)setOrder(null);
     }
    }catch(e){if(live&&(!(e instanceof ApiError)||e.status!==401||linkToken.current||initialReference))setError("We couldn’t open this order. Use the secure link in your confirmation email, or contact us for help.");}
    finally{if(live)setLoading(false);}
@@ -44,8 +49,8 @@ export default function OrderAccessView({initialReference=""}:{initialReference?
   catch{setOrder(null);setTracking(null);setError("Order access may have expired. Reopen the secure link in your confirmation email.");}
   finally{setRefreshing(false);}
  }
- async function close(){setBusy(true);setError("");try{await adminRequest<void>("/api/order-access/close",{method:"POST"});linkToken.current="";setOrder(null);setTracking(null);window.history.replaceState(window.history.state,"",window.location.pathname);}catch{setError("Could not close order access. Please try again.");}finally{setBusy(false);}}
- return <main className="shopping-page"><StoreHeader/><section className={styles.panel}><h1>Your order</h1>
+ async function close(){if(signedIn){setOrder(null);setTracking(null);setError("");return;}setBusy(true);setError("");try{await adminRequest<void>("/api/order-access/close",{method:"POST"});linkToken.current="";setOrder(null);setTracking(null);window.history.replaceState(window.history.state,"",window.location.pathname);}catch{setError("Could not close order access. Please try again.");}finally{setBusy(false);}}
+ return <main className="shopping-page"><StoreHeader/><section className={styles.panel}><h1>{order?"Your order":"My orders"}</h1>
  {error&&<p role="alert" className="shopping-error">{error}</p>}
  {loading?<p role="status">Opening your order…</p>:order?<><div className={styles.status}>{order.status.replaceAll("_"," ")}</div><p className={styles.reference}>Order reference<br/><strong>{order.id}</strong></p>
  {order.paymentMode==="TEST"&&<p className={styles.test}>TEST ORDER · No real money was charged. This order will not be dispatched.</p>}
@@ -60,8 +65,8 @@ export default function OrderAccessView({initialReference=""}:{initialReference?
  <h2>Delivery address</h2><p>{order.name}<br/>{order.line1}{order.line2&&<><br/>{order.line2}</>}<br/>{order.city}, {order.state} {order.pinCode}</p>
  {order.status.startsWith("REFUND")&&<p>This order is not being fulfilled. Contact us if you need help with its refund status.</p>}
  {order.status==="PAYMENT_REVIEW"&&<p>We’re reviewing this payment. Please contact us before making another payment.</p>}
- <button disabled={busy} onClick={close}>{busy?"Closing…":"Close order access"}</button><p className={styles.muted}>On a shared device, close access when finished. Access expires after 30 minutes. You can reopen the link from your email.</p>
- </>:<><p>Open the <strong>View order</strong> link in your confirmation email to see your order status.</p><p>Lost the email or need help? Contact <a href="mailto:contact@styledsomehow.in">contact@styledsomehow.in</a>{initialReference&&<> and include reference <strong>{initialReference}</strong></>}.</p></>}
+ <button disabled={busy} onClick={close}>{busy?"Closing…":signedIn?"← Back to orders":"Close order access"}</button><p className={styles.muted}>{signedIn?"Go back to your orders to log out when finished.":"On a shared device, close access when finished. Access expires after 30 minutes. You can reopen the link from your email."}</p>
+ </>:<OrderLogin onSelect={selectOrder} onSession={sessionChanged}/>}
  {order&&<p className={styles.muted}>Need help? <a href="mailto:contact@styledsomehow.in">contact@styledsomehow.in</a></p>}
  </section></main>;
 }

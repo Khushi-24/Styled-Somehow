@@ -25,8 +25,11 @@ public class OrderAccessController {
  }
  @PostMapping({"/request","/verify"}) public void retired(){throw new ResponseStatusException(HttpStatus.GONE,"Email code requests and self-service recovery are no longer available. Use your confirmation email or contact contact@styledsomehow.in.");}
  @GetMapping("/order/{id}") public ResponseEntity<PendingOrder> order(@PathVariable String id,HttpSession session){
-  Object until=session.getAttribute("verified-order-until");if(!id.equals(session.getAttribute("verified-order-id"))||!(until instanceof Instant time)||!time.isAfter(Instant.now()))throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
-  checkout.expireReservations();return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(orders.findById(id).orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND)));
+  Object until=session.getAttribute("verified-order-until");boolean linked=id.equals(session.getAttribute("verified-order-id"))&&until instanceof Instant time&&time.isAfter(Instant.now());
+  if(!linked)EmailLoginController.email(session);
+  var found=orders.findById(id).orElseThrow(()->new ResponseStatusException(HttpStatus.UNAUTHORIZED));
+  if(!linked&&!EmailLoginController.owns(found,session))throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+  return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(found);
  }
  @GetMapping("/order/{id}/fulfilment") public ResponseEntity<com.styledsomehow.backend.fulfilment.FulfilmentService.View> tracking(@PathVariable String id,HttpSession session){order(id,session);return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(fulfilment.customer(id));}
  @GetMapping("/current") public ResponseEntity<PendingOrder> current(HttpSession session){var id=session.getAttribute("verified-order-id");if(!(id instanceof String value))throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);return order(value,session);}

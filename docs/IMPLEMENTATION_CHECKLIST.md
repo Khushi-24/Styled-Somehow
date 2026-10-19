@@ -94,3 +94,11 @@ Khushi confirmed inventory adjustments/history/persistence tests completed. Cart
 - [ ] Verify genuine LIVE booking → collection → tracking → delivery.
 - [ ] Dispatch emails and operational cancellation/rebooking flows.
 See fulfilment-tracking.md. Earlier OTP checklist entries are superseded by secure email links; public OTP/recovery endpoints are retired.
+
+
+## Email login and status updates
+- [x] Email-first OTP login, private paginated order history sorted by creation date, and session logout.
+- [x] Three requests per email per rolling hour, cooldown, IP/browser/global budgets and hashed single-use codes.
+- [x] Durable stage email retries, per-stage notification suppression and per-order threading headers.
+- [ ] Run new Java 21 integration tests locally and verify Hostinger OTP/threading/delivery on real inboxes.
+- [ ] Verify trusted proxy IP configuration and mobile login/history rendering before launch.

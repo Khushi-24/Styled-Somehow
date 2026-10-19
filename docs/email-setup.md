@@ -1,6 +1,6 @@
-# Hostinger order emails and private order links
+# Hostinger email login and order updates
 
-Add these entries to the ignored backend/.env file (not frontend/.env):
+Put these entries in ignored backend/.env, never frontend/.env or a committed file:
 
 ```properties
 SMTP_HOST=smtp.hostinger.com
@@ -9,48 +9,64 @@ SMTP_USERNAME=contact@styledsomehow.in
 SMTP_PASSWORD=REPLACE_WITH_MAILBOX_PASSWORD
 ORDER_CONFIRMATION_EMAIL_ENABLED=true
 STORE_URL=http://localhost:3000
+ORDER_ACCESS_SECRET=REPLACE_WITH_PRIVATE_RANDOM_SECRET_AT_LEAST_32_CHARACTERS
 ```
 
-Keep the existing ORDER_ACCESS_SECRET, at least 32 characters. It signs private order links. Changing it invalidates links already emailed. Set STORE_URL to the public HTTPS storefront origin on deployment, not localhost. No new credentials or configuration entries are required for the private-link update.
+Preserve an existing valid ORDER_ACCESS_SECRET. Generate a new value only if none exists, using PowerShell:
 
-The project imports backend/.env as a Java properties file. Enter literal values without shell quotes; escape backslashes if present. Never commit passwords. The password is the mailbox password used in Gmail, not the Hostinger account password.
-
-SMTP uses SSL on 465 (required STARTTLS on other ports), hostname verification and finite connection/read/write timeouts. Confirmations use HTML plus plain text with the existing logo embedded inline. TEST orders are labelled in the subject and message and never promised dispatch.
-
-## Order access
-The email View order button contains a signed, read-only link bound to the specific order, payment identity and checkout email. It expires 90 days after payment and can be reopened during that period. Possession of the link grants access: customers must keep it private. It cannot modify orders or access other orders.
-
-The capability is in the URL fragment (#access), which is not sent in the initial page HTTP request. The client strips it from the address bar and exchanges it using a CSRF-protected POST for a server-side, 30-minute, order-specific session. It is not stored in browser localStorage or sessionStorage and is never serialized into order JSON. Responses have no-store caching and the order page uses no-referrer/noindex metadata. Email providers still see the link because it is in the email; disable third-party click tracking for these private links.
-
-The confirmation-page View order button can also grant access from the original checkout session, without a token or extra email. A reference alone on a different browser does not grant access. Refreshing the order page can resume its existing verified session.
-
-Public email-code and recovery forms have been removed. POST /api/order-access/request and /verify now return 410 without sending email. Lost/expired email links direct the customer to contact@styledsomehow.in. Verify ownership before providing private order information. Existing old emails do not automatically gain secure tokens; test with a newly paid TEST order. No bulk resend is triggered.
-
-## Confirmation dispatch
-A durable database queue checks every 30 seconds. Only PAID orders after commit are sent. Row locking suppresses simultaneous duplicate sends; failures preserve payment status and retry with increasing delay. SMTP delivery is at-least-once: a crash or ambiguous network acceptance may cause a duplicate. Recorded sending means provider acceptance, not inbox delivery. Flyway V9 skips historical terminal orders.
-
-## Verification
-Frontend lint and production build pass. Backend tests cannot run here because Gradle download is blocked; no backend compilation or email-client visual verification is claimed.
-
-Local backend check:
 ```powershell
-.\gradlew.bat test --tests "*OrderLinkServiceTests" --tests "*OrderAccessIntegrationTests" --tests "*OrderConfirmationTests"
+[guid]::NewGuid().ToString("N") + [guid]::NewGuid().ToString("N")
 ```
 
-1. Restart backend and frontend after pulling.
-2. Place a new Razorpay TEST order and verify confirmation starts at the top.
-3. Open View order on the confirmation page: it must show that order without requesting email.
-4. Open the email link in a different browser/incognito: it must show only that order with no OTP.
-5. Refresh; close order access; refresh again and ensure details are hidden. Reopen the original email link.
-6. A changed signature, expired link or reference alone from another session must fail.
-7. The retired request/verify endpoints must not send email.
-8. Admin TEST courier review remains read-only; no real booking is enabled by this work.
+Use literal values without shell quotes; this .env is imported as Java properties relative to the backend working directory. Password means the mailbox password, not Hostinger account password. On deployment use the public HTTPS storefront origin and secure cookies. SMTP is the sole provider: no provider selector or API key is needed. SSL/TLS uses port 465; other ports require STARTTLS, with identity checking and bounded network timeouts.
 
-Tests cover signature tampering, expiry, key rotation, identity changes, session scope, CSRF, closing access, retired email endpoints, failed-send retries and escaped HTML.
+## Log in to see orders
 
-## Diagnosing missing confirmations
-Recent fulfilment changes did not change SMTP settings. Only new paid orders trigger confirmations; preparation/tracking changes do not send emails. A sent confirmation is not sent again on page refresh or a stage update.
+The account icon opens /orders. Enter the Gmail checkout address, request a six-digit code, verify, and see completed purchases newest first by createdAt (UUIDs are not chronological). The list loads 20 orders at a time; pending unpaid checkouts are excluded. Each order opens its existing detail/tracking page. There are no passwords, customer registration, or changes to guest checkout.
 
-On startup check `Order confirmation email readiness` warnings: confirmations enabled, provider configured and order-link configured must all be true. SMTP is the only email implementation. For Hostinger use ORDER_CONFIRMATION_EMAIL_ENABLED=true, SMTP_HOST=smtp.hostinger.com, SMTP_PORT=465, SMTP_USERNAME and SMTP_PASSWORD, and an ORDER_ACCESS_SECRET of at least 32 characters. Keep an existing valid signing secret unchanged. The backend loads .env relative to its working directory; start from backend when using backend/.env. Never post the password or signing secret.
+Limits are enforced in the database under the existing budget lock:
 
-For a new PAID order, the worker scans every 30 seconds. It logs provider acceptance or a failure with exception types and a scheduled retry, without recipient addresses, raw SMTP responses, tokens or credentials. Authentication errors suggest checking mailbox credentials; socket/connection errors suggest connectivity; ResponseStatusException can indicate missing order-link configuration. These are diagnostic clues, not proof of the cause. Backoff may delay subsequent attempts for hours. Payment status is never changed by email delivery. SMTP acceptance is not proof of inbox delivery: check Spam and the mailbox provider if acceptance was logged.
+- Three requests per canonical Gmail inbox per rolling hour; dots and +tags share the quota.
+- Sixty seconds between requests for an inbox.
+- Twenty requests per observed source IP per rolling hour; five per browser per hour.
+- Two hundred total code requests per rolling day to protect the mailbox allowance.
+- Ten-minute code lifetime, five guesses per challenge, single-use, bound to the browser session.
+
+Requests send a login code to any valid Gmail address, irrespective of order existence. A generic code request cannot reveal purchase history. Only after verification does a server session grant access to that exact, case-insensitive checkout email (Gmail alias canonicalization is used for limits, not broadening order ownership). A failed send still consumes quota and cannot grant access. Codes are HMAC hashed, not stored in plaintext; expired challenge data is removed after 30 days during requests. Existing older OTP/recovery endpoints remain disabled; new endpoints live under /api/order-access/login.
+
+Login sessions last thirty minutes. Verification rotates the session ID, preserving the checkout session key. Logout clears customer and private-order grants without granting admin access or changing orders. Every list/detail/tracking request checks ownership and expiry and uses no-store caching. CSRF protection applies to code, verify and logout. IP limits use request.getRemoteAddr, not arbitrary forwarded headers: configure trusted reverse-proxy client IP handling before launch; otherwise all visitors may share the proxy IP allowance. No proxy trust was added here.
+
+## Private email links
+
+Confirmation and status emails retain signed, read-only View order links. These grant access only to that order, expire 90 days after payment and cannot modify orders. Keep them private. The URL fragment is stripped and exchanged for a thirty-minute server session; tokens are never stored in browser local/session storage or order JSON. The nonsecret reference may remain in the URL so refresh can resume an authorized session. A reference alone does not grant access. The confirmation page also permits access from the original checkout browser. Email providers see links in messages; do not enable click tracking for private links.
+
+## Confirmation and status emails
+
+Confirmed PAID orders enter a durable queue checked every 30 seconds. After confirmation is accepted by SMTP, new eligible fulfilment events queue updates for Packing, Ready to ship, Shipped, In transit and Delivered. The internal Courier booked event does not generate another Ready to ship email. Repeated polling and repeated stages do not normally generate duplicate stage notifications. One eligible event per stage is created under the order lock. Changes are committed before scheduled sending; failed email delivery never rolls back payment or preparation.
+
+Status mail has persisted attempts, sent timestamp and retry time. Backoff is bounded; no automatic bulk resend of old events occurs. V12 marks pre-existing events ineligible to prevent historical spam. Refunded/unpaid orders are excluded. TEST preparation updates are explicitly labelled TEST and cannot book a real courier. Existing delivered-history events are not replayed.
+
+New confirmations and updates share a unique per-order subject and deterministic Message-ID. Updates include In-Reply-To and References pointing to their confirmation; IDs survive JavaMail saveChanges and retries. This encourages threading, which each email client controls. Old confirmations sent before this change lack the new thread IDs and cannot be retroactively threaded reliably. SMTP delivery is at-least-once: ambiguous acceptance or a crash after sending may still produce a duplicate. Acceptance means provider acceptance, not inbox delivery.
+
+## Local verification
+
+Restart both services after pulling. Flyway V12 must apply before JPA validation. Keep ORDER_ACCESS_SECRET configured.
+
+Run backend tests locally with Java 21:
+
+```powershell
+.\gradlew.bat test --tests "*EmailLoginIntegrationTests" --tests "*OrderEmailThreadTests" --tests "*OrderStatusEmailTests" --tests "*StatusMailIntegrationTests" --tests "*OrderConfirmationTests" --tests "*OrderAccessIntegrationTests"
+```
+
+1. Make a new TEST payment and receive the confirmation.
+2. In incognito open /orders, request a code, verify and check newest-first ordering. No orders should be visible before verification.
+3. Check a different email cannot read the first email’s order/detail/tracking. Test wrong/expired/reused codes and logout.
+4. Verify resend cooldown, third/fourth hourly requests, IP/browser limits, and failed SMTP delivery retaining limits.
+5. In admin advance the new TEST order through Packing and Ready to ship. Confirm one update per stage with the same thread headers/subject. Refreshing a stage should not resend it. No shipping is booked by this test.
+6. Check history/details at 320px, 375px and desktop widths; real courier updates still need a LIVE shipment test.
+
+Frontend lint/build are checked here; backend compilation/tests remain blocked by the unavailable Gradle distribution, and live mailbox/mobile rendering are not verified here.
+
+## Missing mail diagnostics
+
+Startup readiness must show enabled=true, providerConfigured=true, orderLinkConfigured=true. Check SMTP credentials/connectivity and the unchanged signing secret if not ready. The backend logs confirmation provider acceptance or failure types/retry time, without addresses, passwords, raw SMTP responses, codes or tokens. Login send failures and status failures also log safe types. Check Spam if SMTP accepted. Existing queued failures may wait until their scheduled retry. Do not post secrets when sharing logs.

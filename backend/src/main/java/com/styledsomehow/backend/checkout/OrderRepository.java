@@ -13,6 +13,8 @@ public interface OrderRepository extends JpaRepository<PendingOrder,String> {
  boolean existsBySessionKeyAndStatus(String sessionKey,String status);
  @org.springframework.data.jpa.repository.Query("select o.id from PendingOrder o where o.status = 'PAID' and o.confirmationSentAt is null and (o.confirmationNextAttemptAt is null or o.confirmationNextAttemptAt <= :now) order by o.paidAt asc")
  List<String> confirmationQueue(@org.springframework.data.repository.query.Param("now") java.time.Instant now,org.springframework.data.domain.Pageable page);
+ @org.springframework.data.jpa.repository.Query("select o from PendingOrder o where lower(o.email) = :email and o.paidAt is not null and o.paymentId is not null order by o.createdAt desc, o.id desc")
+ org.springframework.data.domain.Slice<PendingOrder> emailHistory(@org.springframework.data.repository.query.Param("email") String email,org.springframework.data.domain.Pageable page);
  List<PendingOrder> findTop100ByOrderByCreatedAtDesc();
  List<PendingOrder> findTop20ByEmailIgnoreCaseAndStatusInOrderByCreatedAtDesc(String email,List<String> statuses);
 }

@@ -25,3 +25,5 @@
  .deliveryHeading h2{line-height:1.5}
  .items>div{gap:10px;font-size:12px}
 }
+
+.login{min-width:0}.login h2{font-size:20px;margin:0 0 12px}.login input{width:100%;min-width:0;box-sizing:border-box}.login .loginPrimary{display:block;width:100%;background:#161616;color:white;border-color:#161616;min-height:46px;font-weight:700}.loginActions,.account{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}.account p{margin:4px 0;font-size:12px}.account button{margin:0}.orderList{list-style:none;padding:0;margin:18px 0;display:grid;gap:14px}.orderList li{border:1px solid #e1e4e2;border-radius:8px;padding:16px;min-width:0}.orderTop{display:flex;align-items:center;flex-wrap:wrap;gap:8px;font-size:12px}.orderTop>span:last-child{margin-left:auto;font-weight:700}.orderList p{margin:10px 0}.orderList button{margin-top:0}.testBadge{font-size:10px;color:#705018;background:#fff5d8;border-radius:3px;padding:3px 6px;font-weight:700}

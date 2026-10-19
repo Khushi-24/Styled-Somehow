@@ -54,7 +54,7 @@ public class FulfilmentService {
   if(!current.equals(next)&&List.of("SHIPPED","IN_TRANSIT","DELIVERED","DELIVERY_ISSUE","RETURNED_TO_ORIGIN").contains(next))change(o,next,"Shiprocket","Updated from courier tracking.");
  }
  private void change(PendingOrder o,String next,String actor,String note){
-  o.fulfilmentStage=next;var e=new FulfilmentEvent();e.id=UUID.randomUUID().toString();e.orderId=o.id;e.stage=next;e.actor=actor.length()>100?actor.substring(0,100):actor;e.note=note.length()>500?note.substring(0,500):note;e.occurredAt=Instant.now();events.save(e);orders.save(o);
+  o.fulfilmentStage=next;var e=new FulfilmentEvent();e.id=UUID.randomUUID().toString();e.orderId=o.id;e.stage=next;e.actor=actor.length()>100?actor.substring(0,100):actor;e.note=note.length()>500?note.substring(0,500):note;e.occurredAt=Instant.now();e.notificationEligible=List.of("PACKING","READY_TO_SHIP","SHIPPED","IN_TRANSIT","DELIVERED").contains(next)&&!events.existsByOrderIdAndStageAndNotificationEligibleTrue(o.id,next);events.save(e);orders.save(o);
  }
  private static ResponseStatusException conflict(String message){return new ResponseStatusException(HttpStatus.CONFLICT,message);}
 }
