@@ -22,4 +22,14 @@ class StatusMailIntegrationTests {
   assertThat(events.notificationQueue(Instant.now(),PageRequest.of(0,100))).hasSize(4);
   o.status="REFUNDED";orders.saveAndFlush(o);assertThat(events.notificationQueue(Instant.now(),PageRequest.of(0,100))).isEmpty();
  }
+ @Test void historicOrderQueuesNewUpdatesWithoutReplayingOldEvents(){
+  var o=new PendingOrder();o.id=UUID.randomUUID().toString();o.status="PAID";o.fulfilmentStage="PAID";o.paymentMode="LIVE";o.paymentId="pay_historic";o.email="fixture@gmail.com";o.paidAt=Instant.now();o.createdAt=o.paidAt;o.expiresAt=o.paidAt;o.confirmationSentAt=o.paidAt;o.confirmationAttempts=0;orders.saveAndFlush(o);
+  var old=new FulfilmentEvent();old.id=UUID.randomUUID().toString();old.orderId=o.id;old.stage="PAID";old.occurredAt=o.paidAt;old.notificationEligible=false;events.saveAndFlush(old);
+  fulfilment.advance(o.id,"PAID","PACKING","","owner");events.flush();
+  var packing=events.findByOrderIdOrderByOccurredAtAsc(o.id).stream().filter(e->e.notificationEligible).findFirst().orElseThrow();
+  assertThat(events.notificationQueue(Instant.now(),PageRequest.of(0,100))).containsExactly(packing.id);
+  packing.notificationSentAt=Instant.now();events.saveAndFlush(packing);
+  assertThat(events.notificationQueue(Instant.now(),PageRequest.of(0,100))).isEmpty();
+ }
+
 }

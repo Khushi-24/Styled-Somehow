@@ -16,4 +16,13 @@ class OrderStatusEmailTests {
   worker.deliver(e.id);assertThat(e.notificationSentAt).isNull();assertThat(e.notificationNextAttemptAt).isAfter(Instant.now());assertThat(o.status).isEqualTo("PAID");worker.deliver(e.id);verify(mail,times(1)).sendStatus(o,e);
   e.notificationNextAttemptAt=Instant.now().minusSeconds(1);worker.deliver(e.id);worker.deliver(e.id);verify(mail,times(2)).sendStatus(o,e);assertThat(e.notificationSentAt).isNotNull();
  }
+ @Test void historicConfirmationMarkerAllowsNewPackingEmailOnlyOnce(){
+  var orders=mock(OrderRepository.class);var events=mock(FulfilmentEventRepository.class);var mail=mock(EmailDelivery.class);when(mail.ready()).thenReturn(true);
+  var o=new PendingOrder();o.id="historic";o.status="PAID";o.confirmationSentAt=Instant.now();o.confirmationAttempts=0;
+  var e=new FulfilmentEvent();e.id="packing";e.orderId=o.id;e.stage="PACKING";e.notificationEligible=true;
+  when(events.findById(e.id)).thenReturn(Optional.of(e));when(events.lockMail(e.id)).thenReturn(Optional.of(e));when(orders.lockForShipping(o.id)).thenReturn(Optional.of(o));
+  var worker=new OrderStatusEmailWorker(orders,events,mail);worker.deliver(e.id);worker.deliver(e.id);
+  verify(mail,times(1)).sendStatus(o,e);assertThat(e.notificationSentAt).isNotNull();assertThat(o.confirmationAttempts).isZero();
+ }
+
 }

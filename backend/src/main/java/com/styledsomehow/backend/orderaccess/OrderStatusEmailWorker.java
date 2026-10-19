@@ -14,7 +14,9 @@ public class OrderStatusEmailWorker {
   // Always lock order before its event, matching fulfilment updates and avoiding lock inversion.
   var read=events.findById(id);if(read.isEmpty())return;var order=orders.lockForShipping(read.get().orderId);if(order.isEmpty())return;
   var found=events.lockMail(id);if(found.isEmpty())return;var e=found.get();var o=order.get();var now=Instant.now();
-  if(!e.notificationEligible||e.notificationSentAt!=null||(e.notificationNextAttemptAt!=null&&e.notificationNextAttemptAt.isAfter(now))||!"PAID".equals(o.status)||o.confirmationSentAt==null||o.confirmationAttempts==0)return;
+  if(!e.notificationEligible||e.notificationSentAt!=null||(e.notificationNextAttemptAt!=null&&e.notificationNextAttemptAt.isAfter(now))||!"PAID".equals(o.status)||o.confirmationSentAt==null)return;
+  // V9 marked historic confirmations complete without recording send attempts.
+  // Newly eligible events for those orders must still be sent.
   e.notificationAttempts++;
   try{mail.sendStatus(o,e);e.notificationSentAt=Instant.now();e.notificationNextAttemptAt=null;log.info("Order status email accepted by provider for event {}; stage={}",id,e.stage);}
   catch(RuntimeException failure){e.notificationNextAttemptAt=now.plusSeconds(Math.min(21600L,60L*(1L<<Math.min(e.notificationAttempts,8))));log.warn("Order status email failed for event {}; errorType={}; nextRetry={}",id,failure.getClass().getSimpleName(),e.notificationNextAttemptAt);}
