@@ -374,3 +374,7 @@ input,select,textarea{font-family:inherit}
 .collection-links a{padding:8px 14px;border:1px solid #e4ded7;border-radius:4px;font-size:14px}
 .collection-links a[aria-current="page"]{background:#211c19;color:#fff;border-color:#211c19}
 @media(max-width:800px){.admin-collections-layout{grid-template-columns:1fr}}
+
+.admin-upload-errors{padding:14px 18px;border:1px solid #e7aaa3;border-radius:6px;background:#fde9e7;color:#9b2923;margin:14px 0;overflow-wrap:anywhere}
+.admin-upload-errors ul{padding-left:20px;list-style:disc}
+.admin-upload-errors li{margin:8px 0}
