@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import {getImageProps} from "next/image";
+import type {ShopCollection} from "../../lib/product";
 import PolicyActions from "./policy-actions";
 import { useEffect, useState } from "react";
 
@@ -10,9 +11,6 @@ const slides = [
   { image: "/images/the-lineup-approved.webp", mobileImage:"/images/the-lineup-mobile-approved.webp", alt: "Styled Somehow graphic tees and everyday basics lineup", href: "/#new-in", position: "center" },
 ] as const;
 
-const collectionLinks = [
-  ["New In", "/#new-in"], ["Women", "/collections/women"], ["Men", "/collections/men"],
-] as const;
 
 function Icon({ name }: { name: "home" | "search" | "user" | "bag" | "menu" | "close" }) {
   const paths = {
@@ -26,7 +24,8 @@ function Icon({ name }: { name: "home" | "search" | "user" | "bag" | "menu" | "c
   return <svg aria-hidden="true" viewBox="0 0 24 24">{paths[name]}</svg>;
 }
 
-export default function StorefrontHero() {
+export default function StorefrontHero({collections}:{collections:ShopCollection[]}) {
+  const collectionLinks = [["New In","/#new-in"],...collections.map(c=>[c.name,`/collections/${c.slug}`])];
   function rememberHome() {
     window.history.replaceState(window.history.state, "", `${window.location.pathname}${window.location.search}`);
   }
@@ -65,8 +64,8 @@ export default function StorefrontHero() {
             <button type="button" className="nav-link">COLLECTIONS <span aria-hidden="true">⌄</span></button>
             <div className="dropdown-menu">{collectionLinks.map(([label, href]) => <Link key={label} href={href}>{label}</Link>)}</div>
           </div>
-          <Link className="nav-link" href="/collections/men" onClick={rememberHome}>MEN</Link>
-          <Link className="nav-link" href="/collections/women" onClick={rememberHome}>WOMEN</Link>
+          {collections.some(c=>c.slug==="men")&&<Link className="nav-link" href="/collections/men" onClick={rememberHome}>MEN</Link>}
+          {collections.some(c=>c.slug==="women")&&<Link className="nav-link" href="/collections/women" onClick={rememberHome}>WOMEN</Link>}
 
         </nav>
         <div className="header-actions"><PolicyActions dark={activeSlide===0||menuOpen}/>          <button className="icon-button menu-button" type="button" aria-label={menuOpen ? "Close menu" : "Open menu"} aria-expanded={menuOpen} onClick={() => setMenuOpen((open) => !open)}><Icon name={menuOpen ? "close" : "menu"} /></button>
@@ -76,8 +75,7 @@ export default function StorefrontHero() {
       <div className={`mobile-panel ${menuOpen ? "is-open" : ""}`} aria-hidden={!menuOpen} role="dialog" aria-modal={menuOpen?true:undefined} aria-label="Shop menu">
         <p className="mobile-menu-label">SHOP</p>
         <Link href="/#new-in" onClick={() => setMenuOpen(false)}>New In</Link>
-        <Link href="/collections/men" onClick={() => { rememberHome(); setMenuOpen(false); }}>Men</Link>
-        <Link href="/collections/women" onClick={() => { rememberHome(); setMenuOpen(false); }}>Women</Link>
+        {collections.map(c=><Link key={c.slug} href={`/collections/${c.slug}`} onClick={()=>{rememberHome();setMenuOpen(false);}}>{c.name}</Link>)}
 
         <div className="mobile-secondary-links"><Link href="/orders">My orders</Link></div>
       </div>

@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { getProduct } from "../../../lib/catalog";
+import { getProduct,getCollections } from "../../../lib/catalog";
 import { productAnchor } from "../../../lib/product";
 import {siteUrl} from "../../../lib/site";
 import ProductView from "../../components/product-view";
@@ -14,7 +14,8 @@ export default async function Page({params,searchParams}: {params: Promise<{slug
  const {from,origin} = await searchParams;
  const collectionQuery = origin === `shop-${from}` ? `?from=${origin}` : "";
  const anchor = productAnchor(product);
- const returnUrl = from === "men" || from === "women" ? `/collections/${from}${collectionQuery}#${anchor}` : `/#new-in-product-${anchor}`;
+ const collections=await getCollections();
+ const returnUrl = collections.some(c=>c.slug===from) ? `/collections/${from}${collectionQuery}#${anchor}` : `/#new-in-product-${anchor}`;
  const data={"@context":"https://schema.org","@type":"Product",name:product.name,description:product.description,image:product.media.filter(m=>m.kind==="image").map(m=>siteUrl+m.url),brand:{"@type":"Brand",name:"Styled Somehow"},offers:{"@type":"Offer",url:`${siteUrl}/products/${product.slug}`,priceCurrency:"INR",price:product.price,availability:product.status==="PUBLISHED"&&Object.values(product.availability||{}).some(sizes=>Object.values(sizes).some(Boolean))?"https://schema.org/InStock":"https://schema.org/OutOfStock"}};
  return <><script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(data).replace(/</g,"\\u003c")}}/><ProductView product={product} returnUrl={returnUrl} /></>;
 }

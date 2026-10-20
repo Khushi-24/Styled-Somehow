@@ -3,3 +3,5 @@ export type Product = {availability?: Record<string,Record<string,boolean>>;id?:
 export const productAnchor = (p: Product) => p.slug.replace(/-oversized-t-shirt$/, "");
 export const money = (n: number) => `₹${n.toLocaleString("en-IN")}`;
 export const saving = (p: Product) => Math.round((1 - p.price / p.originalPrice) * 100);
+
+export type ShopCollection = {slug:string; name:string; sortOrder:number; productCount:number};

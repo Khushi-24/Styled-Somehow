@@ -364,3 +364,13 @@ input,select,textarea{font-family:inherit}
 /* Keep the slideshow pause control available on narrow screens. */
 @media(max-width:620px){.carousel-controls>button[aria-label$="slideshow"]{display:grid;place-items:center;min-width:32px;min-height:32px}}
 .cart-total{background:#fff;border:1px solid #e4e1dd;border-radius:6px}
+
+.admin-collections-layout{display:grid;grid-template-columns:minmax(0,2fr) minmax(260px,1fr);gap:24px;align-items:start}
+.admin-collections-table{min-width:480px}
+.admin-collection-confirm{margin-top:20px;padding:18px;border:1px solid #dcaba2;border-radius:8px;background:#fff1ee}
+.admin-collection-confirm h3{margin-top:0}
+.admin-collection-confirm p{margin:10px 0 18px}
+.collection-links{display:flex;gap:12px;flex-wrap:wrap;padding:16px 24px;border-bottom:1px solid #e4ded7}
+.collection-links a{padding:8px 14px;border:1px solid #e4ded7;border-radius:4px;font-size:14px}
+.collection-links a[aria-current="page"]{background:#211c19;color:#fff;border-color:#211c19}
+@media(max-width:800px){.admin-collections-layout{grid-template-columns:1fr}}

@@ -23,7 +23,7 @@ public class Product {
  @Min(0) public int sortOrder;
  @Min(0) public int collectionOrder;
  @NotNull @Enumerated(EnumType.STRING) @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.VARCHAR) public Status status;
- @ElementCollection @CollectionTable(name="product_collections",joinColumns=@JoinColumn(name="product_id")) @Column(name="value") @OrderColumn(name="position") @Size(min=1,max=2) public List<@Pattern(regexp="men|women") String> collections=new ArrayList<>();
+ @ElementCollection @CollectionTable(name="product_collections",joinColumns=@JoinColumn(name="product_id")) @Column(name="value") @OrderColumn(name="position") @NotNull @Size(max=50) public List<@Pattern(regexp="[a-z0-9]+(?:-[a-z0-9]+)*") @Size(max=100) String> collections=new ArrayList<>();
  @ElementCollection @CollectionTable(name="product_colours",joinColumns=@JoinColumn(name="product_id")) @Column(name="value") @OrderColumn(name="position") @Size(min=1,max=10) public List<@NotBlank @Size(max=50) String> colours=new ArrayList<>();
  @ElementCollection @CollectionTable(name="product_sizes",joinColumns=@JoinColumn(name="product_id")) @Column(name="value") @OrderColumn(name="position") @Size(min=1,max=4) public List<@Pattern(regexp="S|M|L|XL") String> sizes=new ArrayList<>();
  @ElementCollection @CollectionTable(name="product_media",joinColumns=@JoinColumn(name="product_id")) @OrderColumn(name="position") @Valid @Size(min=1,max=20) public List<Media> media=new ArrayList<>();
