@@ -15,7 +15,7 @@ export default function AdminPortal(){
  function change<K extends keyof Product>(key:K,value:Product[K]){setDraft(d=>d?{...d,[key]:value}:d);}
  function photo(i:number,patch:Partial<Media>){if(draft)change("media",draft.media.map((m,j)=>i===j?{...m,...patch}:m));}
  async function login(e:React.FormEvent<HTMLFormElement>){e.preventDefault();setBusy(true);setError("");const f=new FormData(e.currentTarget);try{await adminRequest("/api/auth/login",{method:"POST",body:new URLSearchParams({username:String(f.get("username")),password:String(f.get("password"))})});setUser((await adminRequest<{username:string}>("/api/auth/me")).username);await refresh();}catch(e){setError(e instanceof ApiError&&e.status===401?"Incorrect username or password.":e instanceof ApiError&&e.status===429?"Too many attempts. Try again in 15 minutes.":"Cannot sign in. Check your backend connection.");}finally{setBusy(false);}}
- async function save(e:React.FormEvent<HTMLFormElement>){e.preventDefault();if(!draft)return;setBusy(true);setError("");setNotice("");try{const p=await adminRequest<Product>(draft.id?`/api/admin/products/${draft.id}`:"/api/admin/products",{method:draft.id?"PUT":"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(draft)});setDraft(p);await refresh();setNotice(p.status==="PUBLISHED"?"Saved and published. Check this product on the storefront.":p.status==="ARCHIVED"?"Archived and hidden from the storefront.":"Draft saved and hidden from the storefront.");}catch(e){if(e instanceof ApiError&&(e.status===401||e.status===403)){setUser(null);setDraft(null);setError("Your session expired. Sign in again.");}else setError(e instanceof Error?e.message:"Could not save product");}finally{setBusy(false);}}
+ async function save(e:React.FormEvent<HTMLFormElement>){e.preventDefault();if(!draft)return;setBusy(true);setError("");setNotice("");try{const p=await adminRequest<Product>(draft.id?`/api/admin/products/${draft.id}`:"/api/admin/products",{method:draft.id?"PUT":"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(draft)});setDraft(p);await refresh();setNotice(p.status==="PUBLISHED"?"Saved and published. Check this product on the storefront.":p.status==="ARCHIVED"?"Archived and hidden from the storefront.":"Draft saved and hidden from the storefront.");}catch(e){if(e instanceof ApiError&&(e.status===401||e.status===403)){setUser(null);setError("Your session expired. Sign in again. Your product edits are kept in this tab.");}else setError(e instanceof Error?e.message:"Could not save product");}finally{setBusy(false);}}
  async function upload(selected:File[]){
   if(!selected.length||!draft||busy)return;
   setError("");setNotice("");setUploadErrors([]);setUploadStatus("");
@@ -27,6 +27,7 @@ export default function AdminPortal(){
    for(const [i,file] of selected.entries()){
     setUploadStatus(`Uploading ${i+1} of ${selected.length}: ${file.name}`);
     try{
+     if(i===0)await adminRequest("/api/auth/me");
      const prepared=await prepareProductImage(file);
      const form=new FormData();form.append("file",prepared.file);
      const result=await adminRequest<{url:string}>("/api/admin/media",{method:"POST",body:form});
