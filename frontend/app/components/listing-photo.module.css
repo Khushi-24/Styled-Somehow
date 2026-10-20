@@ -1,0 +1,7 @@
+.alternate{display:none;position:absolute;inset:0;background:#f4efee;pointer-events:none;opacity:0;transition:opacity .25s ease}
+@media(hover:hover) and (pointer:fine){
+ .alternate{display:block}
+ .photo[data-preview-ready="true"]:hover .alternate,
+ :global(.new-in__product>a:focus-visible) .photo[data-preview-ready="true"] .alternate{opacity:1}
+}
+@media(prefers-reduced-motion:reduce){.alternate{transition:none}}

@@ -370,9 +370,6 @@ input,select,textarea{font-family:inherit}
 .admin-collection-confirm{margin-top:20px;padding:18px;border:1px solid #dcaba2;border-radius:8px;background:#fff1ee}
 .admin-collection-confirm h3{margin-top:0}
 .admin-collection-confirm p{margin:10px 0 18px}
-.collection-links{display:flex;gap:12px;flex-wrap:wrap;padding:16px 24px;border-bottom:1px solid #e4ded7}
-.collection-links a{padding:8px 14px;border:1px solid #e4ded7;border-radius:4px;font-size:14px}
-.collection-links a[aria-current="page"]{background:#211c19;color:#fff;border-color:#211c19}
 @media(max-width:800px){.admin-collections-layout{grid-template-columns:1fr}}
 
 .admin-upload-errors{padding:14px 18px;border:1px solid #e7aaa3;border-radius:6px;background:#fde9e7;color:#9b2923;margin:14px 0;overflow-wrap:anywhere}
