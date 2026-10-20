@@ -41,7 +41,7 @@ export default function InteractiveProductRack({ products }: { products: Product
   if (!items.length) return null;
   const choose = (i:number) => {setManual(true);setActive((i+items.length)%items.length);};
   const selected = items[active] ?? items[0];
-  return <section className="ss-rack" aria-labelledby="ss-rack-title">
+  return <section id="pick-your-style" className="ss-rack" aria-labelledby="ss-rack-title" style={{scrollMarginTop:24}}>
     <header className="ss-rack-intro"><h2 id="ss-rack-title">PICK YOUR ENERGY.</h2><p>Find the fit that feels like you.</p></header>
     <div className="ss-rack-stage">
       <div className="ss-rack-rail" aria-hidden="true" />

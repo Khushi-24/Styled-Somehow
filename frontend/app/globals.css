@@ -375,3 +375,11 @@ input,select,textarea{font-family:inherit}
 .admin-upload-errors{padding:14px 18px;border:1px solid #e7aaa3;border-radius:6px;background:#fde9e7;color:#9b2923;margin:14px 0;overflow-wrap:anywhere}
 .admin-upload-errors ul{padding-left:20px;list-style:disc}
 .admin-upload-errors li{margin:8px 0}
+
+/* One CTA for both hero slides; its solid background covers the button embedded in the first image. */
+.hero-shop-now{position:absolute;left:4.45%;bottom:32.35%;width:max(15.8%,144px);height:max(7%,44px);display:inline-flex;align-items:center;justify-content:center;gap:clamp(14px,1.5vw,28px);border:1px solid #171717;background:#fff;color:#090909;font:700 clamp(12px,1.35vw,22px)/1 var(--font-geist-sans),sans-serif;letter-spacing:.02em;white-space:nowrap;transition:background .2s,color .2s;box-sizing:border-box}
+.hero-shop-now>span{font-size:1.25em;line-height:1}
+.hero-shop-now:hover,.hero-slide:focus-visible .hero-shop-now{background:#171717;color:#fff}
+.hero-slide:focus-visible{outline:2px solid #fff;outline-offset:-4px}
+@media(max-width:620px){.hero-shop-now{left:4.6%;bottom:5.3%;width:max(27.6%,144px);height:max(6%,44px);gap:18px;font-size:12px}}
+@media(prefers-reduced-motion:reduce){.hero-shop-now{transition:none}}
