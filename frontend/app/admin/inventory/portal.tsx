@@ -13,13 +13,13 @@ function failure(label:string,path:string,error:unknown){
  return `${label} failed at ${path}. ${error instanceof Error?error.message:"Cannot connect to the backend."}`;
 }
 async function loadInventory(){
- const [stock,movements]=await Promise.allSettled([adminRequest<Stock[]>("/api/admin/inventory"),adminRequest<{content:Movement[];last:boolean}>("/api/admin/inventory/movements/search").then(result=>result.content)]);
+ const [stock,movements]=await Promise.allSettled([adminRequest<Stock[]>("/api/admin/inventory"),adminRequest<{content:Movement[];last:boolean}>("/api/admin/inventory/movements/search")]);
  return {stock,movements};
 }
 export default function InventoryPortal(){
  const [stocks,setStocks]=useState<Stock[]|null>(null),[history,setHistory]=useState<Movement[]|null>(null),[selected,setSelected]=useState<Stock|null>(null),[delta,setDelta]=useState(""),[reason,setReason]=useState(""),[error,setError]=useState(""),[notice,setNotice]=useState(""),[busy,setBusy]=useState(false),[loading,setLoading]=useState(true);
- const [historyPage,setHistoryPage]=useState(0),[historyMore,setHistoryMore]=useState(true);
- async function moreHistory(){setBusy(true);try{const result=await adminRequest<{content:Movement[];last:boolean}>(`/api/admin/inventory/movements/search?page=${historyPage+1}`);setHistory(old=>[...(old||[]),...result.content]);setHistoryPage(p=>p+1);setHistoryMore(!result.last);}catch(e){setError(e instanceof Error?e.message:"Could not load history");}finally{setBusy(false);}}
+ const [historyPage,setHistoryPage]=useState(0),[historyMore,setHistoryMore]=useState(false);
+ async function moreHistory(){setBusy(true);try{const result=await adminRequest<{content:Movement[];last:boolean}>(`/api/admin/inventory/movements/search?page=${historyPage+1}`);setHistory(old=>Array.from(new Map([...(old||[]),...result.content].map(m=>[m.id,m])).values()));setHistoryPage(p=>p+1);setHistoryMore(!result.last);}catch(e){setError(e instanceof Error?e.message:"Could not load history");}finally{setBusy(false);}}
  const [newColour,setNewColour]=useState(""),[newSize,setNewSize]=useState("S");
  async function addVariant(e:React.FormEvent){e.preventDefault();setBusy(true);setError("");try{await adminRequest("/api/admin/inventory",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({colour:newColour.trim(),size:newSize})});await refresh();setNotice("Variant created with zero stock. Adjust it to record your opening quantity.");setNewColour("");}catch(e){setError(e instanceof Error?e.message:"Could not add variant");}finally{setBusy(false);}}
  const pending=useRef<{signature:string;key:string}|null>(null);
@@ -27,11 +27,11 @@ export default function InventoryPortal(){
   const errors:string[]=[];
   if(result.stock.status==="fulfilled"&&Array.isArray(result.stock.value))setStocks(result.stock.value);
   else{setStocks(null);errors.push(failure("Stock","/api/admin/inventory",result.stock.status==="rejected"?result.stock.reason:new Error("Unexpected API response")));}
-  if(result.movements.status==="fulfilled"&&Array.isArray(result.movements.value))setHistory(result.movements.value);
-  else{setHistory(null);errors.push(failure("Stock history","/api/admin/inventory/movements",result.movements.status==="rejected"?result.movements.reason:new Error("Unexpected API response")));}
+  if(result.movements.status==="fulfilled"&&Array.isArray(result.movements.value.content)){setHistory(result.movements.value.content);setHistoryMore(!result.movements.value.last);setHistoryPage(0);}
+  else{setHistory(null);setHistoryMore(false);errors.push(failure("Stock history","/api/admin/inventory/movements/search",result.movements.status==="rejected"?result.movements.reason:new Error("Unexpected API response")));}
   setError(errors.join(" "));
  }
- async function refresh(){setHistoryPage(0);setHistoryMore(true);apply(await loadInventory());}
+ async function refresh(){setBusy(true);setSelected(null);setDelta("");setReason("");try{apply(await loadInventory());}finally{setBusy(false);}}
  useEffect(()=>{let live=true;loadInventory().then(result=>{if(live)apply(result);}).finally(()=>{if(live)setLoading(false);});return()=>{live=false;};},[]);
  useEffect(()=>{if(!notice)return;const timer=setTimeout(()=>setNotice(""),6000);return()=>clearTimeout(timer);},[notice]);
  async function submit(e:React.FormEvent<HTMLFormElement>){e.preventDefault();if(!selected)return;const signature=JSON.stringify([selected.id,selected.version,Number(delta),reason.trim()]);if(pending.current?.signature!==signature)pending.current={signature,key:crypto.randomUUID()};setBusy(true);setError("");setNotice("");try{await adminRequest(`/api/admin/inventory/${selected.id}/adjustments`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({version:selected.version,delta:Number(delta),reason:reason.trim(),requestId:pending.current.key})});pending.current=null;setSelected(null);setDelta("");setReason("");await refresh();setNotice("Stock adjustment saved across all designs using this colour and size.");}catch(e){setError(e instanceof Error?e.message:"Could not adjust stock");}finally{setBusy(false);}}
