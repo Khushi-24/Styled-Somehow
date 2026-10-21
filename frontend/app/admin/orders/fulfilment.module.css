@@ -3,3 +3,12 @@
 .badge[data-stage=UNFULFILLED]{background:#eceff3;color:#657080}.badge[data-stage=PACKING]{background:#fff4dc;color:#735014}.badge[data-stage=PACKED],.badge[data-stage=READY_TO_SHIP],.badge[data-stage=COURIER_BOOKED],.badge[data-stage=IN_TRANSIT],.badge[data-stage=SHIPPED]{background:#e8f0ff;color:#2454a4}.badge[data-stage=DELIVERY_ISSUE],.badge[data-stage=RETURNED_TO_ORIGIN]{background:#fde9e7;color:#94291f}
 
 .progress li{white-space:normal;min-width:145px;flex:1}.progress strong{display:block;font-weight:700}.progress small{display:block;font-size:10px;font-weight:400;line-height:1.5;margin-top:5px}
+
+@media(max-width:620px){
+ .heading{flex-wrap:wrap;align-items:flex-start}
+ .progress{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));overflow:visible;gap:8px}
+ .progress li{min-width:0;padding:10px}
+ .action{min-width:0}
+ .panel button{max-width:100%;white-space:normal}
+ .toast{right:16px;bottom:calc(16px + env(safe-area-inset-bottom));overflow-wrap:anywhere}
+}

@@ -18,3 +18,15 @@
 .successPrimary{display:flex;justify-content:center;align-items:center;min-height:46px;border-radius:5px;background:#161616;color:#fff;font-weight:650;font-size:13px;width:100%}
 .successContinue{display:inline-block;text-decoration:underline;font-size:12px;margin-top:18px;padding:6px}
 @media(max-width:600px){.successPanel{margin:20px auto 30px;padding:26px 18px 20px}.successPanel h1{font-size:28px!important}.successReference{padding:12px;gap:8px}.successReference strong{font-size:11px}.successEmail{margin:22px 0}.successSubtitle{font-size:15px;margin-bottom:20px}}
+
+@media(max-width:760px){
+ .layout>*{min-width:0}
+ .product>div{min-width:0;overflow-wrap:anywhere}
+ .phone input{min-width:0;flex:1;width:0}
+ .steps li{min-width:0;flex-wrap:wrap;row-gap:4px;text-align:center}
+ .steps li span{flex:none}
+ .card input,.card select{font-size:16px}
+ .pinBadge{flex-wrap:wrap;gap:8px}
+ .totals dt,.totals dd{min-width:0;overflow-wrap:anywhere}
+ .totals dd{max-width:65%}
+}

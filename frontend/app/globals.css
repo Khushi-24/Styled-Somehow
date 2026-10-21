@@ -386,3 +386,77 @@ input,select,textarea{font-family:inherit}
 
 /* Preserve the lineup banner’s original desktop CTA placement. */
 @media(min-width:621px){.storefront--campaign .hero-slide:nth-child(2) .hero-shop-now{left:40px;bottom:40px}}
+
+/* Shared navigation keeps the logo centred without wrapping mobile back links. */
+.store-header__back{display:inline-flex;align-items:center;gap:6px;min-height:44px}
+.store-header__back svg{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.store-header__back-short{display:none}
+.collection-heading h1{min-width:0}
+.collection-heading p{flex-shrink:0;white-space:nowrap;margin:0}
+@media(max-width:760px){
+ .collection-heading{align-items:flex-end;gap:12px}
+ .collection-heading h1{flex:1}
+ .collection-heading p{padding-bottom:2px}
+ .admin-page,.admin-editor,.ops-order-detail,.ops-section,.admin-collections-layout>*{min-width:0}
+ .admin-page input,.admin-page select,.admin-page textarea{min-width:0;max-width:100%}
+ .admin-page input[type=checkbox],.admin-page input[type=radio]{width:18px;height:18px;flex:0 0 18px;margin:3px 0 0;padding:0}
+ .admin-page label:has(>input[type=checkbox]){display:flex;align-items:flex-start;gap:10px}
+ .admin-page p,.admin-page h2,.admin-page h3,.ops-table small{overflow-wrap:anywhere}
+ .admin-page .ops-product{min-width:0;max-width:none}
+ .inventory-table-wrap{max-width:100%;overscroll-behavior-x:contain}
+ .inventory-table{min-width:640px}
+ .ops-table-wrap{min-width:0}
+ .cart-row>div>a{overflow-wrap:anywhere}
+ .shopping-layout>section,.shopping-layout>aside{min-width:0}
+}
+@media(max-width:620px){
+ .store-header{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:8px}
+ .store-header__back{font-size:12px;max-width:none;white-space:nowrap;gap:4px}
+ .store-header__back-label{display:none}
+ .store-header__back-short{display:inline}
+ .store-header>.brand-logo{font-size:.94rem}
+ .collection-heading h1{font-size:clamp(22px,6vw,28px)}
+ .collection-heading p{font-size:12px}
+ .product-size-heading{align-items:flex-start;gap:6px}
+ .product-size-measurements{flex-wrap:wrap;row-gap:4px}
+ .product-size-measurements>span:first-child{padding-left:0}
+ .product-sizes legend{max-width:100%}
+ .product-sizes>div{gap:8px}
+ .product-sizes button{min-width:46px;padding:8px 12px}
+ .size-guide-toolbar{flex-wrap:wrap}
+ .product-colours>div{flex-wrap:wrap}
+ .product-breadcrumb{overflow-wrap:anywhere}
+ .shopping-page input,.shopping-page select,.shopping-page textarea,.admin-page input,.admin-page select,.admin-page textarea{font-size:16px}
+ .admin-header{align-items:flex-start;gap:12px}
+ .admin-header h1{width:100%;margin:0;order:-1}
+ .admin-header .brand-logo{font-size:16px}
+ .ops-tabs{flex-wrap:wrap}
+ .ops-tabs button{min-width:0}
+ .ops-nav{width:100%;gap:8px}
+ .ops-nav a{font-size:12px;padding:9px 12px}
+ .ops-filters{min-width:0}
+ .ops-filters label{min-width:0}
+ .ops-table--orders{display:block;min-width:0}
+ .ops-table--orders thead{display:none}
+ .ops-table--orders tbody{display:block}
+ .ops-table--orders tbody>tr{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;padding:16px}
+ .ops-table--orders tbody>tr+tr{border-top:1px solid #e8e2da}
+ .ops-table--orders td{display:block;min-width:0;border:0;padding:0;overflow-wrap:anywhere}
+ .ops-table--orders td::before{content:attr(data-label);display:block;font-size:10px;font-weight:650;text-transform:uppercase;letter-spacing:.04em;color:#6f655d;margin-bottom:5px}
+ .ops-table--orders td:nth-child(-n+3),.ops-table--orders td:last-child{grid-column:1/-1}
+ .ops-table--orders td:last-child::before{display:none}
+ .ops-table--orders .ops-expanded-row{display:block;padding:0}
+ .ops-table--orders .ops-expanded-row>td{padding:10px;background:#f7f1fc}
+ .ops-table--orders .ops-detail-button{min-height:44px;width:100%}
+ .ops-table--orders .ops-order-detail{padding:14px}
+ .ops-order-detail .ops-section{padding:12px 0;border-inline:0;background:transparent}
+ .ops-detail-grid{gap:20px}
+}
+
+/* Constrain admin flex children; wide data tables scroll within their own region. */
+.admin-page{width:100%;min-width:0}
+@media(max-width:760px){
+ .collection-grid .new-in__product>a,.new-in__grid .new-in__product>a{display:flex;flex-direction:column;height:100%}
+ .collection-grid .new-in__image,.new-in__grid .new-in__image{flex-shrink:0}
+ .collection-grid .new-in__product h2,.new-in__grid .new-in__product h3{flex:1}
+}

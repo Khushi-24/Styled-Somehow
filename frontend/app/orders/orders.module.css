@@ -25,3 +25,11 @@
 .authPanel .loginPrimary{margin:22px 0 0;min-height:48px;font-size:13px;font-weight:600}
 .authPanel .loginActions{margin-top:16px}
 @media(max-width:600px){.authPanel{max-width:368px;margin:12px auto 28px;padding:0 4px}.authPanel .authTitle{font-size:28px;margin-bottom:26px}.authPanel .loginDivider{margin:20px 0}.authPanel .loginPrimary{margin-top:20px}}
+
+@media(max-width:760px){
+ .account>div,.intro>div,.deliveryHeading>div{min-width:0}
+ .account,.deliveryHeading{flex-wrap:wrap}
+ .cardMeta{flex-wrap:wrap;row-gap:5px}
+ .authPanel input{font-size:16px}
+ .detailMeta>span{overflow-wrap:anywhere;min-width:0}
+}

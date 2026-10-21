@@ -72,3 +72,15 @@
  .savebar{padding:12px;gap:12px;flex-wrap:wrap}.editorTitle{gap:12px}.page .editorTitle h2{font-size:18px}.savebar>.toolbar{margin-left:auto}.sectionNav{padding:12px;gap:6px}.sectionNav a{font-size:11px;padding:7px 9px}.formSection{padding:22px 16px;scroll-margin-top:160px}.formSection :global(.admin-fields){grid-template-columns:1fr}.formSection :global(.admin-media){grid-template-columns:1fr}.editor :global(.admin-actions){padding:0 16px 22px}
  .catalogueHeading h2{font-size:24px}.pagination>div{gap:10px}
 }
+
+@media(max-width:650px){
+ .editorTitle,.editorTitle>div{min-width:0}
+ .page .editorTitle h2{overflow-wrap:anywhere}
+ .editorTitle{align-items:flex-start}
+ .savebar>.toolbar{width:100%;justify-content:flex-end}
+ .sectionNav{flex-wrap:nowrap;overflow-x:auto;overscroll-behavior-x:contain}
+ .sectionNav a{flex-shrink:0}
+ .results{flex-wrap:wrap;padding:12px 0}
+ .rowActions{flex-wrap:wrap;white-space:normal}
+ .productLink strong{overflow-wrap:anywhere}
+}
