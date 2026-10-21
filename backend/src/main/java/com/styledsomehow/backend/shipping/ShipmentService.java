@@ -23,6 +23,7 @@ public class ShipmentService {
  private record Work(Map<String,Object> payload,ShippingGateway.Rate rate){}
  public Status status(String id){if(!orders.existsById(id))throw new ResponseStatusException(HttpStatus.NOT_FOUND);return new Status(enabled,shipments.findById(id).orElse(null));}
  static void eligible(PendingOrder order){
+  if("PERSONAL".equals(order.deliveryMethod))throw new ResponseStatusException(HttpStatus.CONFLICT,"This order is set for personal delivery. Switch to courier delivery before booking.");
   if(!"PAID".equals(order.status)||!"LIVE".equals(order.paymentMode)||order.paidAt==null||order.paymentId==null||!order.paymentId.startsWith("pay_"))throw new ResponseStatusException(HttpStatus.CONFLICT,"Only paid LIVE orders can be shipped. Test, unpaid, refunded and review orders are blocked.");
  }
  private void enabled(){if(!enabled)throw new ResponseStatusException(HttpStatus.CONFLICT,"Shipment booking is disabled. Complete Shiprocket KYC and live-payment setup before enabling it.");}
@@ -33,7 +34,7 @@ public class ShipmentService {
  public record Comparison(List<ShippingGateway.Rate> options,int customerShipping,int quantity,String pickupLocation,String deliveryPin,ShippingGateway.Parcel parcel){}
  public Comparison compare(String id,ShippingGateway.Parcel parcel){
   validateParcel(parcel);
-  return tx.execute(status->{var o=order(id);if(!"PAID".equals(o.status)||!("LIVE".equals(o.paymentMode)||"TEST".equals(o.paymentMode)))throw new ResponseStatusException(HttpStatus.CONFLICT,"Only paid orders can compare couriers.");if(shipments.existsById(id))throw new ResponseStatusException(HttpStatus.CONFLICT,"A booking already exists. Refresh shipment status.");int quantity=o.items.stream().mapToInt(i->i.quantity).sum();return new Comparison(rates.options(o.pinCode,quantity,o.subtotal,parcel),o.shipping,quantity,pickup,o.pinCode,parcel);});
+  return tx.execute(status->{var o=order(id);if("PERSONAL".equals(o.deliveryMethod))throw new ResponseStatusException(HttpStatus.CONFLICT,"This order is set for personal delivery, not a courier booking.");if(!"PAID".equals(o.status)||!("LIVE".equals(o.paymentMode)||"TEST".equals(o.paymentMode)))throw new ResponseStatusException(HttpStatus.CONFLICT,"Only paid orders can compare couriers.");if(shipments.existsById(id))throw new ResponseStatusException(HttpStatus.CONFLICT,"A booking already exists. Refresh shipment status.");int quantity=o.items.stream().mapToInt(i->i.quantity).sum();return new Comparison(rates.options(o.pinCode,quantity,o.subtotal,parcel),o.shipping,quantity,pickup,o.pinCode,parcel);});
  }
  public ShippingGateway.Diagnostic diagnose(String id,ShippingGateway.Parcel parcel,long shiprocketOrderId){
   validateParcel(parcel);if(shiprocketOrderId<=0)throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Enter a valid Shiprocket order ID.");

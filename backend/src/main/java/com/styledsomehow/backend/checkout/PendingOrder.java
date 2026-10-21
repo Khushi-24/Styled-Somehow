@@ -15,6 +15,7 @@ public class PendingOrder {
  @Column(length=100) public String paymentId;
  @JsonIgnore @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.TIMESTAMP) public Instant gatewayStartUntil;
  public String paymentMode;
+ @Column(length=20,nullable=false) public String deliveryMethod="COURIER";
  @JsonIgnore @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.TIMESTAMP) public Instant paymentCheckedAt;
  @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.TIMESTAMP) public Instant paidAt;
  @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.TIMESTAMP) public Instant createdAt;

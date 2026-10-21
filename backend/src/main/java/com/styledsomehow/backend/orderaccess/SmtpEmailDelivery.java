@@ -50,10 +50,11 @@ public class SmtpEmailDelivery implements EmailDelivery {
  }
  public void sendStatus(PendingOrder order,com.styledsomehow.backend.fulfilment.FulfilmentEvent event){
   String link=links.link(order,storeUrl);
-  String text=("TEST".equals(order.paymentMode)?"TEST ORDER — this order will not be dispatched.\n\n":"")+statusLabel(event.stage)+"\n"+statusDescription(event.stage)+"\n\nOrder: "+order.id+"\nView order: "+link+"\nKeep this private link safe.\n\n"+OrderEmailTemplate.noReplyText();
+  String text=("TEST".equals(order.paymentMode)?"TEST ORDER — this order will not be dispatched.\n\n":"")+statusLabel(event.stage)+"\n"+statusDescription(order,event.stage)+"\n\nOrder: "+order.id+"\nView order: "+link+"\nKeep this private link safe.\n\n"+OrderEmailTemplate.noReplyText();
   sendBranded(order.email,OrderEmailThread.subject(order),text,OrderEmailTemplate.status(order,event.stage,link,"cid:styled-somehow-logo"),order.id,event.id);
  }
  static String statusLabel(String stage){return switch(stage){case "PACKING"->"Packing";case "READY_TO_SHIP"->"Ready to ship";case "SHIPPED"->"Shipped";case "IN_TRANSIT"->"In transit";case "DELIVERED"->"Delivered";default->throw new IllegalArgumentException("Unsupported email stage");};}
+ static String statusDescription(PendingOrder order,String stage){if("PERSONAL".equals(order.deliveryMethod)){if("READY_TO_SHIP".equals(stage))return "All packed and ready for personal delivery by Styled Somehow.";if("SHIPPED".equals(stage)||"IN_TRANSIT".equals(stage))return "Your order is on its way with Styled Somehow for personal delivery.";}return statusDescription(stage);}
  static String statusDescription(String stage){return switch(stage){case "PACKING"->"Getting your tee ready for you.";case "READY_TO_SHIP"->"All packed and waiting for pickup.";case "SHIPPED"->"Your parcel is with the courier.";case "IN_TRANSIT"->"Making its way to your doorstep.";case "DELIVERED"->"Let the outfit plans begin.";default->throw new IllegalArgumentException("Unsupported email stage");};}
  static String confirmationText(PendingOrder o,String url){
   var text=new StringBuilder("Thank you for choosing Styled Somehow!\n\n");

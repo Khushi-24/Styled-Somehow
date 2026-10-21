@@ -55,4 +55,13 @@ class FulfilmentIntegrationTests {
   assertThat(tracking.refresh(id).stage()).isEqualTo("DELIVERED");tracking.refresh(id);verify(courier,times(1)).track(anyString());
   var o=orders.findById(id).orElseThrow();o.paymentMode="TEST";orders.saveAndFlush(o);clearInvocations(courier);tracking.refresh(id);verifyNoInteractions(courier);
  }
+ @Test void personalDeliverySelectionRequiresAuthCsrfAndPersists()throws Exception{
+  fulfilment.advance(id,"PAID","PACKING","","admin");fulfilment.advance(id,"PACKING","READY_TO_SHIP","","admin");
+  String path="/api/admin/orders/"+id+"/fulfilment/delivery-method",body="{\"expectedStage\":\"READY_TO_SHIP\",\"expectedMethod\":\"COURIER\",\"method\":\"PERSONAL\",\"note\":\"Selected in admin\"}";
+  mvc.perform(post(path).with(csrf()).contentType("application/json").content(body)).andExpect(status().isUnauthorized());
+  mvc.perform(post(path).with(user("admin").roles("ADMIN")).contentType("application/json").content(body)).andExpect(status().isForbidden());
+  mvc.perform(post(path).with(user("admin").roles("ADMIN")).with(csrf()).contentType("application/json").content(body)).andExpect(status().isOk()).andExpect(jsonPath("$.fulfilment.deliveryMethod").value("PERSONAL"));
+  assertThat(orders.findById(id).orElseThrow().deliveryMethod).isEqualTo("PERSONAL");assertThat(shipments.findById(id)).isEmpty();
+  mvc.perform(post(path).with(user("admin").roles("ADMIN")).with(csrf()).contentType("application/json").content(body)).andExpect(status().isConflict());
+ }
 }

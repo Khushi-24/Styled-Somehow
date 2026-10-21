@@ -40,4 +40,33 @@ class FulfilmentTests {
   String json=new tools.jackson.databind.ObjectMapper().writeValueAsString(service.customer(o.id));
   assertThat(json).contains("PACKING").doesNotContain("private production note","owner","quotedCost");
  }
+ @Test void personalDeliveryNeedsNoAwbAndRequiresRecordedHandover(){
+  var o=order("LIVE");o.fulfilmentStage="READY_TO_SHIP";
+  var selected=service.deliveryMethod(o.id,"READY_TO_SHIP","COURIER","PERSONAL","Selected in admin","admin");
+  assertThat(selected.allowedNext()).containsExactly("SHIPPED");
+  assertThat(selected.fulfilment().deliveryMethod()).isEqualTo("PERSONAL");
+  assertThat(selected.fulfilment().awb()).isNull();
+  var capture=org.mockito.ArgumentCaptor.forClass(FulfilmentEvent.class);verify(events).save(capture.capture());assertThat(capture.getValue().notificationEligible).isFalse();
+  assertThatThrownBy(()->service.advance(o.id,"READY_TO_SHIP","SHIPPED","","admin")).hasMessageContaining("who is delivering");
+  service.advance(o.id,"READY_TO_SHIP","SHIPPED","Khushi delivering today","admin");
+  assertThatThrownBy(()->service.advance(o.id,"SHIPPED","DELIVERED","","admin")).hasMessageContaining("who received");
+  service.advance(o.id,"SHIPPED","DELIVERED","Handed to customer at 5 PM","admin");
+  assertThat(service.admin(o.id).allowedNext()).isEmpty();assertThat(o.status).isEqualTo("PAID");
+  service.courierProgress(o,"IN_TRANSIT");assertThat(o.fulfilmentStage).isEqualTo("DELIVERED");
+ }
+ @Test void methodSelectionRejectsStaleUnpaidAndExistingCourierBookings(){
+  var o=order("LIVE");o.fulfilmentStage="READY_TO_SHIP";
+  assertThatThrownBy(()->service.deliveryMethod(o.id,"PACKING","COURIER","PERSONAL","","admin")).hasMessageContaining("changed");
+  var b=new ShipmentBooking();b.status="BOOKED";when(shipments.findById(o.id)).thenReturn(Optional.of(b));
+  assertThatThrownBy(()->service.deliveryMethod(o.id,"READY_TO_SHIP","COURIER","PERSONAL","","admin")).hasMessageContaining("existing courier");
+  b.status="CANCELLED";service.deliveryMethod(o.id,"READY_TO_SHIP","COURIER","PERSONAL","","admin");
+  o.status="REFUNDED";assertThatThrownBy(()->service.deliveryMethod(o.id,"READY_TO_SHIP","PERSONAL","COURIER","","admin")).hasMessageContaining("verified paid");
+ }
+ @Test void testPersonalDeliveryRemainsASimulation(){
+  var o=order("TEST");o.fulfilmentStage="READY_TO_SHIP";
+  service.deliveryMethod(o.id,"READY_TO_SHIP","COURIER","PERSONAL","","admin");
+  service.advance(o.id,"READY_TO_SHIP","SHIPPED","Simulated dispatch","admin");
+  var view=service.advance(o.id,"SHIPPED","DELIVERED","Simulated receipt","admin").fulfilment();
+  assertThat(view.test()).isTrue();assertThat(view.awb()).isNull();assertThat(o.paymentMode).isEqualTo("TEST");
+ }
 }
