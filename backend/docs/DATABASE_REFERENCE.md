@@ -1,6 +1,6 @@
 # Database table reference
 
-Schema baseline: Flyway migrations **V1–V19**. There are **21 application tables**, plus Flyway's `flyway_schema_history` system table. An existing local database has this full schema only after all these migrations have run.
+Schema baseline: Flyway migrations **V1–V20**. There are **22 application tables**, plus Flyway's `flyway_schema_history` system table. An existing local database has this full schema only after all these migrations have run.
 
 This is a developer reference, not a database reset script. Table names below are the actual database names. PK means primary key; FK means database-enforced foreign key. Names such as product slugs and hashed emails can also connect records logically without an FK.
 
@@ -71,6 +71,14 @@ Admin credentials are configured outside these tables. Customer access uses sess
 
 The fixed blank T-shirt cost of **₹280** is enforced in `CostingCalculator`, not stored as an editable cost entry. Cost profiles are private current planning estimates; they are not historical cost snapshots or actual order profit records. See [Costing and profit estimates](../../docs/COSTING_AND_PROFIT.md) for formulas and limitations.
 
+### Test order cleanup audit
+
+| Table | Purpose / important data | Primary key | Relationships | Introduced |
+| --- | --- | --- | --- | --- |
+| `test_order_deletions` | Records the deleted TEST order reference, previous status, actor, reason, timestamp, optional restored stock units and released reservations. Prevents repeated deletion requests from restoring stock twice. No customer email/address is copied here. | `order_id` | Deliberately has no FK to the deleted order; the audit survives cleanup. | V20 |
+
+Admin cleanup accepts only explicitly marked TEST orders. LIVE/unassigned orders, active payment/refund processing and any shipment record are protected. A pending test checkout releases only its own reservations. On-hand restoration is unchecked by default and requires matching recorded test-payment stock deductions plus explicit physical-stock confirmation. Changes since the preview invalidate it. Original stock movements are retained; restored units get a new movement. Provider records and already-sent emails are unaffected. Manual stock restorations made before preview cannot reliably be inferred, so the owner must leave restoration disabled for already-corrected stock.
+
 ## 6. Flyway system table
 
 | Table | Purpose | Managed by |
@@ -125,6 +133,7 @@ Every application table has the PK shown above; a primary key creates an index. 
 | `order_access_challenges` | `order_access_ip_limit` | `(ip_hash, created_at)` | IP request limits. |
 | `order_access_challenges` | `order_access_browser_limit` | `(browser_hash, created_at)` | Browser request limits. |
 | `order_access_challenges` | `order_access_daily_limit` | `created_at` | Global request windows and expiry cleanup support. |
+| `order_access_challenges` | `order_access_order_cleanup` | `order_id` | Find order-specific challenges during cleanup. |
 | `commerce_attempts` | `commerce_attempts_window` | `(scope, created_at)` | Recent attempts by request scope. |
 | `costing_items` | Unique constraint | `(product_id, cost_key)` | One entry per cost category per profile. |
 

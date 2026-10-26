@@ -10,4 +10,4 @@ Java 21 / Spring Boot backend, built with Gradle and backed by MySQL. Database c
 - [Deployment, backups and recovery](../deploy/README.md)
 - [Audit remediation status](../docs/AUDIT_FIX_STATUS.md)
 
-The database reference describes migrations through V19. The SQL files in [`src/main/resources/db/migration`](src/main/resources/db/migration) remain the source of truth; the migrations recorded in your database determine which changes are actually installed.
+The database reference describes migrations through V20. The SQL files in [`src/main/resources/db/migration`](src/main/resources/db/migration) remain the source of truth; the migrations recorded in your database determine which changes are actually installed.
