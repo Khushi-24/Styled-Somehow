@@ -1,6 +1,6 @@
 # Database table reference
 
-Schema baseline: Flyway migrations **V1–V20**. There are **22 application tables**, plus Flyway's `flyway_schema_history` system table. An existing local database has this full schema only after all these migrations have run.
+Schema baseline: Flyway migrations **V1–V21**. There are **22 application tables**, plus Flyway's `flyway_schema_history` system table. An existing local database has this full schema only after all these migrations have run.
 
 This is a developer reference, not a database reset script. Table names below are the actual database names. PK means primary key; FK means database-enforced foreign key. Names such as product slugs and hashed emails can also connect records logically without an FK.
 
@@ -8,7 +8,7 @@ This is a developer reference, not a database reset script. Table names below ar
 
 | Table | Purpose / important data | Primary key | Relationships | Introduced |
 | --- | --- | --- | --- | --- |
-| `products` | Product name, slug/URL, selling price, original price, descriptions, composition, GSM, New In flag, display ordering and DRAFT/PUBLISHED/ARCHIVED status. | `id` | Parent of the four product list tables below and `costing_profiles`. | V1 |
+| `products` | Product name, slug/URL, selling price, original price, descriptions, composition, GSM, independent New In and Pick Your Vibe flags, display ordering and DRAFT/PUBLISHED/ARCHIVED status. | `id` | Parent of the four product list tables below and `costing_profiles`. | V1 |
 | `product_collections` | Collection slug assignments for a product, in order. Stores the slug in `value`. | `(product_id, position)` | FK `product_id` → `products.id`. `value` logically identifies `shop_collections.slug`, but has no FK to it. | V1 |
 | `product_colours` | Colours offered for a product, in order. | `(product_id, position)` | FK `product_id` → `products.id`. | V1 |
 | `product_sizes` | Sizes offered for a product, in order. | `(product_id, position)` | FK `product_id` → `products.id`. | V1 |
@@ -190,3 +190,7 @@ ORDER BY parent_table, child_table, k.ORDINAL_POSITION;
 ## 10. Keeping this reference current
 
 Update this file when a migration adds/removes a table, changes relationships/deletion behaviour or adds an index. The authoritative definitions are in [the migrations folder](../src/main/resources/db/migration).
+
+## Homepage selection
+
+V21 adds `products.pick_your_vibe` (default false). Admin product editing controls this independently of `new_in`. Only selected published products with photos appear in Pick Your Vibe (up to nine, interleaved by audience). Existing and new products start unselected; no New In products are copied automatically.

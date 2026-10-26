@@ -23,7 +23,7 @@ function interleave(products: Product[]) {
   return output.concat(other).slice(0,9);
 }
 export default function InteractiveProductRack({ products }: { products: Product[] }) {
-  const items = useMemo(() => interleave(products.filter(p => p.status === "PUBLISHED" && p.media?.some(m => m.kind === "image"))), [products]);
+  const items = useMemo(() => interleave(products.filter(p => p.pickYourVibe === true && p.status === "PUBLISHED" && p.media?.some(m => m.kind === "image"))), [products]);
   const [active,setActive] = useState(0);
   const [manual,setManual] = useState(false);
   const [narrow,setNarrow] = useState(false);
@@ -42,7 +42,7 @@ export default function InteractiveProductRack({ products }: { products: Product
   const choose = (i:number) => {setManual(true);setActive((i+items.length)%items.length);};
   const selected = items[active] ?? items[0];
   return <section id="pick-your-style" className="ss-rack" aria-labelledby="ss-rack-title" style={{scrollMarginTop:24}}>
-    <header className="ss-rack-intro"><h2 id="ss-rack-title">PICK YOUR ENERGY.</h2><p>Find the fit that feels like you.</p></header>
+    <header className="ss-rack-intro"><h2 id="ss-rack-title">PICK YOUR VIBE</h2><p>Find the fit that feels like you.</p></header>
     <div className="ss-rack-stage">
       <div className="ss-rack-rail" aria-hidden="true" />
       <div className="ss-rack-garments">

@@ -53,10 +53,10 @@ class CatalogIntegrationTests {
   p=json.readValue(created,Product.class);
   try{
    mvc.perform(get("/api/products/"+p.slug)).andExpect(status().isNotFound());
-   p.status=Product.Status.PUBLISHED;p.price=649;
+   p.status=Product.Status.PUBLISHED;p.price=649;p.newIn=false;p.pickYourVibe=true;
    String body=mvc.perform(put("/api/admin/products/"+p.id).with(user("owner").roles("ADMIN")).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(p))).andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
    Product published=json.readValue(body,Product.class);
-   mvc.perform(get("/api/products/"+p.slug)).andExpect(status().isOk()).andExpect(jsonPath("$.price").value(649));
+   mvc.perform(get("/api/products/"+p.slug)).andExpect(status().isOk()).andExpect(jsonPath("$.price").value(649)).andExpect(jsonPath("$.pickYourVibe").value(true)).andExpect(jsonPath("$.newIn").value(false));
    mvc.perform(put("/api/admin/products/"+p.id).with(user("owner").roles("ADMIN")).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(p))).andExpect(status().isConflict());
    published.status=Product.Status.ARCHIVED;
    mvc.perform(put("/api/admin/products/"+p.id).with(user("owner").roles("ADMIN")).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(published))).andExpect(status().isOk());

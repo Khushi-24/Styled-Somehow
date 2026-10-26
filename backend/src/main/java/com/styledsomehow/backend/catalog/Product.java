@@ -20,6 +20,7 @@ public class Product {
  @NotBlank @Size(max=100) public String composition;
  @Min(1) @Max(1000) public int gsm;
  public boolean newIn;
+ public boolean pickYourVibe;
  @Min(0) public int sortOrder;
  @Min(0) public int collectionOrder;
  @NotNull @Enumerated(EnumType.STRING) @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.VARCHAR) public Status status;
