@@ -1,0 +1,1 @@
+ALTER TABLE pending_orders ADD COLUMN delivery_method VARCHAR(20) NOT NULL DEFAULT 'COURIER';

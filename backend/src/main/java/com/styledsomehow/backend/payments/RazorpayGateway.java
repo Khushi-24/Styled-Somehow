@@ -12,14 +12,16 @@ import java.util.*;
 import java.nio.charset.StandardCharsets;
 @Component
 public class RazorpayGateway implements PaymentGateway {
+ private boolean liveEnabled;
+ @org.springframework.beans.factory.annotation.Autowired void liveMode(@Value("${payments.razorpay.live-enabled:false}") boolean enabled){this.liveEnabled=enabled;}
  private final String key,secret,webhook;private final RestClient client;
  public RazorpayGateway(@Value("${payments.razorpay.key-id:}") String key,@Value("${payments.razorpay.key-secret:}") String secret,@Value("${payments.razorpay.webhook-secret:}") String webhook){
   this.key=key;this.secret=secret;this.webhook=webhook;
   var factory=new JdkClientHttpRequestFactory(HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build());factory.setReadTimeout(Duration.ofSeconds(10));
   client=RestClient.builder().requestFactory(factory).baseUrl("https://api.razorpay.com/v1").defaultHeaders(h->h.setBasicAuth(key,secret)).build();
  }
- // This release deliberately accepts test credentials only.
- public boolean ready(){return key.matches("rzp_test_[A-Za-z0-9]+")&&!secret.isBlank()&&webhook.length()>=32;}
+ // Live credentials require a separate explicit launch switch.
+ public boolean ready(){return (key.matches("rzp_test_[A-Za-z0-9]+")||liveEnabled&&key.matches("rzp_live_[A-Za-z0-9]+"))&&!secret.isBlank()&&webhook.length()>=32;}
  public String keyId(){return key;}
  public static boolean validSignature(byte[] body,String signature,String secret){
   if(secret.isBlank()||signature==null||!signature.matches("[a-fA-F0-9]{64}"))return false;

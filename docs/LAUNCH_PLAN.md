@@ -1,3 +1,5 @@
+> Current implementation status: see [AUDIT_FIX_STATUS.md](AUDIT_FIX_STATUS.md) (19 October 2026). Older planning/checklist entries below are historical and may be superseded. Live launch and external verification are not implied by completed code.
+
 # styled_somehow — custom website launch plan
 
 Updated: 8 October 2026. Pricing checked on this date.
