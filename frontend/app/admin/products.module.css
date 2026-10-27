@@ -84,3 +84,11 @@
  .rowActions{flex-wrap:wrap;white-space:normal}
  .productLink strong{overflow-wrap:anywhere}
 }
+
+.colours{margin-top:18px;max-width:520px}
+.colours>label{display:block;font-weight:600;margin-bottom:6px}
+.colours select{width:100%;min-height:44px}
+.selectedColours{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+.selectedColours span{display:inline-flex;align-items:center;gap:8px;padding:4px 5px 4px 12px;background:#f3f0eb;border:1px solid #ded8d1;border-radius:6px}
+.page .selectedColours button{padding:2px 7px;min-width:32px;font-size:18px;line-height:1.2}
+.colours small{display:block;color:#71685f}.colours small a{text-decoration:underline}.colours p[role=alert]{color:#a32a2a;font-size:13px}
