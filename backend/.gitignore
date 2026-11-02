@@ -36,3 +36,7 @@ out/
 ### VS Code ###
 .vscode/
 /.env
+
+# Real environment files stay private; templates are safe to commit.
+/.env.*
+!/.env.*.example

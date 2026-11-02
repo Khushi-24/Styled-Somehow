@@ -12,3 +12,9 @@ export async function getProduct(slug: string): Promise<Product | null> {
  if (!response.ok) throw new Error("Catalogue unavailable");
  return response.json();
 }
+
+export async function getCollections(): Promise<import("./product").ShopCollection[]> {
+ const response = await fetch(`${backend}/api/collections`, {cache:"no-store",signal:AbortSignal.timeout(5000)});
+ if(!response.ok) throw new Error("Collections unavailable");
+ return response.json();
+}

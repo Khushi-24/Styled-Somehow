@@ -19,6 +19,11 @@ public class MediaController {
   else if(bytes.length>12&&Arrays.equals(Arrays.copyOf(bytes,8),new byte[]{(byte)137,80,78,71,13,10,26,10}))type="png";
   else if(bytes.length>12&&new String(bytes,0,4,java.nio.charset.StandardCharsets.US_ASCII).equals("RIFF")&&new String(bytes,8,4,java.nio.charset.StandardCharsets.US_ASCII).equals("WEBP"))type="webp";
   else throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Only JPEG, PNG and WebP photos are supported");
+  // Decode the actual image after checking dimensions, rather than trusting magic bytes.
+  try(var input=javax.imageio.ImageIO.createImageInputStream(new java.io.ByteArrayInputStream(bytes))){
+   var readers=javax.imageio.ImageIO.getImageReaders(input);if(!readers.hasNext())throw new IOException("Unsupported image");var reader=readers.next();
+   try{reader.setInput(input,true,true);int width=reader.getWidth(0),height=reader.getHeight(0);if(width<1||height<1||width>8000||height>8000||(long)width*height>12000000)throw new IOException("Image dimensions exceed limit");if(reader.read(0)==null)throw new IOException("Invalid image");}finally{reader.dispose();}
+  }catch(IOException|RuntimeException invalid){throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Choose a valid JPEG, PNG or WebP under 12 megapixels and 8000 pixels per side.");}
   Files.createDirectories(root);String name=UUID.randomUUID()+"."+type;Files.write(root.resolve(name),bytes,StandardOpenOption.CREATE_NEW);return Map.of("url","/api/media/"+name);
  }
  @GetMapping("/api/media/{name}") public ResponseEntity<Resource> photo(@PathVariable String name){

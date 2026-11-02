@@ -10,6 +10,7 @@ public class PaymentReceipt {
  @Column(length=100) public String refundId;
  @Column(length=36) public String refundKey;
  @Column(length=500) public String reason;
+ @com.fasterxml.jackson.annotation.JsonIgnore @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.TIMESTAMP) public Instant workerLeaseUntil;
  public int retries;
  @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.TIMESTAMP) public Instant createdAt,updatedAt;
 }

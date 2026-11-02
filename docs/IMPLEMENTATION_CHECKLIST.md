@@ -1,3 +1,5 @@
+> Current implementation status: see [AUDIT_FIX_STATUS.md](AUDIT_FIX_STATUS.md) (19 October 2026). Older planning/checklist entries below are historical and may be superseded. Live launch and external verification are not implied by completed code.
+
 # Temporary website implementation checklist
 
 Owner: Khushi. Updated 8 October 2026.
@@ -63,9 +65,9 @@ Khushi confirmed inventory adjustments/history/persistence tests completed. Cart
 
 
 ## Guest email access
-- [x] Implement read-only cross-browser order access via short-lived email OTP and Brevo delivery adapter.
+- [x] Implement read-only cross-browser order access via short-lived email OTP (historical; public endpoints now disabled).
 - [x] Browser-bound single-use codes, attempt/resend/global limits, hashed storage and session expiry.
-- [ ] Configure private Brevo API key, verified sender/domain and order access secret.
+- [ ] Verify Hostinger SMTP credentials and order access secret; see email-setup.md.
 - [ ] Verify real delivery, MySQL V4 migration, proxy IP handling, desktop/mobile flow and abuse limits.
 - [ ] Optional customer accounts, saved addresses and order history.
 - [ ] Send order confirmations only after verified successful payment.
@@ -82,3 +84,33 @@ Khushi confirmed inventory adjustments/history/persistence tests completed. Cart
 - [x] Customer test checkout and admin payment/refund visibility.
 - [ ] Real Razorpay sandbox payment, refund, public webhook and mobile checkout verification.
 - [ ] Live onboarding, production secrets and payment launch review.
+
+
+## Fulfilment milestone — 18 October 2026 (current status)
+- [x] Separate payment and fulfilment stages, admin preparation updates and internal history.
+- [x] Ready-to-ship gate before LIVE courier booking; AWB assignment records Courier booked.
+- [x] Physical-handover confirmation before manual Shipped status; TEST dispatch blocked.
+- [x] Private customer order progress and courier/AWB details without internal notes/costs.
+- [x] Cached Shiprocket tracking polling with manual admin refresh, outage retention and terminal-state protection.
+- [ ] Run backend suites and Flyway V10 against the local database.
+- [ ] Verify genuine LIVE booking → collection → tracking → delivery.
+- [ ] Dispatch emails and operational cancellation/rebooking flows.
+See fulfilment-tracking.md. Earlier OTP checklist entries are superseded by secure email links; public OTP/recovery endpoints are retired.
+
+
+## Email login and status updates
+- [x] Email-first OTP login, private paginated order history sorted by creation date, and session logout.
+- [x] Three requests per email per rolling hour, cooldown, IP/browser/global budgets and hashed single-use codes.
+- [x] Durable stage email retries, per-stage notification suppression and per-order threading headers.
+- [ ] Run new Java 21 integration tests locally and verify Hostinger OTP/threading/delivery on real inboxes.
+- [ ] Verify trusted proxy IP configuration and mobile login/history rendering before launch.
+
+
+## Google or email login
+- [x] Optional Google OIDC login shares the email OTP customer session and private history.
+- [x] Verified Gmail-only claim, separate OAuth security chain, state/nonce validation, fixed storefront callback and discarded access tokens.
+- [ ] Configure Google Cloud OAuth web client and test callback, consent cancellation, logout/expiry and admin isolation locally.
+
+
+## Verification — 19 October 2026
+Khushi confirmed Google login, email OTP verification, newest-first order history and logout work locally. OTP and status-email visual templates were then refined; verify newly sent messages in desktop/mobile email clients. Existing delivered emails do not change. Backend tests still require local Java 21 execution.

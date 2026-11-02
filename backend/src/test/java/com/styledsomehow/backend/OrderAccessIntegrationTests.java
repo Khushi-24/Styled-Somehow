@@ -14,6 +14,12 @@ import static com.styledsomehow.backend.checkout.CheckoutDtos.*;
 @org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 @SpringBootTest(properties="order-access.secret=integration-test-only-not-a-deployed-secret-123456789") @Transactional
 class OrderAccessIntegrationTests {
+ @org.springframework.test.context.bean.override.mockito.MockitoBean com.styledsomehow.backend.address.PostalLocationService locations;
+ @org.springframework.test.context.bean.override.mockito.MockitoBean com.styledsomehow.backend.shipping.ShippingGateway shipping;
+ @org.junit.jupiter.api.BeforeEach void stubShipping(){org.mockito.Mockito.when(shipping.rate(org.mockito.ArgumentMatchers.anyString(),org.mockito.ArgumentMatchers.anyInt(),org.mockito.ArgumentMatchers.anyInt())).thenReturn(new com.styledsomehow.backend.shipping.ShippingGateway.Rate(1,"Delhivery",0));}
+
+ @Autowired OrderLinkService links;
+ @Autowired OrderRepository orders;
  @Autowired OrderAccessService access;@Autowired EmailBlockRepository blocks;@Autowired CheckoutService checkout;@Autowired ChallengeRepository challenges;
  @MockitoBean EmailDelivery mail;
  @Autowired org.springframework.test.web.servlet.MockMvc mvc;
@@ -24,17 +30,29 @@ class OrderAccessIntegrationTests {
  @Test void codeIsBrowserBoundSingleUseAndHashed(){var o=order();var r=access.request(o.id,"FIXTURE@GMAIL.COM","browser","127.0.0.1");assertThat(sent).matches("[0-9]{6}");assertThat(challenges.findById(r.challengeId()).orElseThrow().codeHash).hasSize(64).isNotEqualTo(sent);assertThat(access.verify(r.challengeId(),sent,"other-browser")).isEmpty();assertThat(access.verify(r.challengeId(),sent,"browser")).contains(o.id);assertThat(access.verify(r.challengeId(),sent,"browser")).isEmpty();}
  @Test void fiveWrongAttemptsLockCodeAndExpiredCodesFail(){var o=order();var r=access.request(o.id,o.email,"browser","127.0.0.1");String correct=sent;String wrong=correct.equals("000000")?"111111":"000000";for(int i=0;i<5;i++)assertThat(access.verify(r.challengeId(),wrong,"browser")).isEmpty();assertThat(challenges.findById(r.challengeId()).orElseThrow().attempts).isEqualTo(5);assertThat(access.verify(r.challengeId(),correct,"browser")).isEmpty();var c=challenges.findById(r.challengeId()).orElseThrow();c.attempts=0;c.expiresAt=Instant.now().minusSeconds(1);assertThat(access.verify(r.challengeId(),correct,"browser")).isEmpty();}
  @Test void mismatchedDetailsDoNotSendOrRevealOrder(){var o=order();var r=access.request(o.id,"wrong@gmail.com","browser","127.0.0.1");verify(mail,never()).sendCode(anyString(),anyString());assertThat(r.message()).startsWith("If the reference and email match");assertThat(access.verify(r.challengeId(),"123456","browser")).isEmpty();}
- @Test void httpAccessRequiresCsrfAndVerificationAndCanBeClosed()throws Exception{
-  var o=order();var session=new org.springframework.mock.web.MockHttpSession();String originalSession=session.getId();String body=json.writeValueAsString(Map.of("orderId",o.id,"email",o.email));
+ @Test void httpLinkAccessRequiresTokenAndCsrfAndCanBeClosed()throws Exception{
+  var o=order();o.status="PAID";o.paidAt=Instant.now();o.paymentId="pay_fixture";orders.saveAndFlush(o);
+  String token=links.link(o,"https://styledsomehow.in").split("#access=")[1];
+  var session=new org.springframework.mock.web.MockHttpSession();String original=session.getId();
+  var request=org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post("/api/order-access/link").session(session).contentType("application/json").content(json.writeValueAsString(Map.of("token",token)));
+  mvc.perform(request).andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isForbidden());
   mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/api/order-access/order/"+o.id).session(session)).andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isUnauthorized());
-  mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post("/api/order-access/request").session(session).contentType("application/json").content(body)).andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isForbidden());
-  var response=mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post("/api/order-access/request").with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf()).session(session).contentType("application/json").content(body)).andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isOk()).andReturn().getResponse().getContentAsString();
-  assertThat(response).doesNotContain(sent);String id=json.readTree(response).get("challengeId").asText();
-  mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post("/api/order-access/verify").with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf()).session(session).contentType("application/json").content(json.writeValueAsString(Map.of("challengeId",id,"code",sent)))).andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isOk());
-  assertThat(session.getId()).isNotEqualTo(originalSession);
-  mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/api/order-access/order/"+o.id).session(session)).andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isOk()).andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$.id").value(o.id)).andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$.sessionKey").doesNotExist());
+  mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post("/api/order-access/link").with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf()).session(session).contentType("application/json").content(json.writeValueAsString(Map.of("token",token)))).andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isOk());
+  assertThat(session.getId()).isNotEqualTo(original);
+  mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/api/order-access/order/"+o.id).session(session)).andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isOk()).andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$.id").value(o.id));
+  mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/api/order-access/order/"+UUID.randomUUID()).session(session)).andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isUnauthorized());
   mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post("/api/order-access/close").with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf()).session(session)).andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isNoContent());
-  mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/api/order-access/order/"+o.id).session(session)).andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isUnauthorized());
+  mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/api/order-access/current").session(session)).andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isUnauthorized());
+ }
+ @Test void retiredEndpointsCannotSendEmail()throws Exception{
+  for(String path:List.of("/api/order-access/request","/api/order-access/verify")){
+   mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post(path).with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf()).contentType("application/json").content("{}")).andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isGone());
+  }
+  verify(mail,never()).sendCode(anyString(),anyString());verify(mail,never()).sendRecovery(anyString(),anyString(),anyList());
+ }
+ @Test void checkoutReferenceCannotOpenSomeoneElsesOrder()throws Exception{
+  var o=order();o.status="PAID";o.paymentId="pay_fixture";o.paidAt=Instant.now();orders.saveAndFlush(o);
+  mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post("/api/order-access/checkout").with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf()).contentType("application/json").content(json.writeValueAsString(Map.of("orderId",o.id)))).andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isNotFound());
  }
  @Test void onlyGmailAndExactDomainAreAccepted(){assertThat(GmailAddress.valid("fixture@gmail.com")).isTrue();assertThat(GmailAddress.valid("fixture@GMAIL.COM")).isTrue();for(String value:List.of("fixture@yahoo.com","fixture@gmail.com.evil.test","fixture@googlemail.com","fixture@sub.gmail.com"))assertThatThrownBy(()->access.request(UUID.randomUUID().toString(),value,"browser","ip")).isInstanceOf(org.springframework.web.server.ResponseStatusException.class);}
  @Test void sixthDailyRequestPersistsBlockAcrossBrowsersAndAliases(){
@@ -60,10 +78,32 @@ class OrderAccessIntegrationTests {
   }finally{challenges.deleteAllById(ids);if(emailHash!=null)blocks.deleteById(emailHash);}
  }
  @Test void gmailValidationCannotBeBypassedThroughApi()throws Exception{
-  String body=json.writeValueAsString(Map.of("orderId",UUID.randomUUID().toString(),"email","fixture@gmail.com.evil.test"));
-  mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post("/api/order-access/request").with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf()).contentType("application/json").content(body)).andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isBadRequest()).andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$.message").value(org.hamcrest.Matchers.containsString("Only @gmail.com")));
   var payload=new Checkout(List.of(new Item("cherry-zest-oversized-t-shirt","White","S",1)),new Address("Test","fixture@yahoo.com","9999999999","Test","","Ahmedabad","Gujarat","380054"),UUID.randomUUID().toString(),599);
   mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post("/api/checkout").with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf()).contentType("application/json").content(json.writeValueAsString(payload))).andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isBadRequest()).andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$.message").value(org.hamcrest.Matchers.containsString("Only @gmail.com")));
  }
  @Test void resendIsLimitedAndFailedDeliveryDoesNotUndoLimits(){var o=order();doThrow(new IllegalStateException("fixture provider failure")).when(mail).sendCode(anyString(),anyString());var r=access.request(o.id,o.email,"browser","127.0.0.1");assertThat(challenges.findById(r.challengeId()).orElseThrow().orderId).isNull();assertThatThrownBy(()->access.request(o.id,o.email,"new-browser","127.0.0.2")).isInstanceOf(org.springframework.web.server.ResponseStatusException.class);}
+ @Test void recoveryEmailsOnlyMatchingPaidReferencesAndCodeIsStillBrowserBound(){
+  var paid=order();paid.status="PAID";orders.saveAndFlush(paid);
+  var pending=order();
+  doAnswer(call->{sent=call.getArgument(1);return null;}).when(mail).sendRecovery(anyString(),anyString(),anyList());
+  var r=access.request("","FIXTURE@gmail.com","browser","ip");
+  verify(mail).sendRecovery(eq(paid.email),anyString(),eq(List.of(paid.id)));
+  assertThat(r.message()).doesNotContain(paid.id).doesNotContain(pending.id);
+  assertThat(access.verify(r.challengeId(),sent,"other")).isEmpty();
+  assertThat(access.verify(r.challengeId(),sent,"browser")).contains(paid.id);
+ }
+ @Test void recoveryDoesNotRevealMissingEmailAndSharesResendLimit(){
+  var r=access.request("","missing@gmail.com","browser","ip");
+  verify(mail,never()).sendRecovery(anyString(),anyString(),anyList());
+  assertThat(r.message()).startsWith("If paid orders match");
+  assertThat(challenges.findById(r.challengeId()).orElseThrow().orderId).isNull();
+  assertThatThrownBy(()->access.request("","missing@gmail.com","other","other")).isInstanceOf(org.springframework.web.server.ResponseStatusException.class);
+ }
+ @Test void failedRecoveryEmailCannotGrantOrderAccess(){
+  var paid=order();paid.status="PAID";orders.saveAndFlush(paid);
+  doThrow(new IllegalStateException("mail unavailable")).when(mail).sendRecovery(anyString(),anyString(),anyList());
+  var r=access.request("",paid.email,"browser","ip");
+  assertThat(challenges.findById(r.challengeId()).orElseThrow().orderId).isNull();
+ }
+
 }

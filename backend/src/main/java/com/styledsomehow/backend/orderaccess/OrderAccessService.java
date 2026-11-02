@@ -33,12 +33,14 @@ public class OrderAccessService {
    throw new ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS,"Too many code requests. Please wait before trying again.");
   var challenge=new AccessChallenge();challenge.id=UUID.randomUUID().toString();challenge.emailHash=eh;challenge.browserHash=bh;challenge.ipHash=ih;challenge.createdAt=now;challenge.expiresAt=now.plusSeconds(600);
   String code=String.format(Locale.ROOT,"%06d",random.nextInt(1000000));challenge.codeHash=hash(challenge.id+":"+code);
-  var order=orders.findById(orderId).filter(o->o.email.trim().equalsIgnoreCase(email.trim()));
+  boolean recovery=orderId==null||orderId.isBlank();
+  var recent=recovery?orders.findTop20ByEmailIgnoreCaseAndStatusInOrderByCreatedAtDesc(email.trim(),List.of("PAID","REFUNDED","REFUND_PENDING","REFUND_REQUIRED")):List.<PendingOrder>of();
+  var order=recovery?recent.stream().findFirst():orders.findById(orderId).filter(o->o.email.trim().equalsIgnoreCase(email.trim()));
   if(order.isPresent()){
-   try{mail.sendCode(order.get().email.trim(),code);challenge.orderId=orderId;}catch(RuntimeException unavailable){/* Preserve rate limits without logging provider responses or customer data. */}
+   try{if(recovery)mail.sendRecovery(order.get().email.trim(),code,recent.stream().map(o->o.id).toList());else mail.sendCode(order.get().email.trim(),code);challenge.orderId=order.get().id;}catch(RuntimeException unavailable){/* Preserve rate limits without logging provider responses or customer data. */}
   }
   challenges.saveAndFlush(challenge);
-  return new Result(challenge.id,"If the reference and email match, a code will arrive shortly. Check your spam folder too.");
+  return new Result(challenge.id,recovery?"If paid orders match this email, your recent references and a code for the latest order will arrive shortly. Check your spam folder too.":"If the reference and email match, a code will arrive shortly. Check your spam folder too.");
  }
  // Return failure instead of throwing, so failed attempts are committed.
  public Optional<String> verify(String id,String code,String browser){

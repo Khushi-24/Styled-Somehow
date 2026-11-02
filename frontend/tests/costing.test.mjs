@@ -1,0 +1,10 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {estimateCost,costLabels} from '../lib/costing.ts';
+const profile=()=>({version:-1,items:Object.keys(costLabels).map(key=>({key,amount:10,included:true})),customerShipping:0,allocateMonthly:false});
+const budget={version:-1,electricity:100,website:0,ai:0,other:0,expectedUnits:3};
+test('costs include the fixed blank and current selling price with real decimal precision',()=>{const e=estimateCost(599,280,profile(),budget);assert.equal(e.totalCost,370);assert.equal(e.profit,229);assert.equal(e.margin,38.23);const p=profile();p.items=p.items.map(i=>({...i,amount:0.1}));assert.equal(estimateCost(599,280,p,budget).directCost,280.9);});
+test('local packaging exclusions keep amounts and add customer shipping income separately',()=>{const p=profile();p.items[0].included=false;p.customerShipping=60;const e=estimateCost(599,280,p,budget);assert.equal(e.directCost,360);assert.equal(e.revenue,659);assert.equal(e.profit,299);assert.equal(p.items[0].amount,10);});
+test('unknown selected costs block profit while explicit zero and disabled costs are valid',()=>{const p=profile();p.items[0].amount=null;assert.equal(estimateCost(599,280,p,budget).profit,null);p.items[0].included=false;assert.equal(estimateCost(599,280,p,budget).complete,true);p.items[0].included=true;p.items[0].amount=0;assert.equal(estimateCost(599,280,p,budget).complete,true);});
+test('overhead is allocated once and zero forecast never divides by zero',()=>{const p=profile();p.allocateMonthly=true;const e=estimateCost(599,280,p,budget);assert.equal(e.overhead,33.33);assert.equal(e.profit,195.67);assert.equal(estimateCost(599,280,p,{...budget,expectedUnits:0}).profit,null);p.allocateMonthly=false;assert.equal(estimateCost(599,280,p,{...budget,expectedUnits:0}).profit,229);});
+test('negative profit remains visible as a loss',()=>{const e=estimateCost(300,280,profile(),budget);assert.equal(e.profit,-70);assert.equal(e.margin,-23.33);});

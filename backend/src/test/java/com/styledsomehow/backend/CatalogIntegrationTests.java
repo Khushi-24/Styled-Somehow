@@ -53,14 +53,14 @@ class CatalogIntegrationTests {
   p=json.readValue(created,Product.class);
   try{
    mvc.perform(get("/api/products/"+p.slug)).andExpect(status().isNotFound());
-   p.status=Product.Status.PUBLISHED;p.price=649;
+   p.status=Product.Status.PUBLISHED;p.price=649;p.newIn=false;p.pickYourVibe=true;
    String body=mvc.perform(put("/api/admin/products/"+p.id).with(user("owner").roles("ADMIN")).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(p))).andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
    Product published=json.readValue(body,Product.class);
-   mvc.perform(get("/api/products/"+p.slug)).andExpect(status().isOk()).andExpect(jsonPath("$.price").value(649));
+   mvc.perform(get("/api/products/"+p.slug)).andExpect(status().isOk()).andExpect(jsonPath("$.price").value(649)).andExpect(jsonPath("$.pickYourVibe").value(true)).andExpect(jsonPath("$.newIn").value(false));
    mvc.perform(put("/api/admin/products/"+p.id).with(user("owner").roles("ADMIN")).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(p))).andExpect(status().isConflict());
    published.status=Product.Status.ARCHIVED;
    mvc.perform(put("/api/admin/products/"+p.id).with(user("owner").roles("ADMIN")).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(published))).andExpect(status().isOk());
-   mvc.perform(get("/api/products/"+p.slug)).andExpect(status().isNotFound());
+   mvc.perform(get("/api/products/"+p.slug)).andExpect(status().isOk()).andExpect(jsonPath("$.status").value("ARCHIVED")).andExpect(jsonPath("$.availability").isEmpty());
   }finally{repository.deleteById(p.id);}
  }
  @Test void rejectsInvalidPricingAndUnsupportedSize()throws Exception{
@@ -69,5 +69,28 @@ class CatalogIntegrationTests {
   mvc.perform(post("/api/admin/products").with(user("owner").roles("ADMIN")).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(p))).andExpect(status().isBadRequest());
   p.originalPrice=999;p.sizes=java.util.List.of("XXL");
   mvc.perform(post("/api/admin/products").with(user("owner").roles("ADMIN")).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(p))).andExpect(status().isBadRequest());
+ }
+
+ @Test void photoUploadUsesRealAdminLoginSessionAndFreshCsrf()throws Exception{
+  var tokenResponse=mvc.perform(get("/api/auth/csrf")).andExpect(status().isOk()).andReturn();
+  var anonymous=(org.springframework.mock.web.MockHttpSession)tokenResponse.getRequest().getSession(false);
+  var token=json.readTree(tokenResponse.getResponse().getContentAsString());
+  var login=mvc.perform(post("/api/auth/login").servletPath("/api/auth/login").session(anonymous)
+   .header(token.get("headerName").asText(),token.get("token").asText())
+   .param("username","test-owner").param("password","integration-password-only"))
+   .andExpect(status().isNoContent()).andReturn();
+  var session=(org.springframework.mock.web.MockHttpSession)login.getRequest().getSession(false);
+  mvc.perform(get("/api/auth/me").session(session)).andExpect(status().isOk());
+  var fresh=json.readTree(mvc.perform(get("/api/auth/csrf").session(session)).andExpect(status().isOk()).andReturn().getResponse().getContentAsString());
+  byte[] png=java.util.Base64.getDecoder().decode("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jFioAAAAASUVORK5CYII=");
+  var file=new org.springframework.mock.web.MockMultipartFile("file","photo.png","image/png",png);
+  String body=mvc.perform(multipart("/api/admin/media").file(file).session(session)
+   .header(fresh.get("headerName").asText(),fresh.get("token").asText()))
+   .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+  String url=json.readTree(body).get("url").asText();
+  try{mvc.perform(get(url)).andExpect(status().isOk()).andExpect(content().bytes(png));}
+  finally{java.nio.file.Files.deleteIfExists(java.nio.file.Path.of("build/test-media",url.substring(url.lastIndexOf('/')+1)));}
+  session.invalidate();
+  mvc.perform(multipart("/api/admin/media").file(file).with(csrf())).andExpect(status().isUnauthorized());
  }
 }

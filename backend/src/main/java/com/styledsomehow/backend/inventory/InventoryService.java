@@ -10,9 +10,12 @@ import java.util.*;
 public class InventoryService {
  private final StockRepository stocks;private final MovementRepository movements;
  public InventoryService(StockRepository s,MovementRepository m){stocks=s;movements=m;}
+ public record NewVariant(@NotBlank @Size(max=50) @Pattern(regexp="[A-Za-z][A-Za-z -]*") String colour,@NotNull @Pattern(regexp="S|M|L|XL") String size){}
+ @Transactional public BlankStock create(NewVariant input){String colour=input.colour().trim().replaceAll("\\s+"," ");if(stocks.findAll().stream().anyMatch(s->s.colour.equalsIgnoreCase(colour)&&s.size.equals(input.size())))throw new ResponseStatusException(HttpStatus.CONFLICT,"This colour and size already exist.");var stock=new BlankStock();stock.colour=colour;stock.size=input.size();stock.quantity=0;stock.reserved=0;stock.lowStockThreshold=3;return stocks.saveAndFlush(stock);}
  public record Adjustment(@NotNull Long version,@Min(-100000) @Max(100000) int delta,@NotBlank @Size(max=500) String reason,@NotBlank @Pattern(regexp="[a-f0-9-]{36}") String requestId){}
  @Transactional(readOnly=true) public List<BlankStock> list(){return stocks.findAll().stream().sorted(Comparator.comparing((BlankStock s)->s.colour).thenComparingInt(s->List.of("S","M","L","XL").indexOf(s.size))).toList();}
  @Transactional(readOnly=true) public Map<String,Map<String,Boolean>> availability(){Map<String,Map<String,Boolean>> result=new HashMap<>();for(var s:list())result.computeIfAbsent(s.colour,k->new HashMap<>()).put(s.size,s.quantity-s.reserved>0);return result;}
+ @Transactional(readOnly=true) public org.springframework.data.domain.Slice<StockMovement> movements(int page){return movements.findAll(org.springframework.data.domain.PageRequest.of(page,50,org.springframework.data.domain.Sort.by("id").descending()));}
  @Transactional(readOnly=true) public List<StockMovement> history(){return movements.findTop100ByOrderByIdDesc();}
  @Transactional public BlankStock adjust(Long id,Adjustment a,String actor){
   var stock=stocks.locked(id).orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND));

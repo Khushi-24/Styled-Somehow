@@ -1,23 +1,20 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
-import {readCart} from "../../lib/cart";
+import {getImageProps} from "next/image";
+import type {ShopCollection} from "../../lib/product";
+import PolicyActions from "./policy-actions";
 import { useEffect, useState } from "react";
 
 const slides = [
-  { image: "/images/feel-the-vibe.webp", alt: "Styled Somehow Feel the Vibe campaign", href: "/collections/new-drop", position: "center" },
-  { image: "/images/the-lineup.webp", alt: "Styled Somehow graphic tees and everyday basics lineup", href: "/collections/all", position: "center" },
+  { image: "/images/red-streetwear-hero.webp", mobileImage:"/images/red-streetwear-hero-mobile-refined.webp", alt: "Styled Somehow red streetwear campaign: Style you don’t have to think about. Comfort you never want to take off. Shop now.", href: "/#pick-your-style", position: "center" },
+  { image: "/images/the-lineup-approved.webp", mobileImage:"/images/the-lineup-mobile-approved.webp", alt: "Styled Somehow graphic tees and everyday basics lineup", href: "/#pick-your-style", position: "center" },
 ] as const;
 
-const collectionLinks = [
-  ["New Drop", "/collections/new-drop"], ["Graphic Tees", "/collections/graphic-tees"],
-  ["Plain Tees", "/collections/plain-tees"], ["Joggers", "/collections/joggers"],
-  ["Best Sellers", "/collections/best-sellers"],
-] as const;
 
-function Icon({ name }: { name: "search" | "user" | "bag" | "menu" | "close" }) {
+function Icon({ name }: { name: "home" | "search" | "user" | "bag" | "menu" | "close" }) {
   const paths = {
+    home: <path d="M3 10 12 3l9 7M5 9v12h14V9M9 21v-7h6v7"/>,
     search: <><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.25 4.25"/></>,
     user: <><circle cx="12" cy="8" r="4"/><path d="M4.75 21c.7-4.25 3.12-6.5 7.25-6.5s6.55 2.25 7.25 6.5"/></>,
     bag: <><path d="M4.5 8.5h15l-1 12h-13l-1-12Z"/><path d="M9 9V6a3 3 0 0 1 6 0v3"/></>,
@@ -27,24 +24,45 @@ function Icon({ name }: { name: "search" | "user" | "bag" | "menu" | "close" }) 
   return <svg aria-hidden="true" viewBox="0 0 24 24">{paths[name]}</svg>;
 }
 
-export default function StorefrontHero() {
+export default function StorefrontHero({collections}:{collections:ShopCollection[]}) {
+  const collectionLinks = [["New In","/#new-in"],...collections.map(c=>[c.name,`/collections/${c.slug}`])];
   function rememberHome() {
     window.history.replaceState(window.history.state, "", `${window.location.pathname}${window.location.search}`);
   }
-  const [cartCount,setCartCount]=useState(0);
-  useEffect(()=>{function update(){setCartCount(readCart().reduce((n,i)=>n+i.quantity,0));}const timer=setTimeout(update,0);window.addEventListener("cart-updated",update);window.addEventListener("storage",update);window.addEventListener("pageshow",update);return()=>{clearTimeout(timer);window.removeEventListener("cart-updated",update);window.removeEventListener("storage",update);window.removeEventListener("pageshow",update);};},[]);
+  function shopNow(event:React.MouseEvent<HTMLAnchorElement>){
+    if(event.button!==0||event.metaKey||event.ctrlKey||event.shiftKey||event.altKey)return;
+    const target=document.getElementById("pick-your-style")||document.getElementById("new-in");
+    if(!target)return;
+    event.preventDefault();
+    const hash=`#${target.id}`;
+    if(window.location.hash!==hash)window.history.pushState(window.history.state,"",hash);
+    target.scrollIntoView({behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"instant":"smooth",block:"start"});
+  }
   const [activeSlide, setActiveSlide] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
-    const timer = window.setInterval(() => setActiveSlide((current) => (current + 1) % slides.length), 6500);
+    if (menuOpen || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const timer = window.setInterval(() => setActiveSlide((current) => (current + 1) % slides.length), 2500);
     return () => window.clearInterval(timer);
-  }, []);
+  }, [menuOpen]);
 
-  const moveSlide = (direction: number) => setActiveSlide((current) => (current + direction + slides.length) % slides.length);
+  useEffect(() => {
+    if (!menuOpen) return;
+    const toggle=document.querySelector<HTMLButtonElement>(".menu-button");
+    const panel=document.querySelector<HTMLDivElement>(".mobile-panel");
+    panel?.querySelector<HTMLAnchorElement>("a")?.focus();
+    const previous=document.body.style.overflow;document.body.style.overflow="hidden";
+    const escape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") { setMenuOpen(false); toggle?.focus(); }
+      if(event.key==="Tab"&&panel){const controls=[toggle,...panel.querySelectorAll<HTMLElement>("a,button")].filter((node):node is HTMLElement=>!!node);const index=controls.indexOf(document.activeElement as HTMLElement);if(event.shiftKey&&index<=0){event.preventDefault();controls.at(-1)?.focus();}else if(!event.shiftKey&&(index===controls.length-1||index<0)){event.preventDefault();controls[0]?.focus();}}
+    };
+    document.addEventListener("keydown", escape);
+    return () => {document.removeEventListener("keydown", escape);document.body.style.overflow=previous;};
+  }, [menuOpen]);
 
   return (
-    <section className="storefront" aria-label="Styled Somehow featured collections">
+    <section className="storefront storefront--campaign" aria-label="Styled Somehow featured collections">
       <header className={`site-header ${activeSlide === 0 ? "header-on-dark" : "header-on-light"} ${menuOpen ? "menu-is-open" : ""}`}>
         <Link className="brand-logo" href="/" aria-label="Styled Somehow home">
           <span>STYLED</span>
@@ -55,46 +73,35 @@ export default function StorefrontHero() {
             <button type="button" className="nav-link">COLLECTIONS <span aria-hidden="true">⌄</span></button>
             <div className="dropdown-menu">{collectionLinks.map(([label, href]) => <Link key={label} href={href}>{label}</Link>)}</div>
           </div>
-          <Link className="nav-link" href="/collections/men" onClick={rememberHome}>MEN</Link>
-          <Link className="nav-link" href="/collections/women" onClick={rememberHome}>WOMEN</Link>
-          <Link className="nav-link" href="/collections/couple-tshirts">COUPLE T-SHIRTS</Link>
+          {collections.some(c=>c.slug==="men")&&<Link className="nav-link" href="/collections/men" onClick={rememberHome}>MEN</Link>}
+          {collections.some(c=>c.slug==="women")&&<Link className="nav-link" href="/collections/women" onClick={rememberHome}>WOMEN</Link>}
+
         </nav>
-        <div className="header-actions">
-          <button className="icon-button desktop-action" type="button" aria-label="Search"><Icon name="search" /></button>
-          <Link className="icon-button desktop-action" href="/orders" aria-label="View your order"><Icon name="user" /></Link>
-          <Link className="icon-button bag-button" href="/cart" aria-label={`Cart, ${cartCount} items`}><Icon name="bag" /><span className="cart-count">{cartCount}</span></Link>
-          <button className="icon-button menu-button" type="button" aria-label={menuOpen ? "Close menu" : "Open menu"} aria-expanded={menuOpen} onClick={() => setMenuOpen((open) => !open)}><Icon name={menuOpen ? "close" : "menu"} /></button>
+        <div className="header-actions"><PolicyActions dark={activeSlide===0||menuOpen}/>          <button className="icon-button menu-button" type="button" aria-label={menuOpen ? "Close menu" : "Open menu"} aria-expanded={menuOpen} onClick={() => setMenuOpen((open) => !open)}><Icon name={menuOpen ? "close" : "menu"} /></button>
         </div>
       </header>
 
-      <div className={`mobile-panel ${menuOpen ? "is-open" : ""}`} aria-hidden={!menuOpen}>
+      <div className={`mobile-panel ${menuOpen ? "is-open" : ""}`} aria-hidden={!menuOpen} role="dialog" aria-modal={menuOpen?true:undefined} aria-label="Shop menu">
         <p className="mobile-menu-label">SHOP</p>
-        <Link href="/collections/new-drop" onClick={() => setMenuOpen(false)}>New Drop</Link>
-        <Link href="/collections/graphic-tees" onClick={() => setMenuOpen(false)}>Graphic Tees</Link>
-        <Link href="/collections/plain-tees" onClick={() => setMenuOpen(false)}>Plain Tees</Link>
-        <Link href="/collections/joggers" onClick={() => setMenuOpen(false)}>Joggers</Link>
-        <Link href="/collections/men" onClick={() => { rememberHome(); setMenuOpen(false); }}>Men</Link>
-        <Link href="/collections/women" onClick={() => { rememberHome(); setMenuOpen(false); }}>Women</Link>
-        <Link href="/collections/couple-tshirts" onClick={() => setMenuOpen(false)}>Couple T-shirts</Link>
-        <div className="mobile-secondary-links"><Link href="/orders">View your order</Link><button type="button">Search</button></div>
+        <Link href="/#new-in" onClick={() => setMenuOpen(false)}>New In</Link>
+        {collections.map(c=><Link key={c.slug} href={`/collections/${c.slug}`} onClick={()=>{rememberHome();setMenuOpen(false);}}>{c.name}</Link>)}
+
+        <div className="mobile-secondary-links"><Link href="/orders">My orders</Link></div>
       </div>
 
       <div className="slides">
-        {slides.map((slide, index) => (
-          <Link key={slide.image} href={slide.href} className={`hero-slide ${index === activeSlide ? "is-active" : ""}`} aria-hidden={index !== activeSlide} tabIndex={index === activeSlide ? 0 : -1}>
-            <Image src={slide.image} alt={slide.alt} fill priority={index === 0} sizes="100vw" style={{ objectPosition: slide.position }} />
-            {index === 1 && <span className="lineup-cta">EXPLORE THE LINEUP <span aria-hidden="true">↗</span></span>}
-          </Link>
-        ))}
+        {slides.map((slide, index) => {
+          const {props:desktop}=getImageProps({src:slide.image,alt:slide.alt,width:index===0?1672:2048,height:index===0?941:1024,sizes:"100vw",quality:95});
+          const {props:mobile}=getImageProps({src:slide.mobileImage,alt:slide.alt,width:1122,height:1402,sizes:"100vw",quality:95});
+          return <Link key={slide.image} href={slide.href} onClick={shopNow} aria-label="Shop now — explore Pick Your Energy" className={`hero-slide ${index === activeSlide ? "is-active" : ""}`} aria-hidden={index !== activeSlide} tabIndex={index === activeSlide ? 0 : -1}>
+            <picture><source media="(max-width: 620px)" srcSet={mobile.srcSet} sizes={mobile.sizes}/>{/* Art-directed sources share one responsive image element. */}
+            <img {...desktop} alt={slide.alt} loading={index===0?"eager":"lazy"} fetchPriority={index===0?"high":"auto"} style={{objectPosition:slide.position}}/></picture>
+            <span className="hero-shop-now">SHOP NOW <span aria-hidden="true">→</span></span>
+          </Link>;
+        })}
       </div>
 
-      <div className="carousel-controls">
-        <button type="button" onClick={() => moveSlide(-1)} aria-label="Previous slide">←</button>
-        <div className="carousel-dots" role="group" aria-label="Choose a slide">
-          {slides.map((slide, index) => <button key={slide.image} className={index === activeSlide ? "is-active" : ""} type="button" aria-label={`Show slide ${index + 1}`} aria-current={index === activeSlide ? "true" : undefined} onClick={() => setActiveSlide(index)} />)}
-        </div>
-        <button type="button" onClick={() => moveSlide(1)} aria-label="Next slide">→</button>
-      </div>
+
     </section>
   );
 }

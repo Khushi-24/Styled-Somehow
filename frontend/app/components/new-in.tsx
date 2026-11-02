@@ -1,5 +1,5 @@
 "use client";
-import Image from "next/image";
+import ListingPhoto from "./listing-photo";
 import Link from "next/link";
 import { useEffect } from "react";
 
@@ -32,7 +32,7 @@ export default function NewIn({products}: {products: Product[]}) {
    return <article key={product.id} id={`new-in-product-${anchor}`} className="new-in__product"><Link prefetch={false} href={`/products/${product.slug}`} onClick={event => {
     if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
     window.history.replaceState(window.history.state, "", `${window.location.pathname}${window.location.search}#new-in-product-${anchor}`);
-   }}><div className="new-in__image"><Image src={product.media[0].url} alt={product.media[0].alt} fill sizes="(max-width: 620px) 70vw, (max-width: 980px) 45vw, 25vw" unoptimized={product.media[0].url.startsWith("/api/")} /><span className="new-in__badge">NEW</span></div>
+   }}><ListingPhoto product={product} sizes="(max-width: 620px) 70vw, (max-width: 980px) 45vw, 25vw" unoptimized={product.media[0].url.startsWith("/api/")} />
     <h3>{product.name}</h3><p className="product-price">{product.originalPrice > product.price && <del>{money(product.originalPrice)}</del>}<span>{money(product.price)}</span>{product.originalPrice > product.price && <span className="product-saving">Save {saving(product)}%</span>}</p>
    </Link></article>;
   })}</div>{products.filter(p => p.newIn).length === 0 && <p>New arrivals are on their way.</p>}

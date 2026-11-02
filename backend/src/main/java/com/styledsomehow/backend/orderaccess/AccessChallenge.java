@@ -7,6 +7,7 @@ public class AccessChallenge {
  @Column(length=36) public String orderId;
  @Column(length=64) public String emailHash,ipHash,browserHash,codeHash;
  @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.TIMESTAMP) public Instant createdAt,expiresAt;
+ @Column(length=254) public String loginEmail;
  public int attempts;
  public boolean consumed;
 }

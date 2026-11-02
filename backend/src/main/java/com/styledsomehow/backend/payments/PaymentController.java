@@ -10,13 +10,14 @@ import tools.jackson.databind.ObjectMapper;
 import java.util.*;
 @RestController
 public class PaymentController {
+ @org.springframework.beans.factory.annotation.Autowired private com.styledsomehow.backend.operations.CommerceGuard guard;
  private final PaymentService payments;private final PaymentGateway gateway;private final ObjectMapper json;
  public PaymentController(PaymentService payments,PaymentGateway gateway,ObjectMapper json){this.payments=payments;this.gateway=gateway;this.json=json;}
  public record Verification(@NotNull @Pattern(regexp="pay_[A-Za-z0-9]+") String paymentId,@NotNull @Pattern(regexp="[a-fA-F0-9]{64}") String signature){}
- @GetMapping("/api/payments/config") public Map<String,Object> config(){return Map.of("enabled",gateway.ready(),"mode","TEST");}
- @PostMapping("/api/checkout/{id}/payment") public PaymentService.Start start(@PathVariable String id,HttpSession session){return payments.start(id,CheckoutController.key(session));}
- @PostMapping("/api/checkout/{id}/payment/verify") public PendingOrder verify(@PathVariable String id,@Valid @RequestBody Verification body,HttpSession session){return payments.verify(id,CheckoutController.key(session),body.paymentId(),body.signature());}
- @PostMapping("/api/checkout/{id}/payment/check") public PendingOrder refresh(@PathVariable String id,HttpSession session){return payments.refresh(id,CheckoutController.key(session));}
+ @GetMapping("/api/payments/config") public Map<String,Object> config(){return Map.of("enabled",gateway.ready(),"mode",gateway.keyId().startsWith("rzp_live_")?"LIVE":"TEST");}
+ @PostMapping("/api/checkout/{id}/payment") public PaymentService.Start start(@PathVariable String id,jakarta.servlet.http.HttpServletRequest request){String owner=CheckoutController.key(request.getSession());guard.check("payment",request.getRemoteAddr(),owner,null);return payments.start(id,owner);}
+ @PostMapping("/api/checkout/{id}/payment/verify") public PendingOrder verify(@PathVariable String id,@Valid @RequestBody Verification body,jakarta.servlet.http.HttpServletRequest request){String owner=CheckoutController.key(request.getSession());guard.check("payment",request.getRemoteAddr(),owner,null);return payments.verify(id,owner,body.paymentId(),body.signature());}
+ @PostMapping("/api/checkout/{id}/payment/check") public PendingOrder refresh(@PathVariable String id,jakarta.servlet.http.HttpServletRequest request){String owner=CheckoutController.key(request.getSession());guard.check("payment",request.getRemoteAddr(),owner,null);return payments.refresh(id,owner);}
  @PostMapping("/api/payments/razorpay/webhook") @ResponseStatus(HttpStatus.NO_CONTENT) public void webhook(@RequestBody byte[] body,@RequestHeader(value="X-Razorpay-Signature",required=false) String signature){
   if(!gateway.ready()||!gateway.verifyWebhook(body,signature))throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Invalid webhook signature");
   if(body.length>262144)throw new ResponseStatusException(HttpStatus.PAYLOAD_TOO_LARGE);
