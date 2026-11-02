@@ -32,3 +32,7 @@ Example schedule after a successful manual rehearsal: hourly database/media back
 - LIVE mode requires a matching `rzp_live_` key AND `RAZORPAY_LIVE_ENABLED=true`; TEST remains the default. Match webhook credentials to that account/mode and verify a controlled small payment/refund before broad launch.
 - Shipping comparison/booking uses the same default parcel formula: 11 x 13 inches, 1 inch height per tee, 0.5 kg for each started pair, up to 20 tees. These are defaults, not measured proof for every design/quantity. Verify packed dimensions and weight before accepting larger orders; override admin measurements when necessary and absorb any agreed merchant-side quote difference.
 - Labels, pickup scheduling, exchanges, partial refunds and courier cancellation/rebooking remain reviewed operations in provider dashboards. The portal can reconcile a matching existing provider shipment; it does not blindly recreate ambiguous bookings.
+
+## Environment profiles
+
+See [backend environment setup](../backend/docs/ENVIRONMENTS.md) for local, staging and production profiles, matching secret-file templates and server startup arguments. Real environment files are never committed.
