@@ -8,7 +8,7 @@ import {prepareProductImage} from "../../lib/product-image-upload";
 import {filterCatalogue} from "../../lib/admin-catalogue";
 import styles from "./products.module.css";
 import {Product,Media,ShopCollection,money} from "../../lib/product";
-const blank=():Product=>({slug:"",name:"",price:599,originalPrice:900,description:"",details:"",composition:"100% Cotton",gsm:260,collections:[],colours:["Black"],sizes:["S","M","L","XL"],media:[],newIn:true,pickYourVibe:false,sortOrder:100,collectionOrder:100,status:"DRAFT"});
+const blank=():Product=>({slug:"",name:"",price:599,originalPrice:900,description:"",details:"",composition:"100% Cotton",gsm:240,collections:[],colours:["Black"],sizes:["S","M","L","XL"],media:[],newIn:true,pickYourVibe:false,sortOrder:100,collectionOrder:100,status:"DRAFT"});
 type InventoryColour={colour:string;size:string};
 export default function AdminPortal(){
  const [user,setUser]=useState<string|null>(null),[loading,setLoading]=useState(true),[busy,setBusy]=useState(false),[products,setProducts]=useState<Product[]>([]),[collections,setCollections]=useState<ShopCollection[]>([]),[draft,setDraft]=useState<Product|null>(null),[error,setError]=useState(""),[notice,setNotice]=useState(""),[query,setQuery]=useState(""),[customSlug,setCustomSlug]=useState(false),[uploadStatus,setUploadStatus]=useState(""),[uploadErrors,setUploadErrors]=useState<string[]>([]),[statusFilter,setStatusFilter]=useState("ALL"),[collectionFilter,setCollectionFilter]=useState(""),[sort,setSort]=useState("newest"),[page,setPage]=useState(1),[baseline,setBaseline]=useState(""),[confirmLeave,setConfirmLeave]=useState(false);
