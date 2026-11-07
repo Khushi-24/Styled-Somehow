@@ -32,8 +32,8 @@ class OrderConfirmationTests {
  }
  @Test void htmlEscapesCustomerTextAndIncludesSafeOrderAccessLink(){
   var o=order();o.name="<script>alert(1)</script>";o.items.get(0).name="A & B <tee>";
-  String html=OrderEmailTemplate.html(o,"https://styledsomehow.in/orders#access=fixture-token","cid:styled-somehow-logo");
-  assertThat(html).contains("&lt;script&gt;","A &amp; B &lt;tee&gt;","cid:styled-somehow-logo","https://styledsomehow.in/orders#access=fixture-token","TEST ORDER","View order").doesNotContain("<script>","A & B <tee>");
+  String html=OrderEmailTemplate.html(o,"https://styledsomehow.in/orders#access=fixture-token");
+  assertThat(html).contains("&lt;script&gt;","A &amp; B &lt;tee&gt;","STYLED SOMEHOW","https://styledsomehow.in/orders#access=fixture-token","TEST ORDER","View order").doesNotContain("<script>","A & B <tee>");
  }
 
 }

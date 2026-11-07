@@ -34,24 +34,24 @@ public class SmtpEmailDelivery implements EmailDelivery {
    helper.setFrom(new jakarta.mail.internet.InternetAddress(username,"Styled Somehow","UTF-8"));helper.setTo(email);helper.setSubject(subject);
    // Discourage automated responses; human Reply buttons are controlled by email clients.
    message.setHeader("Auto-Submitted","auto-generated");message.setHeader("X-Auto-Response-Suppress","All");
-   helper.setText(text,html);helper.addInline("styled-somehow-logo",new org.springframework.core.io.ClassPathResource("email/logo.png"),"image/png");client.send(message);
+   helper.setText(text,html);client.send(message);
   }catch(jakarta.mail.MessagingException|java.io.UnsupportedEncodingException failure){throw new IllegalStateException("Could not prepare automated email",failure);}
  }
  public void sendCode(String email,String code){
   String text="Your Styled Somehow login code: "+code+"\n\nValid for 10 minutes. Do not share this code. If you did not request it, ignore this email.\n\n"+OrderEmailTemplate.noReplyText();
-  sendBranded(email,"Your Styled Somehow login code",text,OrderEmailTemplate.otp(code,"cid:styled-somehow-logo"),null,null);
+  sendBranded(email,"Your Styled Somehow login code",text,OrderEmailTemplate.otp(code),null,null);
  }
  public void sendRecovery(String email,String code,List<String> references){
   String text="Your recent order references:\n"+String.join("\n",references)+"\n\nYour access code: "+code+". It expires in 10 minutes. Do not share this code.";
-  sendBranded(email,"Your Styled Somehow order references",text+"\n\n"+OrderEmailTemplate.noReplyText(),OrderEmailTemplate.recovery(text,"cid:styled-somehow-logo"),null,null);
+  sendBranded(email,"Your Styled Somehow order references",text+"\n\n"+OrderEmailTemplate.noReplyText(),OrderEmailTemplate.recovery(text),null,null);
  }
  public void sendConfirmation(PendingOrder order){
-  String link=links.link(order,storeUrl);sendBranded(order.email,OrderEmailThread.subject(order),confirmationText(order,link),OrderEmailTemplate.html(order,link,"cid:styled-somehow-logo"),order.id,null);
+  String link=links.link(order,storeUrl);sendBranded(order.email,OrderEmailThread.subject(order),confirmationText(order,link),OrderEmailTemplate.html(order,link),order.id,null);
  }
  public void sendStatus(PendingOrder order,com.styledsomehow.backend.fulfilment.FulfilmentEvent event){
   String link=links.link(order,storeUrl);
   String text=("TEST".equals(order.paymentMode)?"TEST ORDER — this order will not be dispatched.\n\n":"")+statusLabel(event.stage)+"\n"+statusDescription(order,event.stage)+"\n\nOrder: "+order.id+"\nView order: "+link+"\nKeep this private link safe.\n\n"+OrderEmailTemplate.noReplyText();
-  sendBranded(order.email,OrderEmailThread.subject(order),text,OrderEmailTemplate.status(order,event.stage,link,"cid:styled-somehow-logo"),order.id,event.id);
+  sendBranded(order.email,OrderEmailThread.subject(order),text,OrderEmailTemplate.status(order,event.stage,link),order.id,event.id);
  }
  static String statusLabel(String stage){return switch(stage){case "PACKING"->"Packing";case "READY_TO_SHIP"->"Ready to ship";case "SHIPPED"->"Shipped";case "IN_TRANSIT"->"In transit";case "DELIVERED"->"Delivered";default->throw new IllegalArgumentException("Unsupported email stage");};}
  static String statusDescription(PendingOrder order,String stage){if("PERSONAL".equals(order.deliveryMethod)){if("READY_TO_SHIP".equals(stage))return "All packed and ready for personal delivery by Styled Somehow.";if("SHIPPED".equals(stage)||"IN_TRANSIT".equals(stage))return "Your order is on its way with Styled Somehow for personal delivery.";}return statusDescription(stage);}
