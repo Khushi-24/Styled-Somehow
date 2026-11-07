@@ -93,7 +93,7 @@ export default function StorefrontHero({collections}:{collections:ShopCollection
         {slides.map((slide, index) => {
           const {props:desktop}=getImageProps({src:slide.image,alt:slide.alt,width:index===0?1672:2048,height:index===0?941:1024,sizes:"100vw",quality:95});
           const {props:mobile}=getImageProps({src:slide.mobileImage,alt:slide.alt,width:1122,height:1402,sizes:"100vw",quality:95});
-          return <Link key={slide.image} href={slide.href} onClick={shopNow} aria-label="Shop now — explore Pick Your Energy" className={`hero-slide ${index === activeSlide ? "is-active" : ""}`} aria-hidden={index !== activeSlide} tabIndex={index === activeSlide ? 0 : -1}>
+          return <Link key={slide.image} href={slide.href} onClick={shopNow} aria-label="Shop now — explore Pick Your Vibe" className={`hero-slide ${index === activeSlide ? "is-active" : ""}`} aria-hidden={index !== activeSlide} tabIndex={index === activeSlide ? 0 : -1}>
             <picture><source media="(max-width: 620px)" srcSet={mobile.srcSet} sizes={mobile.sizes}/>{/* Art-directed sources share one responsive image element. */}
             <img {...desktop} alt={slide.alt} loading={index===0?"eager":"lazy"} fetchPriority={index===0?"high":"auto"} style={{objectPosition:slide.position}}/></picture>
             <span className="hero-shop-now">SHOP NOW <span aria-hidden="true">→</span></span>

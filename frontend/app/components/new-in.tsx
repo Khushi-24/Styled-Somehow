@@ -26,7 +26,7 @@ export default function NewIn({products}: {products: Product[]}) {
   return () => { cancelAnimationFrame(frame); window.removeEventListener("popstate", restoreProduct); window.removeEventListener("hashchange", restoreProduct); window.removeEventListener("pageshow", restoreProduct); };
  }, []);
  return <section id="new-in" className="new-in" aria-labelledby="new-in-title">
-  <header><h2 id="new-in-title">New In</h2><p>Upgrade your closet with everything trendy and new</p></header>
+  <header><h2 id="new-in-title">New In</h2><p>Fresh graphics. Same oversized comfort.</p></header>
   <div className="new-in__grid">{products.filter(p => p.newIn).map(product => {
    const anchor = productAnchor(product);
    return <article key={product.id} id={`new-in-product-${anchor}`} className="new-in__product"><Link prefetch={false} href={`/products/${product.slug}`} onClick={event => {
