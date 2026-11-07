@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import BrandHomeLink from "./brand-home-link";
 import {getImageProps} from "next/image";
 import type {ShopCollection} from "../../lib/product";
 import PolicyActions from "./policy-actions";
@@ -64,10 +65,7 @@ export default function StorefrontHero({collections}:{collections:ShopCollection
   return (
     <section className="storefront storefront--campaign" aria-label="Styled Somehow featured collections">
       <header className={`site-header ${activeSlide === 0 ? "header-on-dark" : "header-on-light"} ${menuOpen ? "menu-is-open" : ""}`}>
-        <Link className="brand-logo" href="/" aria-label="Styled Somehow home">
-          <span>STYLED</span>
-          <span>SOMEHOW</span>
-        </Link>
+        <BrandHomeLink />
         <nav className="desktop-nav" aria-label="Main navigation">
           <div className="nav-dropdown">
             <button type="button" className="nav-link">COLLECTIONS <span aria-hidden="true">⌄</span></button>

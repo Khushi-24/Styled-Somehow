@@ -12,7 +12,7 @@ button { color: inherit; font: inherit; }
 .site-header.header-on-dark { background: transparent; color: white; }
 .site-header.header-on-light { border-color: rgba(9,9,9,.14); background: #f9f4ec; color: var(--ink); }
 .site-header.menu-is-open { border-color: transparent; background: var(--ink); color: white; }
-.brand-logo { display: flex; width: max-content; flex-direction: column; align-items: center; gap: 3px; color: inherit; font-family: Arial Black, Arial, Helvetica, sans-serif; font-size: 1.25rem; font-weight: 950; line-height: .78; letter-spacing: -.075em; transform: scaleX(1.14); transform-origin: left center; }
+.brand-logo { display: flex; width: max-content; flex-direction: column; align-items: center; gap: 3px; color: inherit; font-family: "Arial Black", Arial, Helvetica, sans-serif; font-style: normal; text-transform: none; font-size: 1.25rem; font-weight: 950; line-height: .78; letter-spacing: -.075em; transform: scaleX(1.14); transform-origin: left center; }
 .brand-logo span { display: block; }
 .desktop-nav { display: flex; align-items: center; gap: clamp(20px, 3vw, 48px); }
 .nav-link { position: relative; display: inline-flex; align-items: center; gap: 6px; padding: 10px 0; border: 0; background: transparent; color: inherit; font-size: .75rem; font-weight: 800; letter-spacing: .09em; cursor: pointer; }
@@ -414,8 +414,7 @@ input,select,textarea{font-family:inherit}
  .store-header__back{font-size:12px;max-width:none;white-space:nowrap;gap:4px}
  .store-header__back-label{display:none}
  .store-header__back-short{display:inline}
- .store-header>.brand-logo{font-size:.94rem}
- .collection-heading h1{font-size:clamp(22px,6vw,28px)}
+  .collection-heading h1{font-size:clamp(22px,6vw,28px)}
  .collection-heading p{font-size:12px}
  .product-size-heading{align-items:flex-start;gap:6px}
  .product-size-measurements{flex-wrap:wrap;row-gap:4px}
