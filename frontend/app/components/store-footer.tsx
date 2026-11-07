@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import BrandHomeLink from "./brand-home-link";
 import {usePathname} from "next/navigation";
 import {socialLinks} from "../../lib/social-links";
 import styles from "./store-footer.module.css";

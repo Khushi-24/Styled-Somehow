@@ -1,9 +1,10 @@
+import {BrandWordmark} from "./brand-home-link";
 import {socialLinks} from "../../lib/social-links";
 import styles from "./founder-story.module.css";
 
 export default function FounderStory(){
  return <section className={styles.section} aria-labelledby="founder-story-title"><div className={styles.inner}>
-  <div className={styles.identity}><div className="brand-logo" aria-label="Styled Somehow"><span>STYLED</span><span>SOMEHOW</span></div><span className={styles.caption}>A NOTE FROM THE FOUNDER</span></div>
+  <div className={styles.identity}><BrandWordmark /><span className={styles.caption}>A NOTE FROM THE FOUNDER</span></div>
   <div className={styles.story}>
    <h2 id="founder-story-title">For the tees you keep reaching for.</h2>
    <p>Some T-shirts become your favourites without you even realising it. You reach for them on busy mornings, lazy weekends and every “I’ll be ready in five” kind of day.</p>

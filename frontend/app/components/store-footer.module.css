@@ -27,7 +27,7 @@
  .footer{padding:32px 20px 18px}
  .main{display:flex;flex-direction:column;gap:0;padding:0}
  .brand{text-align:center;padding:4px 0 28px}
- .brand :global(.brand-logo){transform-origin:center;font-size:19px}
+ .brand :global(.brand-logo){transform-origin:center}
  .brand p{margin:16px 0 0;font-size:12px;line-height:1.8}
  .desktopLinks{display:none}
  .contact{order:1;text-align:center;padding:24px 0;border-top:1px solid #303030}
